@@ -19,259 +19,277 @@ namespace Read_Write_GPRS_Server.Controllers
             public string ModbusReadColumnNumber { get; set; }
 
         }
+
+
         public class TcpServer
         {
-            private readonly ConcurrentQueue<string> _messageQueue = new ConcurrentQueue<string>();
-            private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-            private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+            private readonly BlockingCollection<string> _messageQueue = new BlockingCollection<string>();
+            private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
-            public string messageLog {  get; set; }
-            private TcpClient client { get; set; }
+            public string messageLog { get; set; }
+
+            private TcpDevice.UsrGPRS232_730 gprsOne;
 
             private TcpListener server { get; set; }
 
+            private bool isRunning = false;
+
             public TcpServer()
+            {
+                Task.Run(ProcessQueueAsync);
+            }
+
+            public async Task Start(string ipAddress, int port)
+            {
+
+                _cancellationTokenSource = new CancellationTokenSource();
+                if (isRunning)
                 {
-                    Task.Run(ProcessQueueAsync);
+                    await AddMessageToQueue("Сервер уже запущен.");
+                    return;
                 }
+                await AddMessageToQueue("Await press start to run server");
 
-                public async Task Start(string ipAddress, int port)
+                try
                 {
-                    
-                    messageLog = "Loading...";
+                    server = new TcpListener(IPAddress.Any, port);
 
-                    try
+                    // Начинаем прослушивание входящих соединений
+                    server.Start();
+                    await AddMessageToQueue($"TCP-сервер запущен на {ipAddress}:{port}");
+
+                    gprsOne = new TcpDevice.UsrGPRS232_730("GPRS Online", 1); //потом заменить на задание со View
+                    isRunning = true;
+                    await AddMessageToQueue("Сервер развернут. Ожидание подключения устройства...");
+
+                    while (true)
                     {
-                        server = new TcpListener(IPAddress.Any, port);
+                        gprsOne.tcpClient = await server.AcceptTcpClientAsync();
+                        await AddMessageToQueue("Подключено новое соединение.");
 
-                        // Начинаем прослушивание входящих соединений
-                        server.Start();
-                        messageLog = $"TCP-сервер запущен на {ipAddress}:{port}";
-
-                        while (true)
-                        {
-                            client = await server.AcceptTcpClientAsync();
-                            await AddMessageToQueue("Подключено новое соединение.");
-
-                            // Обрабатываем клиента в отдельной задаче
-                            _ = Task.Run(() => HandleClientAsync(client));
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        await AddMessageToQueue($"Ошибка: {ex.Message}");
+                        // Обрабатываем клиента в отдельной задаче
+                        _ = Task.Run(() => HandleClientAsync(gprsOne.tcpClient));
                     }
                 }
+                catch (Exception ex)
+                {
+                    await AddMessageToQueue($"Ошибка: {ex.Message}");
+                }
+            }
 
             public async Task Stop()
             {
-                _cancellationTokenSource.Cancel();
+                if (!isRunning)
+                {
+                    await AddMessageToQueue("Сервер уже остановлен.");
+                    return;
+                }
 
                 if (server != null)
                 {
                     server.Stop();
-                    messageLog = "TCP-сервер остановлен.";
+                    await AddMessageToQueue("TCP-сервер остановлен.");
                 }
 
-                if (client != null)
+                if (gprsOne.tcpClient != null)
                 {
-                    client.Close();
-                    messageLog = "Клиентское соединение закрыто.";
+                    gprsOne.tcpClient.Close();
+                    await AddMessageToQueue("Клиентское соединение закрыто.");
                 }
 
+                isRunning = false;
                 await AddMessageToQueue("Сервер и клиентские соединения закрыты.");
             }
 
             public async Task SendMessgeToDeviceASCII(string message)
+            {
+                if (gprsOne.tcpClient == null || !gprsOne.tcpClient.Connected)
                 {
-                    if (client == null || !client.Connected)
-                    {
-                        await AddMessageToQueue("No client. Pleasr, await client");
-                        return;
-                    }
-
-                    try
-                    {
-                        NetworkStream stream = client.GetStream();
-                        string response = message;
-                        byte[] responseBytes = Encoding.ASCII.GetBytes(response);
-                        await stream.WriteAsync(responseBytes, 0, responseBytes.Length);
-                        await AddMessageToQueue($"Отправлено сообщение: {response}");
-                    }
-                    catch (Exception ex)
-                    {
-                        await AddMessageToQueue($"Sending error: {ex.Message}");
-                    }
+                    await AddMessageToQueue("No client. Pleasr, await client");
+                    return;
                 }
 
-                public async Task SendMB3CommandToDevice(int deviceId, int address, int quantity)
+                try
                 {
-                    if (client == null || !client.Connected)
-                    {
-                        await AddMessageToQueue("No client. Pleasr, await client");
-                        return;
-                    }
-
-                    try
-                    {
-                        NetworkStream stream = client.GetStream();
-                        byte[] responseBytes = GenerateReadHoldingRegistersCommand(deviceId, address, quantity);
-                    string command = BitConverter.ToString(responseBytes); 
+                    NetworkStream stream = gprsOne.tcpClient.GetStream();
+                    string response = message;
+                    byte[] responseBytes = Encoding.ASCII.GetBytes(response);
                     await stream.WriteAsync(responseBytes, 0, responseBytes.Length);
-                        await AddMessageToQueue($"Отправлено сообщение: Отправлена команда MB4  для {deviceId} ID {address} регистр 2 байта<br> hex command: {command}");
-                    }
-                    catch (Exception ex)
-                    {
-                        await AddMessageToQueue($"Sending error: {ex.Message}");
-                    }
+                    await AddMessageToQueue($"Отправлено сообщение: {response}");
+                }
+                catch (Exception ex)
+                {
+                    await AddMessageToQueue($"Sending error: {ex.Message}");
+                }
+            }
+
+            public async Task SendMB3CommandToDevice(int deviceId, int address, int quantity)
+            {
+                if (gprsOne.tcpClient == null || !gprsOne.tcpClient.Connected)
+                {
+                    await AddMessageToQueue("No client. Pleasr, await client");
+                    return;
                 }
 
-
-                private async Task HandleClientAsync(TcpClient client)
+                try
                 {
-                    try
+                    NetworkStream stream = gprsOne.tcpClient.GetStream();
+                    byte[] responseBytes = GenerateReadHoldingRegistersCommand(deviceId, address, quantity);
+                    string command = BitConverter.ToString(responseBytes);
+                    await stream.WriteAsync(responseBytes, 0, responseBytes.Length);
+                    await AddMessageToQueue($"Отправлено сообщение: Отправлена команда MB4  для {deviceId} ID {address} регистр 2 байта<br> hex command: {command}");
+                }
+                catch (Exception ex)
+                {
+                    await AddMessageToQueue($"Sending error: {ex.Message}");
+                }
+            }
+
+            private async Task HandleClientAsync(TcpClient client)
+            {
+                try
+                {
+                    using (NetworkStream stream = client.GetStream())
                     {
-                        using (NetworkStream stream = client.GetStream())
+                        byte[] buffer = new byte[1024];
+                        int bytesRead;
+
+                        // Читаем данные от клиента
+                        while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                         {
-                            byte[] buffer = new byte[1024];
-                            int bytesRead;
+                            string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
 
-                            // Читаем данные от клиента
-                            while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-                            {
-                                string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                            string decodedMbCommand = DecodeModbusMessage(buffer);
 
-                                string decodedMbCommand = DecodeModbusMessage(buffer);
-                            
-                                string hexedNessage = BitConverter.ToString(buffer, 0, bytesRead);
+                            string hexedNessage = BitConverter.ToString(buffer, 0, bytesRead);
 
-                                await AddMessageToQueue($"Получено сообщение: <br> ASCII: {message}<br>MB: {decodedMbCommand} <br>hex:{hexedNessage}");
-
-                                string response = "Message accepted.";
-                                byte[] responseBytes = Encoding.ASCII.GetBytes(response);
-                                await stream.WriteAsync(responseBytes, 0, responseBytes.Length);
-                                await AddMessageToQueue($"Отправлено сообщение: {response}");
-                            }
+                            await AddMessageToQueue($"Получено сообщение: <br> ASCII: {message}<br>MB: {decodedMbCommand} <br>hex:{hexedNessage}");
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        await AddMessageToQueue($"Client error: {ex.Message}");
-                    }
-                    
                 }
-
-
+                catch (Exception ex)
+                {
+                    await AddMessageToQueue($"Client error: {ex.Message}");
+                }
+            }
 
             private async Task AddMessageToQueue(string message)
-                {
-                    _messageQueue.Enqueue(message);
-                    _semaphore.Release();
-                }
+            {
+                _messageQueue.Add(message);
+                Console.WriteLine(message);
+            }
 
-                private async Task ProcessQueueAsync()
+            private async Task ProcessQueueAsync()
+            {
+                try
                 {
                     while (!_cancellationTokenSource.Token.IsCancellationRequested)
                     {
-                        await _semaphore.WaitAsync(_cancellationTokenSource.Token);
+                        string message = _messageQueue.Take(_cancellationTokenSource.Token);
 
-                        if (_messageQueue.TryDequeue(out string message))
+                        Console.WriteLine(message);
+
+                        if (messageLog == "Loading...")
                         {
-                            Console.WriteLine(message);
-
-                            if(messageLog == "Loading...")
-                            {
-                                messageLog =  "<br>" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ") + message + "<br>";
-                            }
-                            messageLog =  "<br>" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ") + message + "<br>" + messageLog;
+                            messageLog = "<br>" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ") + message + "<br>";
                         }
+                        messageLog = "<br>" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ") + message + "<br>" + messageLog;
                     }
                 }
-
-
-                public static string DecodeModbusMessage(byte[] buffer)
+                catch (OperationCanceledException)
                 {
-                    if (buffer.Length < 2)
-                    {
-                        return "Недостаточная длина команды";
-                    }
+                    // Обработка отмены задачи
+                    Console.WriteLine($"Сообщение отменено");
+                }
+                catch (Exception ex)
+                {
+                    // Обработка других исключений
+                    Console.WriteLine($"Error in ProcessQueueAsync: {ex.Message}");
+                }
+            }
 
-                    byte modbusId = buffer[0];
-                    byte functionCode = buffer[1];
-                    int bytesRead = buffer.Length;
+            public static string DecodeModbusMessage(byte[] buffer)
+            {
+                if (buffer.Length < 2)
+                {
+                    return "Недостаточная длина команды";
+                }
 
-                    string messageType = "";
-                    string registers = "";
-                    ushort startAddress;
-                    ushort quantity;
-                    byte byteCount;
+                byte modbusId = buffer[0];
+                byte functionCode = buffer[1];
+                int bytesRead = buffer.Length;
 
+                string messageType = "";
+                string registers = "";
+                ushort startAddress;
+                ushort quantity;
+                byte byteCount;
 
-                    switch (functionCode)
-                    {
-                        case 3: // Read Holding Registers
-                            if (bytesRead < 5)
+                switch (functionCode)
+                {
+                    case 3: // Read Holding Registers
+                        if (bytesRead < 5)
+                        {
+                            return "Недостаточная длина команды для чтения регистров";
+                        }
+
+                        // Определение типа сообщения
+                        if (bytesRead == 8)
+                        {
+                            messageType = "Запрос";
+                            startAddress = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToUInt16(buffer, 2));
+                            quantity = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToUInt16(buffer, 4));
+                            registers = $"{startAddress}-{startAddress + quantity - 1}";
+                        }
+                        else
+                        {
+                            messageType = "Ответ";
+                            byteCount = buffer[2]; // Количество байт данных
+                            if (bytesRead < 3 + byteCount)
                             {
                                 return "Недостаточная длина команды для чтения регистров";
                             }
 
-                            // Определение типа сообщения
-                            if (bytesRead == 8)
+                            // Извлечение данных регистров для функции 3
+                            StringBuilder data = new StringBuilder();
+                            for (int i = 0; i < byteCount / 2; i++)
                             {
-                                messageType = "Запрос";
-                                startAddress = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToUInt16(buffer, 2));
-                                quantity = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToUInt16(buffer, 4));
-                                registers = $"{startAddress}-{startAddress + quantity - 1}";
-                            }
-                            else
-                            {
-                                messageType = "Ответ";
-                                byteCount = buffer[2]; // Количество байт данных
-                                if (bytesRead < 3 + byteCount)
-                                {
-                                    return "Недостаточная длина команды для чтения регистров";
-                                }
-
-                                // Извлечение данных регистров для функции 3
-                                StringBuilder data = new StringBuilder();
-                                for (int i = 0; i < byteCount / 2; i++)
-                                {
-                                    ushort value = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(buffer, 3 + i * 2));
+                                ushort value = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(buffer, 3 + i * 2));
                                 data.Append($"{value} ");
-                                }
-                                registers = $"Данные: {data.ToString().Trim()}";
                             }
-                            break;
+                            registers = $"Данные: {data.ToString().Trim()}";
+                        }
+                        break;
 
-                        case 10: // Write Multiple Holding Registers
-                            if (bytesRead < 7)
+                    case 10: // Write Multiple Holding Registers
+                        if (bytesRead < 7)
+                        {
+                            return "Недостаточная длина команды для записи нескольких регистров";
+                        }
+                        startAddress = BitConverter.ToUInt16(buffer, 2);
+                        quantity = BitConverter.ToUInt16(buffer, 4);
+                        byteCount = buffer[6];
+                        registers = $"{startAddress}-{startAddress + quantity - 1}";
+
+                        // Извлечение данных регистров для функции 10
+                        if (bytesRead >= 7 + byteCount)
+                        {
+                            StringBuilder data = new StringBuilder();
+                            for (int i = 0; i < byteCount / 2; i++)
                             {
-                                return "Недостаточная длина команды для записи нескольких регистров";
+                                ushort value = BitConverter.ToUInt16(buffer, 7 + i * 2);
+                                data.Append($"{value} ");
                             }
-                            startAddress = BitConverter.ToUInt16(buffer, 2);
-                            quantity = BitConverter.ToUInt16(buffer, 4);
-                            byteCount = buffer[6];
-                            registers = $"{startAddress}-{startAddress + quantity - 1}";
+                            registers += $" (Данные: {data.ToString().Trim()})";
+                        }
+                        break;
 
-                            // Извлечение данных регистров для функции 10
-                            if (bytesRead >= 7 + byteCount)
-                            {
-                                StringBuilder data = new StringBuilder();
-                                for (int i = 0; i < byteCount / 2; i++)
-                                {
-                                    ushort value = BitConverter.ToUInt16(buffer, 7 + i * 2);
-                                    data.Append($"{value} ");
-                                }
-                                registers += $" (Данные: {data.ToString().Trim()})";
-                            }
-                            break;
-
-                        default:
-                            return "Неподдерживаемая функция Modbus";
-                    }
-
-                    return $"{messageType}: команда {functionCode} для устройства ID {modbusId} {registers}";
+                    default:
+                        return "Неподдерживаемая функция Modbus";
                 }
+
+                return $"{messageType}: команда {functionCode} для устройства ID {modbusId} {registers}";
+            }
         }
 
 
@@ -413,7 +431,7 @@ namespace Read_Write_GPRS_Server.Controllers
             public async Task Stop()
             {
                 Console.WriteLine("TryingStopTable");
-                _cancellationTokenSource.Cancel();
+                
 
                 if (server != null)
                 {
@@ -429,6 +447,7 @@ namespace Read_Write_GPRS_Server.Controllers
                 serverRuning = false;
                 connectionStatus = "Disconnected";
                 Console.WriteLine("Сервер и клиентские соединения закрыты.");
+                _cancellationTokenSource.Cancel();
             }
 
             public static string DecodeModbusMessageValueMb3(byte[] buffer)
