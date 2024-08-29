@@ -15,148 +15,26 @@ var app = builder.Build();
 string ipAddress = "90.188.113.113";
 int port = 42360;
 TcpConnectionController.TcpServer tcpServer = new TcpConnectionController.TcpServer();
+
 TcpConnectionController.TcpDeviceTable tcpDeviceTable = new TcpConnectionController.TcpDeviceTable();
 
-app.MapGet("/", async () =>
+
+app.MapGet("/", async (HttpContext context) =>
 {
-    return Results.Content(@"
-<!DOCTYPE html>
-<html>
-<head>
-    <meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />
-    <title>GPRS</title>
-    <!-- Materialize CSS -->
-    <link href=""https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"" rel=""stylesheet"">
-    <!-- Materialize JavaScript -->
-    <script src=""https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js""></script>
-    <script>
-        async function Server() {
-            window.location.href = '/TCP-Server';
-        }
-        async function Table() {
-            window.location.href = '/Table';
-        }
-    </script>
-</head>
-<body>
-    <div class=""container"">
-        <button class=""btn waves-effect waves-light"" onclick=""Server()"">Server</button>
-        <button class=""btn waves-effect waves-light"" onclick=""Table()"">Table</button>
-    </div>
-</body>
-</html>
-", "text/html");
+    var filePath = Path.Combine(context.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath, "html", "index.html");
+    var htmlContent = await System.IO.File.ReadAllTextAsync(filePath);
+    context.Response.ContentType = "text/html";
+    await context.Response.WriteAsync(htmlContent);
 });
 
-app.MapGet("/TCP-Server", () =>
+
+
+app.MapGet("/TCP-Server", async (HttpContext context) =>
 {
-    return Results.Content(@"
-<!DOCTYPE html>
-<html>
-<head>
-    <meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />
-    <title>GPRS-Server</title>
-    <!-- Materialize CSS -->
-    <link href=""https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"" rel=""stylesheet"">
-    <!-- Materialize JavaScript -->
-    <script src=""https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js""></script>
-    <script>
-        async function Table() {
-            await fetch('/api/TCP/stop');
-            window.location.href = '/Table';
-        }
-
-        async function StartConnection() {
-            await fetch('/api/TCP/start');
-        }
-
-        async function StopConnection() {
-            await fetch('/api/TCP/stop');
-        }
-
-        async function updateData() {
-            const response = await fetch('/api/TCP/read');
-            const data = await response.text();
-            const newData = `<div>${data}</div>`;
-            document.getElementById('data').innerHTML = newData;
-        }
-
-        async function SendToDevice() {
-            const message = document.getElementById('messageInput').value;
-            const response = await fetch('/api/TCP/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'text/plain'
-                },
-                body: message
-            });
-
-            if (response.ok) {
-                alert('Message sent successfully!');
-            } else {
-                const errorText = await response.text();
-                alert('Failed to send message: ' + errorText);
-            }
-        }
-
-        async function SendMb3ReadToDevice() {
-            const modbusReadID = document.getElementById('modbusReadID').value;
-            const modbusReadColumnNumber = document.getElementById('modbusReadColumnNumber').value;
-            const modbusInput = {
-                modbusReadID: modbusReadID,
-                modbusReadColumnNumber: modbusReadColumnNumber
-            };
-
-            console.log(modbusInput); // ƒобавьте это дл€ отладки
-
-            const response = await fetch('/api/TCP/sendMb3', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(modbusInput)
-            });
-
-            if (response.ok) {
-                alert('Modbus command sent successfully!');
-            } else {
-                const errorText = await response.text();
-                alert('Failed to send Modbus command: ' + errorText);
-            }
-        }
-
-        setInterval(updateData, 200); // ќбновление каждые 200 миллисекунд
-        updateData(); // ѕервоначальное обновление
-    </script>
-</head>
-<body>
-    <div class=""container"">
-        <button class=""btn waves-effect waves-light"" onclick=""Table()"">Table</button>
-        <button class=""btn waves-effect waves-light"" onclick=""StartConnection()"">Start</button>
-        <button class=""btn waves-effect waves-light"" onclick=""StopConnection()"">Stop</button>
-        <h1 class=""center-align"">GPRS-Server:</h1>
-        <div id='sendZone' class=""row"">
-            <div class=""input-field col s12"">
-                <input type=""text"" id=""messageInput"" placeholder=""Enter your message"">
-                <button class=""btn waves-effect waves-light"" onclick=""SendToDevice()"">Send Message</button>
-            </div>
-        </div>
-        <div id='ModbusReadComand' class=""row"">
-            <div class=""input-field col s6"">
-                <input type=""number"" id=""modbusReadID"" placeholder=""ModbusID"">
-            </div>
-            <div class=""input-field col s6"">
-                <input type=""number"" id=""modbusReadColumnNumber"" placeholder=""ColumnNumber"">
-            </div>
-            <div class=""col s12"">
-                <button class=""btn waves-effect waves-light"" onclick=""SendMb3ReadToDevice()"">Send MB Read 3 Command</button>
-            </div>
-        </div>
-        <div id='data' class=""row""></div>
-    </div>
-</body>
-</html>
-", "text/html");
+    var filePath = Path.Combine(context.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath, "html", "BusServer.html");
+    var htmlContent = await System.IO.File.ReadAllTextAsync(filePath);
+    context.Response.ContentType = "text/html";
+    await context.Response.WriteAsync(htmlContent);
 });
 
 app.MapGet("/api/TCP/start", async () =>
@@ -214,76 +92,12 @@ app.MapGet("/api/TCP/stop", async () =>
     await tcpServer.Stop();
 });
 
-app.MapGet("/Table", async () =>
+app.MapGet("/Table", async (HttpContext context) =>
 {
-    return Results.Content(@"
-<!DOCTYPE html>
-<html>
-<head>
-    <meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />
-    <title>Table</title>
-    <!-- Materialize CSS -->
-    <link href=""https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"" rel=""stylesheet"">
-    <!-- Materialize JavaScript -->
-    <script src=""https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js""></script>
-    <script>
-        async function Server() {
-            StopConnection();
-            window.location.href = '/TCP-Server';
-        }
-        async function StartConnection() {
-            await fetch('/api/Table/start');
-        }
-        async function StopConnection() {
-            await fetch('/api/Table/stop');
-        }
-
-        async function updateData() {
-            const response = await fetch(`/api/Table/GetConnectionStatus`);
-            const connectionStatus = await response.text();
-                document.getElementById(`conectionStatus`).innerHTML = connectionStatus;
-
-   
-                for (let i = 1; i <= 10; i++) {
-                    const response = await fetch(`/api/Table/UpdateTable/${i}`);
-                    const data = await response.text();
-                    document.getElementById(`dataTd${i}`).innerHTML = data;
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
-            
-        }
-
-        setInterval(updateData, 100); // ќбновление каждые 1000 миллисекунд
-        updateData(); // ѕервоначальное обновление
-    </script>
-</head>
-<body>
-    <div class=""container"">
-        <button class=""btn waves-effect waves-light"" onclick=""Server()"">Server</button>
-        <button class=""btn waves-effect waves-light"" onclick=""StartConnection()"">Start</button>
-        <button class=""btn waves-effect waves-light"" onclick=""StopConnection()"">Stop</button>
-        <div>
-            <h1 class=""center-align"">Device-Table:</h1>
-            <h4 id=""conectionStatus""><h4>
-             <input type=""number"" id=""modbusReadID"" placeholder=""ModbusID"">
-        </div>
-        <table>
-            <tr><th>адресс</th><th>значение в uint16(dec)</th></tr>
-            <tr><td>1</td><td id=""dataTd1"" >данные</td></tr>
-            <tr><td>2</td><td id=""dataTd2"">данные</td></tr>
-            <tr><td>3</td><td id=""dataTd3"">данные</td></tr>
-            <tr><td>4</td><td id=""dataTd4"">данные</td></tr>
-            <tr><td>5</td><td id=""dataTd5"">данные</td></tr>
-            <tr><td>6</td><td id=""dataTd6"">данные</td></tr>
-            <tr><td>7</td><td id=""dataTd7"">данные</td></tr>
-            <tr><td>8</td><td id=""dataTd8"">данные</td></tr>
-            <tr><td>9</td><td id=""dataTd9"">данные</td></tr>
-            <tr><td>10</td><td id=""dataTd10"">данные</td></tr>
-        </table>
-    </div>
-</body>
-</html>
-", "text/html");
+    var filePath = Path.Combine(context.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath, "html", "Table.html");
+    var htmlContent = await System.IO.File.ReadAllTextAsync(filePath);
+    context.Response.ContentType = "text/html";
+    await context.Response.WriteAsync(htmlContent);
 });
 
 app.MapGet("/api/Table/start", async () =>
