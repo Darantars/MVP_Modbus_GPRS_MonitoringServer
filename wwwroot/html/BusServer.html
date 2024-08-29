@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>GPRS-Server</title>
+    <!-- Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <!-- Materialize JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        async function Table() {
+            await fetch('/api/TCP/stop');
+            window.location.href = '/Table';
+        }
+
+        async function StartConnection() {
+            await fetch('/api/TCP/start');
+        }
+
+        async function StopConnection() {
+            await fetch('/api/TCP/stop');
+        }
+
+        async function updateData() {
+            const response = await fetch('/api/TCP/read');
+            const data = await response.text();
+            const newData = `<div>${data}</div>`;
+            document.getElementById('data').innerHTML = newData;
+        }
+
+        async function SendToDevice() {
+            const message = document.getElementById('messageInput').value;
+            const response = await fetch('/api/TCP/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain'
+                },
+                body: message
+            });
+
+            if (response.ok) {
+                alert('Message sent successfully!');
+            } else {
+                const errorText = await response.text();
+                alert('Failed to send message: ' + errorText);
+            }
+        }
+
+        async function SendMb3ReadToDevice() {
+            const modbusReadID = document.getElementById('modbusReadID').value;
+            const modbusReadColumnNumber = document.getElementById('modbusReadColumnNumber').value;
+            const modbusInput = {
+                modbusReadID: modbusReadID,
+                modbusReadColumnNumber: modbusReadColumnNumber
+            };
+
+            console.log(modbusInput); // Добавьте это для отладки
+
+            const response = await fetch('/api/TCP/sendMb3', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(modbusInput)
+            });
+
+            if (response.ok) {
+                alert('Modbus command sent successfully!');
+            } else {
+                const errorText = await response.text();
+                alert('Failed to send Modbus command: ' + errorText);
+            }
+        }
+
+        setInterval(updateData, 200); // Обновление каждые 200 миллисекунд
+        updateData(); // Первоначальное обновление
+    </script>
+</head>
+<body>
+    <div class="container">
+        <button class="btn waves-effect waves-light" onclick="Table()">Table</button>
+        <button class="btn waves-effect waves-light" onclick="StartConnection()">Start</button>
+        <button class="btn waves-effect waves-light" onclick="StopConnection()">Stop</button>
+        <h1 class="center-align">GPRS-Server:</h1>
+        <div id="sendZone" class="row">
+            <div class="input-field col s12">
+                <input type="text" id="messageInput" placeholder="Enter your message">
+                <button class="btn waves-effect waves-light" onclick="SendToDevice()">Send Message</button>
+            </div>
+        </div>
+        <div id="ModbusReadComand" class="row">
+            <div class="input-field col s6">
+                <input type="number" id="modbusReadID" placeholder="ModbusID">
+            </div>
+            <div class="input-field col s6">
+                <input type="number" id="modbusReadColumnNumber" placeholder="ColumnNumber">
+            </div>
+            <div class="col s12">
+                <button class="btn waves-effect waves-light" onclick="SendMb3ReadToDevice()">Send MB Read 3 Command</button>
+            </div>
+        </div>
+        <div id="data" class="row"></div>
+    </div>
+</body>
+</html>

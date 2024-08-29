@@ -1,0 +1,25 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>GPRS</title>
+    <!-- Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <!-- Materialize JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        async function Server() {
+            window.location.href = '/TCP-Server';
+        }
+        async function Table() {
+            window.location.href = '/Table';
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <button class="btn waves-effect waves-light" onclick="Server()">Server</button>
+        <button class="btn waves-effect waves-light" onclick="Table()">Table</button>
+    </div>
+</body>
+</html>

@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Table</title>
+    <!-- Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <!-- Materialize JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        async function Server() {
+            StopConnection();
+            window.location.href = '/TCP-Server';
+        }
+        async function StartConnection() {
+            await fetch('/api/Table/start');
+        }
+        async function StopConnection() {
+            await fetch('/api/Table/stop');
+        }
+
+        async function updateData() {
+            const response = await fetch(`/api/Table/GetConnectionStatus`);
+            const connectionStatus = await response.text();
+            document.getElementById(`conectionStatus`).innerHTML = connectionStatus;
+
+            for (let i = 1; i <= 10; i++) {
+                const response = await fetch(`/api/Table/UpdateTable/${i}`);
+                const data = await response.text();
+                document.getElementById(`dataTd${i}`).innerHTML = data;
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+
+        setInterval(updateData, 100); // Обновление каждые 100 миллисекунд
+        updateData(); // Первоначальное обновление
+    </script>
+</head>
+<body>
+    <div class="container">
+        <button class="btn waves-effect waves-light" onclick="Server()">Server</button>
+        <button class="btn waves-effect waves-light" onclick="StartConnection()">Start</button>
+        <button class="btn waves-effect waves-light" onclick="StopConnection()">Stop</button>
+        <div>
+            <h1 class="center-align">Device-Table:</h1>
+            <h4 id="conectionStatus"></h4>
+            <input type="number" id="modbusReadID" placeholder="ModbusID">
+        </div>
+        <table>
+            <tr><th>адресс</th><th>значение в uint16(dec)</th></tr>
+            <tr><td>1</td><td id="dataTd1">данные</td></tr>
+            <tr><td>2</td><td id="dataTd2">данные</td></tr>
+            <tr><td>3</td><td id="dataTd3">данные</td></tr>
+            <tr><td>4</td><td id="dataTd4">данные</td></tr>
+            <tr><td>5</td><td id="dataTd5">данные</td></tr>
+            <tr><td>6</td><td id="dataTd6">данные</td></tr>
+            <tr><td>7</td><td id="dataTd7">данные</td></tr>
+            <tr><td>8</td><td id="dataTd8">данные</td></tr>
+            <tr><td>9</td><td id="dataTd9">данные</td></tr>
+            <tr><td>10</td><td id="dataTd10">данные</td></tr>
+        </table>
+    </div>
+</body>
+</html>
