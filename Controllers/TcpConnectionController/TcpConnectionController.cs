@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
@@ -28,20 +28,24 @@ namespace Read_Write_GPRS_Server.Controllers
 
             public string messageLog { get; set; }
 
+            private int messageCounter { get; set; }
+
+            public int messageBufferSize { get; set; }
+
             private TcpDevice.UsrGPRS232_730 gprsOne;
 
             private TcpListener server { get; set; }
 
             private bool isRunning = false;
 
-            public TcpServer()
+            public TcpServer(int messageBufferSize)
             {
+                this.messageBufferSize = messageBufferSize;
                 Task.Run(ProcessQueueAsync);
             }
 
             public async Task Start(string ipAddress, int port)
             {
-
                 _cancellationTokenSource = new CancellationTokenSource();
                 if (isRunning)
                 {
@@ -177,6 +181,7 @@ namespace Read_Write_GPRS_Server.Controllers
             {
                 _messageQueue.Add(message);
                 Console.WriteLine(message);
+                messageCounter++;
             }
 
             private async Task ProcessQueueAsync()
@@ -194,6 +199,14 @@ namespace Read_Write_GPRS_Server.Controllers
                             messageLog = "<br>" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ") + message + "<br>";
                         }
                         messageLog = "<br>" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ") + message + "<br>" + messageLog;
+
+                        // Проверка счетчика сообщений
+                        if (messageCounter >= messageBufferSize)
+                        {
+                            await SaveMessageLogToFile();
+                            messageLog = $"Лог предыдущих сообщений сохранен в файл messageLog_{DateTime.Now:yyyyMMddHHmm}.txt";
+                            messageCounter = 0;
+                        }
                     }
                 }
                 catch (OperationCanceledException)
@@ -205,6 +218,20 @@ namespace Read_Write_GPRS_Server.Controllers
                 {
                     // Обработка других исключений
                     Console.WriteLine($"Error in ProcessQueueAsync: {ex.Message}");
+                }
+            }
+
+            private async Task SaveMessageLogToFile()
+            {
+                try
+                {
+                    string fileName = $"messageLog_{DateTime.Now:yyyyMMddHHmm}.txt";
+                    await System.IO.File.WriteAllTextAsync(fileName, messageLog);
+                    Console.WriteLine($"Сообщения сохранены в файл: {fileName}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка при сохранении сообщений в файл: {ex.Message}");
                 }
             }
 
@@ -495,7 +522,7 @@ namespace Read_Write_GPRS_Server.Controllers
                             ushort value = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(buffer, 3 + i * 2));
                             data.Append($"{value} ");
                         }
-                        registers = $"Данные: {data.ToString().Trim()}";
+                        registers = $"{data.ToString().Trim()}";
                     }
                     return registers;
                 }
