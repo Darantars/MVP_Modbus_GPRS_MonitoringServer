@@ -47,7 +47,7 @@ app.MapGet("/api/TCP/read", async () =>
     if (tcpServer.messageLog != null)
         return Results.Content(tcpServer.messageLog, "text/plain");
     else
-        return Results.Content("Loading...", "text/plain");
+        return Results.Content("Await press start to run server", "text/plain");
 });
 
 app.MapPost("/api/TCP/send", async (HttpContext context) =>
