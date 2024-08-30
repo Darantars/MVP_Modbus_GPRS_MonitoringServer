@@ -14,7 +14,7 @@ var app = builder.Build();
 // ”казываем IP-адрес и порт дл€ прослушивани€
 string ipAddress = "90.188.113.113";
 int port = 42360;
-TcpConnectionController.TcpServer tcpServer = new TcpConnectionController.TcpServer();
+TcpConnectionController.TcpServer tcpServer = new TcpConnectionController.TcpServer(100);
 
 TcpConnectionController.TcpDeviceTable tcpDeviceTable = new TcpConnectionController.TcpDeviceTable();
 
@@ -47,7 +47,7 @@ app.MapGet("/api/TCP/read", async () =>
     if (tcpServer.messageLog != null)
         return Results.Content(tcpServer.messageLog, "text/plain");
     else
-        return Results.Content("Loading...", "text/plain");
+        return Results.Content("Await press start to run server", "text/plain");
 });
 
 app.MapPost("/api/TCP/send", async (HttpContext context) =>
