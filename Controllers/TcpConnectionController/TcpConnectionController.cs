@@ -167,7 +167,7 @@ namespace Read_Write_GPRS_Server.Controllers
 
                             string hexedNessage = BitConverter.ToString(buffer, 0, bytesRead);
 
-                            await AddMessageToQueue($"Получено сообщение: <br> ASCII: {message}<br>MB: {decodedMbCommand} <br>hex:{hexedNessage}");
+                            await AddMessageToQueue($"<br> Получено сообщение: <br> ASCII: {message}<br> MB: {decodedMbCommand} <br> hex:{hexedNessage} ");
                         }
                     }
                 }
@@ -191,6 +191,8 @@ namespace Read_Write_GPRS_Server.Controllers
                     while (!_cancellationTokenSource.Token.IsCancellationRequested)
                     {
                         string message = _messageQueue.Take(_cancellationTokenSource.Token);
+
+                        message = message.Replace("<br>", "\n");
 
                         Console.WriteLine(message);
 
