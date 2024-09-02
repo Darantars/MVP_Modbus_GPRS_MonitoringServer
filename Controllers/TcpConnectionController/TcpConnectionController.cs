@@ -161,8 +161,9 @@ namespace Read_Write_GPRS_Server.Controllers
                         // Читаем данные от клиента
                         while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                         {
-
-                            List<byte[]> responseList = Protocols.Modbuss.ModBussRTU.CutToModbusRtuMessageListFastMb(buffer);
+                            byte[] newBuffer = new byte[bytesRead];
+                            Array.Copy(buffer, newBuffer, bytesRead);
+                            List<byte[]> responseList = await Task.Run(() => Protocols.Modbuss.ModBussRTU.CutToModbusRtuMessageListFastMb(newBuffer));
 
                                 string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
 
