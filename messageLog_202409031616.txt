@@ -1,0 +1,701 @@
+
+2024-09-03 16:16:23 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:16:21 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:16:19 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:16:16 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:16:15 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:16:13 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:16:10 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:16:09 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:16:07 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:16:04 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:16:03 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:16:01 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:59 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:57 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:55 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:53 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:52 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:50 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:46 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:45 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:43 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:40 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:39 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:36 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:35 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:33 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:31 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:28 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:27 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:25 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:22 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:21 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:18 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:17 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:15 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:12 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:10 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:08 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:06 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:05 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:03 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:15:00 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:59 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:57 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:54 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:52 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:51 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:48 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:46 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:45 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:42 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:40 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:38 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:36 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:34 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:32 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:30 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:28 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:27 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:25 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:22 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:20 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:18 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:16 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:14 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:12 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:10 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:08 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:06 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:04 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:02 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:01 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:14:00 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:59 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:57 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:54 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:53 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:49 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:48 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:43 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:43 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:40 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:38 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:37 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:35 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:33 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:33 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:33 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:28 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:25 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:22 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:20 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:18 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:16 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:14 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:12 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:10 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:08 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:06 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+
+2024-09-03 16:13:03 
+ Получено сообщение: 
+ ASCII: GPRS Online 
+ MB:  
+ hex: 47-50-52-53-20-4F-6E-6C-69-6E-65 
+ hex-commands(probably): 
+Лог предыдущих сообщений сохранен в файл messageLog_202409031613.txt
