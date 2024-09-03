@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.TagHelpers.Cache;
+using Microsoft.AspNetCore.Http;
+using Read_Write_GPRS_Server.TcpDevice;
+using Microsoft.JSInterop;
 
 namespace Read_Write_GPRS_Server.Controllers
 {
@@ -17,7 +20,6 @@ namespace Read_Write_GPRS_Server.Controllers
         {
             public string ModbusReadID { get; set; }
             public string ModbusReadColumnNumber { get; set; }
-
         }
 
 
@@ -63,16 +65,17 @@ namespace Read_Write_GPRS_Server.Controllers
                     await AddMessageToQueue($"TCP-сервер запущен на {ipAddress}:{port}");
 
                     gprsOne = new TcpDevice.UsrGPRS232_730("GPRS Online", 1); //потом заменить на задание со View
+                    gprsOne.tcpConnectionStatus = "Connecting...";
                     isRunning = true;
                     await AddMessageToQueue("Сервер развернут. Ожидание подключения устройства...");
-
+                    
                     while (true)
                     {
                         gprsOne.tcpClient = await server.AcceptTcpClientAsync();
                         await AddMessageToQueue("Подключено новое соединение.");
-
+                        _ = Task.Run(() => StartCheckConnectionToDeviceLoop(gprsOne));
                         // Обрабатываем клиента в отдельной задаче
-                        _ = Task.Run(() => HandleClientAsync(gprsOne.tcpClient));
+                        _ = Task.Run(() => HandleClientAsync(gprsOne));
                     }
                 }
                 catch (Exception ex)
@@ -103,6 +106,70 @@ namespace Read_Write_GPRS_Server.Controllers
 
                 isRunning = false;
                 await AddMessageToQueue("Сервер и клиентские соединения закрыты.");
+            }
+
+            private async Task StartCheckConnectionToDeviceLoop(UsrGPRS232_730 device)              ////T0 DO: Таска была открыта, таску нужно закрыть
+            {
+                double delayFiveHeartBeatReal = device.heartbeatMessageRateSec * 2;
+                int loopCounter = 1;
+                int[] heartBeatAtLoop = new int[4];
+                
+
+                while (isRunning )
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(2));
+                    heartBeatAtLoop[loopCounter - 1] = device.tcp5HeartBeatTimingMessageCounter;
+                    int missedPockets = 0;
+                    for (int i = 0; i < 4; i++)
+                    {
+                        if (heartBeatAtLoop[i] < i) 
+                            missedPockets++;
+                    }
+                        switch (missedPockets)
+                        {
+                            case 5:
+                                if (device.tcpClient != null)
+                                    device.tcpConnectionStatus = "Bad connection 0% package recived";
+                                break;
+                            case 4:
+                                device.tcpConnectionStatus = "Bad connection 20% package recived";
+                                break;
+                            case 3:
+                                device.tcpConnectionStatus = "Bad connection 40% package recived";
+                                break;
+                            case 2:
+                                device.tcpConnectionStatus = "Connected 60% package recived";
+                                break;
+                            case 1:
+                                device.tcpConnectionStatus = "Connected 80% package recived";
+                                break;
+                            case 0:
+                                device.tcpConnectionStatus = "Fast connection 100% package recived";
+                                break;
+                            default:
+                                device.tcpConnectionStatus = "Connection supergood!";
+                                break;
+                    }
+
+                    if (loopCounter == 5)
+                    {
+                        loopCounter = 1;
+                        device.tcp5HeartBeatTimingMessageCounter = 0;
+                    }
+                    else
+                        loopCounter = loopCounter + 1;
+                    
+                }
+            }
+
+            public string GetDeviceConnectionStatus() 
+            {
+                if (!isRunning)
+                    return "Server is not running";
+                if (gprsOne != null)
+                    return gprsOne.tcpConnectionStatus;
+                else
+                    return "Not started yet";
             }
 
             public async Task SendMessgeToDeviceASCII(string message)
@@ -149,8 +216,9 @@ namespace Read_Write_GPRS_Server.Controllers
                 }
             }
 
-            private async Task HandleClientAsync(TcpClient client)
+            private async Task HandleClientAsync(UsrGPRS232_730 device)
             {
+                TcpClient client = device.tcpClient;
                 try
                 {
                     using (NetworkStream stream = client.GetStream())
@@ -161,6 +229,7 @@ namespace Read_Write_GPRS_Server.Controllers
                         // Читаем данные от клиента
                         while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                         {
+                            device.tcp5HeartBeatTimingMessageCounter = device.tcp5HeartBeatTimingMessageCounter + 1;
                             byte[] newBuffer = new byte[bytesRead];
                             Array.Copy(buffer, newBuffer, bytesRead);
                             List<byte[]> responseList = await Task.Run(() => Protocols.Modbuss.ModBussRTU.CutToModbusRtuMessageListFastMb(newBuffer));

@@ -26,6 +26,11 @@
             const data = await response.text();
             const newData = `<div>${data}</div>`;
             document.getElementById('data').innerHTML = newData;
+
+            const response1 = await fetch('/api/TCP/updateConnectionStatus');
+            const connection = await response1.text();
+            const newStatus = `${connection}`;
+            document.getElementById('connectionStatus').innerHTML = newStatus;
         }
 
         async function SendToDevice() {
@@ -77,15 +82,25 @@
     </script>
 </head>
 <body>
+    <header>
+        <nav class="waves-effect waves-light teal">
+            <div class="nav-wrapper">
+                <ul id="nav" style=" margin-inline:15px ;" class="left hide-on-med-and-down">
+                    <li><a  onclick="Table()">Table</a></li>
+                    <li><a  onclick="StartConnection()">Start</a></li>
+                    <li><a  onclick="StopConnection()">Stop</a></li>
+                    <li><a  style="font-weight: 600; padding-left: 20px; padding-right: 20px;" ;" class="brand-logo">GPRS-Buss</a> </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
     <div class="container">
-        <button class="btn waves-effect waves-light" onclick="Table()">Table</button>
-        <button class="btn waves-effect waves-light" onclick="StartConnection()">Start</button>
-        <button class="btn waves-effect waves-light" onclick="StopConnection()">Stop</button>
-        <h1 class="center-align">GPRS-Buss:</h1>
+
+        <h5 id="connectionStatus">Offline</h5>
         <div id="sendZone" class="row">
             <div class="input-field col s12">
                 <input type="text" id="messageInput" placeholder="Enter your message">
-                <button class="btn waves-effect waves-light" onclick="SendToDevice()">Send Message</button>
+                <button class="btn waves-effect waves-light cian" onclick="SendToDevice()">Send Message</button>
             </div>
         </div>
         <div id="ModbusReadComand" class="row">
@@ -96,10 +111,13 @@
                 <input type="number" id="modbusReadColumnNumber" placeholder="ColumnNumber">
             </div>
             <div class="col s12">
-                <button class="btn waves-effect waves-light" onclick="SendMb3ReadToDevice()">Send MB Read 3 Command</button>
+                <button class="btn waves-effect waves-light cian" onclick="SendMb3ReadToDevice()">Send MB Read 3 Command</button>
             </div>
         </div>
-        <div id="data" class="row"></div>
+
+        <div class="row">
+            <p id="data">Await start</p>
+        </div>
     </div>
 </body>
 </html>

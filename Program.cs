@@ -57,6 +57,11 @@ app.MapPost("/api/TCP/send", async (HttpContext context) =>
     return Results.Ok();
 });
 
+app.MapGet("/api/TCP/updateConnectionStatus", async (HttpContext context) =>
+{
+        return Results.Content(tcpServer.GetDeviceConnectionStatus(), "text/plain");
+});
+
 app.MapPost("/api/TCP/sendMb3", async (HttpContext context) =>
 {
     var mbData = await new StreamReader(context.Request.Body).ReadToEndAsync();
@@ -91,6 +96,13 @@ app.MapGet("/api/TCP/stop", async () =>
 {
     await tcpServer.Stop();
 });
+
+
+
+
+
+
+
 
 app.MapGet("/Table", async (HttpContext context) =>
 {
