@@ -138,7 +138,7 @@ namespace Read_Write_GPRS_Server.Controllers
                 try
                 {
                     NetworkStream stream = gprsOne.tcpClient.GetStream();
-                    byte[] responseBytes = GenerateReadHoldingRegistersCommand(deviceId, address, quantity);
+                    byte[] responseBytes = Protocols.Modbuss.ModBussRTU.GenerateReadHoldingRegistersCommand(deviceId, address, quantity);
                     string command = BitConverter.ToString(responseBytes);
                     await stream.WriteAsync(responseBytes, 0, responseBytes.Length);
                     await AddMessageToQueue($"Отправлено сообщение: Отправлена команда MB4  для {deviceId} ID {address} регистр 2 байта<br> hex command: {command}");
@@ -161,13 +161,28 @@ namespace Read_Write_GPRS_Server.Controllers
                         // Читаем данные от клиента
                         while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                         {
-                            string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                            byte[] newBuffer = new byte[bytesRead];
+                            Array.Copy(buffer, newBuffer, bytesRead);
+                            List<byte[]> responseList = await Task.Run(() => Protocols.Modbuss.ModBussRTU.CutToModbusRtuMessageListFastMb(newBuffer));
 
-                            string decodedMbCommand = DecodeModbusMessage(buffer);
+                                string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
 
-                            string hexedNessage = BitConverter.ToString(buffer, 0, bytesRead);
+                                string decodedMbCommand = "";
 
-                            await AddMessageToQueue($"<br> Получено сообщение: <br> ASCII: {message}<br> MB: {decodedMbCommand} <br> hex:{hexedNessage} ");
+                                for (int i = 0; i < responseList.Count; i++)
+                                {
+                                    decodedMbCommand = decodedMbCommand + "<br>"+ Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i]);
+                                }
+
+                                string hexedNessage=  BitConverter.ToString(buffer, 0, bytesRead);
+
+                                string cuttedMessageMB = "";
+                                for (int i = 0; i < responseList.Count; i++)
+                                {
+                                    cuttedMessageMB = cuttedMessageMB + "<br>"+ BitConverter.ToString(responseList[i]);
+                                }
+
+                                await AddMessageToQueue($"<br> Получено сообщение: <br> ASCII: {message} <br> MB: {decodedMbCommand} <br> hex: {hexedNessage} <br> hex-commands(probably): {cuttedMessageMB}");
                         }
                     }
                 }
@@ -191,8 +206,6 @@ namespace Read_Write_GPRS_Server.Controllers
                     while (!_cancellationTokenSource.Token.IsCancellationRequested)
                     {
                         string message = _messageQueue.Take(_cancellationTokenSource.Token);
-
-                        message = message.Replace("<br>", "\n");
 
                         Console.WriteLine(message);
 
@@ -227,97 +240,15 @@ namespace Read_Write_GPRS_Server.Controllers
             {
                 try
                 {
-                    string fileName = $"messageLog_{DateTime.Now:yyyyMMddHHmm}.txt";
-                    await System.IO.File.WriteAllTextAsync(fileName, messageLog);
-                    Console.WriteLine($"Сообщения сохранены в файл: {fileName}");
+                    string _fileText = messageLog.Replace("<br>", "\n");
+                    string _fileName = $"messageLog_{DateTime.Now:yyyyMMddHHmm}.txt";
+                    await System.IO.File.WriteAllTextAsync(_fileName, _fileText);
+                    Console.WriteLine($"Сообщения сохранены в файл: {_fileName}");
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Ошибка при сохранении сообщений в файл: {ex.Message}");
                 }
-            }
-
-            public static string DecodeModbusMessage(byte[] buffer)
-            {
-                if (buffer.Length < 2)
-                {
-                    return "Недостаточная длина команды";
-                }
-
-                byte modbusId = buffer[0];
-                byte functionCode = buffer[1];
-                int bytesRead = buffer.Length;
-
-                string messageType = "";
-                string registers = "";
-                ushort startAddress;
-                ushort quantity;
-                byte byteCount;
-
-                switch (functionCode)
-                {
-                    case 3: // Read Holding Registers
-                        if (bytesRead < 5)
-                        {
-                            return "Недостаточная длина команды для чтения регистров";
-                        }
-
-                        // Определение типа сообщения
-                        if (bytesRead == 8)
-                        {
-                            messageType = "Запрос";
-                            startAddress = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToUInt16(buffer, 2));
-                            quantity = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToUInt16(buffer, 4));
-                            registers = $"{startAddress}-{startAddress + quantity - 1}";
-                        }
-                        else
-                        {
-                            messageType = "Ответ";
-                            byteCount = buffer[2]; // Количество байт данных
-                            if (bytesRead < 3 + byteCount)
-                            {
-                                return "Недостаточная длина команды для чтения регистров";
-                            }
-
-                            // Извлечение данных регистров для функции 3
-                            StringBuilder data = new StringBuilder();
-                            for (int i = 0; i < byteCount / 2; i++)
-                            {
-                                ushort value = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(buffer, 3 + i * 2));
-                                data.Append($"{value} ");
-                            }
-                            registers = $"Данные: {data.ToString().Trim()}";
-                        }
-                        break;
-
-                    case 10: // Write Multiple Holding Registers
-                        if (bytesRead < 7)
-                        {
-                            return "Недостаточная длина команды для записи нескольких регистров";
-                        }
-                        startAddress = BitConverter.ToUInt16(buffer, 2);
-                        quantity = BitConverter.ToUInt16(buffer, 4);
-                        byteCount = buffer[6];
-                        registers = $"{startAddress}-{startAddress + quantity - 1}";
-
-                        // Извлечение данных регистров для функции 10
-                        if (bytesRead >= 7 + byteCount)
-                        {
-                            StringBuilder data = new StringBuilder();
-                            for (int i = 0; i < byteCount / 2; i++)
-                            {
-                                ushort value = BitConverter.ToUInt16(buffer, 7 + i * 2);
-                                data.Append($"{value} ");
-                            }
-                            registers += $" (Данные: {data.ToString().Trim()})";
-                        }
-                        break;
-
-                    default:
-                        return "Неподдерживаемая функция Modbus";
-                }
-
-                return $"{messageType}: команда {functionCode} для устройства ID {modbusId} {registers}";
             }
         }
 
@@ -401,7 +332,7 @@ namespace Read_Write_GPRS_Server.Controllers
                 try
                 {
                     NetworkStream stream = client.GetStream();
-                    byte[] responseBytes = GenerateReadHoldingRegistersCommand(deviceId, address, quantity);
+                    byte[] responseBytes = Protocols.Modbuss.ModBussRTU.GenerateReadHoldingRegistersCommand(deviceId, address, quantity);
                     string command = BitConverter.ToString(responseBytes);
                     await stream.WriteAsync(responseBytes, 0, responseBytes.Length);
                     Console.WriteLine($"Отправлено сообщение: Отправлена команда MB4 для {deviceId} ID {address} регистр 2 байта<br> hex command: {command}");
@@ -426,7 +357,7 @@ namespace Read_Write_GPRS_Server.Controllers
                         // Читаем данные от клиента
                         while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                         {
-                            string response = DecodeModbusMessageValueMb3(buffer);
+                            string response = Protocols.Modbuss.ModBussRTU.DecodeModbusMessageValueMb3(buffer);
                             if (response != null && response != "no data")
                             {
                                 _responseQueue.Enqueue(response);
@@ -479,100 +410,7 @@ namespace Read_Write_GPRS_Server.Controllers
                 _cancellationTokenSource.Cancel();
             }
 
-            public static string DecodeModbusMessageValueMb3(byte[] buffer)
-            {
-                if (buffer.Length < 2)
-                {
-                    return "Недостаточная длина команды";
-                }
-
-                byte modbusId = buffer[0];
-                byte functionCode = buffer[1];
-                int bytesRead = buffer.Length;
-
-                string registers = "";
-                ushort startAddress;
-                ushort quantity;
-                byte byteCount;
-
-                if (functionCode == 3)
-                {
-                    if (bytesRead < 5)
-                    {
-                        return "Недостаточная длина команды для чтения регистров";
-                    }
-
-                    // Определение типа сообщения
-                    if (bytesRead == 8)
-                    {
-                        startAddress = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(buffer, 2));
-                        quantity = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(buffer, 4));
-                        registers = $"{startAddress}-{startAddress + quantity - 1}";
-                    }
-                    else
-                    {
-                        byteCount = buffer[2]; // Количество байт данных
-                        if (bytesRead < 3 + byteCount)
-                        {
-                            return "Недостаточная длина команды для чтения регистров";
-                        }
-
-                        // Извлечение данных регистров для функции 3
-                        StringBuilder data = new StringBuilder();
-                        for (int i = 0; i < byteCount / 2; i++)
-                        {
-                            ushort value = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(buffer, 3 + i * 2));
-                            data.Append($"{value} ");
-                        }
-                        registers = $"{data.ToString().Trim()}";
-                    }
-                    return registers;
-                }
-                else return "no data";
-            }
-        }
-
-        public static byte[] GenerateReadHoldingRegistersCommand(int modbusId, int startAddress, int quantity)
-        {
-            // Создаем буфер для команды
-            byte[] command = new byte[8];
-
-            // Заполняем буфер данными
-            command[0] = (byte)modbusId; // ID устройства
-            command[1] = 0x03; // Функция 3 (чтение нескольких регистров)
-            command[2] = (byte)(startAddress >> 8); // Старший байт начального адреса регистра
-            command[3] = (byte)(startAddress & 0xFF); // Младший байт начального адреса регистра
-            command[4] = (byte)(quantity >> 8); // Старший байт количества регистров
-            command[5] = (byte)(quantity & 0xFF); // Младший байт количества регистров
-
-            // Вычисляем контрольную сумму (CRC)
-            ushort crc = CalculateCRC(command, 6);
-            command[6] = (byte)(crc & 0xFF); // Младший байт CRC
-            command[7] = (byte)(crc >> 8); // Старший байт CRC
-
-            return command;
-        }
-
-        private static ushort CalculateCRC(byte[] data, int length)
-        {
-            ushort crc = 0xFFFF;
-            for (int i = 0; i < length; i++)
-            {
-                crc ^= data[i];
-                for (int j = 0; j < 8; j++)
-                {
-                    if ((crc & 0x0001) != 0)
-                    {
-                        crc >>= 1;
-                        crc ^= 0xA001;
-                    }
-                    else
-                    {
-                        crc >>= 1;
-                    }
-                }
-            }
-            return crc;
+            
         }
     }
 }
