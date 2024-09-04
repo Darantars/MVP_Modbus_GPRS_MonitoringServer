@@ -40,6 +40,8 @@ namespace Read_Write_GPRS_Server.Controllers
 
             private bool isRunning = false;
 
+            
+
             public TcpServer(int messageBufferSize)
             {
                 this.messageBufferSize = messageBufferSize;
@@ -73,7 +75,11 @@ namespace Read_Write_GPRS_Server.Controllers
                     {
                         gprsOne.tcpClient = await server.AcceptTcpClientAsync();
                         await AddMessageToQueue("Подключено новое соединение.");
-                        _ = Task.Run(() => StartCheckConnectionToDeviceLoop(gprsOne));
+                        lock (gprsOne.connectinLocker)
+                        {
+                            _ = Task.Run(() => StartCheckConnectionToDeviceLoop(gprsOne));
+                        }
+
                         // Обрабатываем клиента в отдельной задаче
                         _ = Task.Run(() => HandleClientAsync(gprsOne));
                     }
@@ -112,43 +118,43 @@ namespace Read_Write_GPRS_Server.Controllers
             {
                 double delayFiveHeartBeatReal = device.heartbeatMessageRateSec * 2;
                 int loopCounter = 1;
-                int[] heartBeatAtLoop = new int[4];
-                
+                int[] heartBeatAtLoop = new int[5];
 
-                while (isRunning )
+
+                while (isRunning)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(2));
                     heartBeatAtLoop[loopCounter - 1] = device.tcp5HeartBeatTimingMessageCounter;
                     int missedPockets = 0;
                     for (int i = 0; i < 4; i++)
                     {
-                        if (heartBeatAtLoop[i] < i) 
+                        if (heartBeatAtLoop[i] < i + 1)
                             missedPockets++;
                     }
-                        switch (missedPockets)
-                        {
-                            case 5:
-                                if (device.tcpClient != null)
-                                    device.tcpConnectionStatus = "Bad connection 0% package recived";
-                                break;
-                            case 4:
-                                device.tcpConnectionStatus = "Bad connection 20% package recived";
-                                break;
-                            case 3:
-                                device.tcpConnectionStatus = "Bad connection 40% package recived";
-                                break;
-                            case 2:
-                                device.tcpConnectionStatus = "Connected 60% package recived";
-                                break;
-                            case 1:
-                                device.tcpConnectionStatus = "Connected 80% package recived";
-                                break;
-                            case 0:
-                                device.tcpConnectionStatus = "Fast connection 100% package recived";
-                                break;
-                            default:
-                                device.tcpConnectionStatus = "Connection supergood!";
-                                break;
+                    switch (missedPockets)
+                    {
+                        case 5:
+                            if (device.tcpClient != null)
+                                device.tcpConnectionStatus = "Bad connection 0% package recived";
+                            break;
+                        case 4:
+                            device.tcpConnectionStatus = "Bad connection 20% package recived";
+                            break;
+                        case 3:
+                            device.tcpConnectionStatus = "Bad connection 40% package recived";
+                            break;
+                        case 2:
+                            device.tcpConnectionStatus = "Connected 60% package recived";
+                            break;
+                        case 1:
+                            device.tcpConnectionStatus = "Connected 80% package recived";
+                            break;
+                        case 0:
+                            device.tcpConnectionStatus = "Fast connection 100% package recived";
+                            break;
+                        default:
+                            device.tcpConnectionStatus = "Connection supergood!";
+                            break;
                     }
 
                     if (loopCounter == 5)
@@ -158,7 +164,7 @@ namespace Read_Write_GPRS_Server.Controllers
                     }
                     else
                         loopCounter = loopCounter + 1;
-                    
+
                 }
             }
 
@@ -231,7 +237,7 @@ namespace Read_Write_GPRS_Server.Controllers
                         {
                             device.tcp5HeartBeatTimingMessageCounter = device.tcp5HeartBeatTimingMessageCounter + 1;
                             byte[] newBuffer = new byte[bytesRead];
-                            Array.Copy(buffer, newBuffer, bytesRead);
+                            Array.Copy(buffer, newBuffer, bytesRead);     //error по array начинается тут
                             List<byte[]> responseList = await Task.Run(() => Protocols.Modbuss.ModBussRTU.CutToModbusRtuMessageListFastMb(newBuffer));
 
                                 string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
@@ -245,13 +251,13 @@ namespace Read_Write_GPRS_Server.Controllers
 
                                 string hexedNessage=  BitConverter.ToString(buffer, 0, bytesRead);
 
-                                string cuttedMessageMB = "";
-                                for (int i = 0; i < responseList.Count; i++)
-                                {
-                                    cuttedMessageMB = cuttedMessageMB + "<br>"+ BitConverter.ToString(responseList[i]);
-                                }
+                            string cuttedMessageMB = "";
+                            for (int i = 0; i < responseList.Count; i++)
+                            {
+                                cuttedMessageMB = cuttedMessageMB + "<br>"+ BitConverter.ToString(responseList[i]);
+                            }
 
-                                await AddMessageToQueue($"<br> Получено сообщение: <br> ASCII: {message} <br> MB: {decodedMbCommand} <br> hex: {hexedNessage} <br> hex-commands(probably): {cuttedMessageMB}");
+                            await AddMessageToQueue($"<br> Получено сообщение: <br> ASCII: {message} <br> MB: {decodedMbCommand} <br> hex: {hexedNessage} <br> hex-commands(probably): {cuttedMessageMB}");
                         }
                     }
                 }

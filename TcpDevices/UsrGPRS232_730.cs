@@ -13,6 +13,8 @@ namespace Read_Write_GPRS_Server.TcpDevice
         public string tcpConnectionStatus {  get; set; }
 
         public int tcp5HeartBeatTimingMessageCounter;
+        
+        public object connectinLocker;
 
         public UsrGPRS232_730(string heartbeatMessageTextASCII, int heartbeatMessageRateSec) 
         {
@@ -25,6 +27,8 @@ namespace Read_Write_GPRS_Server.TcpDevice
             tcpConnectionStatus = "Offline";
 
             tcp5HeartBeatTimingMessageCounter = 0;
+
+            connectinLocker = new();
         }
 
     }
