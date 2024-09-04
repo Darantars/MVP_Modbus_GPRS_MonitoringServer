@@ -14,7 +14,7 @@ var app = builder.Build();
 // ”казываем IP-адрес и порт дл€ прослушивани€
 string ipAddress = "90.188.113.113";
 int port = 42360;
-TcpConnectionController.TcpServer tcpServer = new TcpConnectionController.TcpServer(100);
+TcpConnectionController.TcpServer tcpServer = new TcpConnectionController.TcpServer(10000);
 
 TcpConnectionController.TcpDeviceTable tcpDeviceTable = new TcpConnectionController.TcpDeviceTable();
 

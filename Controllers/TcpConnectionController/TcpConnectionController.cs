@@ -136,15 +136,19 @@ namespace Read_Write_GPRS_Server.Controllers
                         case 5:
                             if (device.tcpClient != null)
                                 device.tcpConnectionStatus = "Bad connection 0% package recived";
+                                _ = Task.Run(() => AddMessageToQueue("Bad connection 0% package recived"));
                             break;
                         case 4:
                             device.tcpConnectionStatus = "Bad connection 20% package recived";
+                            _ = Task.Run(() => AddMessageToQueue("Bad connection 20% package recived"));
                             break;
                         case 3:
                             device.tcpConnectionStatus = "Bad connection 40% package recived";
+                            _ = Task.Run(() => AddMessageToQueue("Bad connection 40% package recived"));
                             break;
                         case 2:
-                            device.tcpConnectionStatus = "Connected 60% package recived";
+                            device.tcpConnectionStatus = "Unstable connection 60% package recived";
+                            _ = Task.Run(() => AddMessageToQueue("Unstable connection 60% package recived"));
                             break;
                         case 1:
                             device.tcpConnectionStatus = "Connected 80% package recived";
@@ -237,7 +241,7 @@ namespace Read_Write_GPRS_Server.Controllers
                         {
                             device.tcp5HeartBeatTimingMessageCounter = device.tcp5HeartBeatTimingMessageCounter + 1;
                             byte[] newBuffer = new byte[bytesRead];
-                            Array.Copy(buffer, newBuffer, bytesRead);     //error по array начинается тут
+                            Array.Copy(buffer, newBuffer, bytesRead);    
                             List<byte[]> responseList = await Task.Run(() => Protocols.Modbuss.ModBussRTU.CutToModbusRtuMessageListFastMb(newBuffer));
 
                                 string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
