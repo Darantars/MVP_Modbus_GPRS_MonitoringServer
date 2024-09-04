@@ -7,201 +7,47 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
 {
     public class ModBussRTU
     {
-public static List<byte[]> CutToModbusRtuMessageList(byte[] byteData)
-    {
-        List<byte[]> commands = new List<byte[]>();
-        int i = 0;
-        while (i < byteData.Length)
-        {
-
-            if (i + 7 > byteData.Length)
-                break;
-
-            byte address = byteData[i];
-            byte functionCode = byteData[i + 1];
-            int totalLength = 0;
-            bool isLastMessageRequest = false;
-
-            if (functionCode == 0x03)   // 3 (Read Holding Registers)
-            {
-                if(i + 8 <= byteData.Length &&  isLastMessageRequest == false)
-                {
-                        isLastMessageRequest = true;
-                        totalLength = 8;
-                }
-
-                else if (i + 5 <= byteData.Length)
-                {
-                    isLastMessageRequest = false;
-                    int dataLength = byteData[i + 2];
-                    totalLength = 5 + dataLength; // Ответ
-                }
-            }
-            else if (functionCode == 0x10)  // 10 (Write Multiple Registers)
-            {
-                if (i + 9 <= byteData.Length && isLastMessageRequest == false) 
-                {
-                    isLastMessageRequest = true;
-                    int byteCount = byteData[i + 6];
-                    totalLength = 9 + byteCount; // Запрос
-                }
-                else if (i + 8 <= byteData.Length) 
-                {
-                    isLastMessageRequest = false;
-                    totalLength = 8; // Ответ
-                }
-            }
-            else
-            {
-                break;
-            }
-
-            // Проверяем, что длина команды не превышает длину оставшихся данных
-            if (i + totalLength > byteData.Length)
-                break;
-
-            // Извлекаем команду и ответ
-            byte[] command = new byte[totalLength];
-            Array.Copy(byteData, i, command, 0, totalLength);
-            commands.Add(command);
-
-            // Переходим к следующей команде
-            i += totalLength;
-        }
-
-        // Вывод в консоль полученного буфера команд в HEX формате
-        foreach (var cmd in commands)
-        {
-            Console.WriteLine(BitConverter.ToString(cmd));
-        }
-
-        return commands;
-    }
 
         public static List<byte[]> CutToModbusRtuMessageListFastMb(byte[] byteData)
         {
             List<byte[]> commands = new List<byte[]>();
             int i = 0;
 
-            while (i < byteData.Length)
+            while (i < byteData.Length - 6)
             {
-                // -4) Проверить достаточно ли байт в посылке чтобы содержать связку: 2 запроса, ответы на них в той же последовательности.
-                if (i + 22 <= byteData.Length)
+                // Проверка на наличие двух запросов и ответов
+                if (i + 30 <= byteData.Length)
                 {
-                    // -3) Поиск адресов и кодов функций и проверка что они равны во всех 4х командах.
-                    byte addressRequest1 = byteData[i];
-                    byte functionCodeRequest1 = byteData[i + 1];
-                    byte addressResponse1 = byteData[i + 8];
-                    byte functionCodeResponse1 = byteData[i + 9];
-                    byte byteCountResponse1 = byteData[i + 10];
-
-                    byte addressRequest2 = byteData[i + 8 + 3 + byteCountResponse1];
-                    byte functionCodeRequest2 = byteData[i + 8 + 3 + byteCountResponse1 + 1];
-                    byte addressResponse2 = byteData[i + 8 + 3 + byteCountResponse1 + 8];
-                    byte functionCodeResponse2 = byteData[i + 8 + 3 + byteCountResponse1 + 9];
-                    byte byteCountResponse2 = byteData[i + 8 + 3 + byteCountResponse1 + 10];
-
-                    if (addressRequest1 == addressResponse1 && functionCodeRequest1 == functionCodeResponse1 &&
-                        addressRequest2 == addressResponse2 && functionCodeRequest2 == functionCodeResponse2)
+                    if (Parser.TryParseTwoRequestsAndResponses(byteData, ref i, commands))
                     {
-                        if (functionCodeRequest1 == 3 && functionCodeRequest2 == 3)
-                        {
-                            // -2) Проверка длины ответов в соответствии с длинной указанной в их 3ем байте.
-                            int responseLength1 = byteCountResponse1 + 3 + 2;
-                            int responseLength2 = byteCountResponse2 + 3 + 2;
-                            if (i + 8 + responseLength1 + 8 + responseLength2 <= byteData.Length)
-                            {
-                                // Записать запросы и ответы в результирующие команды
-                                byte[] request1 = new byte[8];
-                                Array.Copy(byteData, i, request1, 0, 8);
-                                commands.Add(request1);
-
-                                byte[] response1 = new byte[responseLength1];
-                                Array.Copy(byteData, i + 8, response1, 0, responseLength1);
-                                commands.Add(response1);
-
-                                byte[] request2 = new byte[8];
-                                Array.Copy(byteData, i + 8 + responseLength1, request2, 0, 8);
-                                commands.Add(request2);
-
-                                byte[] response2 = new byte[responseLength2];
-                                Array.Copy(byteData, i + 8 + responseLength1 + 8, response2, 0, responseLength2);
-                                commands.Add(response2);
-
-                                // Переходим к следующей команде
-                                i += 8 + responseLength1 + 8 + responseLength2;
-                                continue;
-                            }
-                        }    
-
-                    }
-                }
-
-                // 1) Проверить достаточно ли байт в посылке чтобы содержать хотя бы одну пару запрос-ответ
-                if (i + 11 <= byteData.Length)
-                {
-                    // 2) Считать первую пару следующим образом:
-                    byte addressRequest = byteData[i];
-                    byte functionCodeRequest = byteData[i + 1];
-                    byte addressResponse = byteData[i + 8];
-                    byte functionCodeResponse = byteData[i + 9];
-                    byte byteCountResponse = byteData[i + 10];
-
-                    if (functionCodeRequest == 3 && functionCodeResponse == 3)
-                    {
-                        // Проверяем, что адрес и код функции совпадают
-                        if (addressRequest == addressResponse && functionCodeRequest == functionCodeResponse)
-                        {
-                            int responseLength = byteCountResponse + 3 + 2 ; // 3 байта заголовка ответа 2 байта crc
-                            if (i + 8 + responseLength <= byteData.Length)
-                            {
-                                // 3) Записать запрос и ответ в результирующие команды
-                                byte[] request = new byte[8];
-                                Array.Copy(byteData, i, request, 0, 8);
-                                commands.Add(request);
-
-                                byte[] response = new byte[responseLength];
-                                Array.Copy(byteData, i + 8, response, 0, responseLength);
-                                commands.Add(response);
-
-                                // Переходим к следующей команде
-                                i += 8 + responseLength;
-                                continue;
-                            }
-                        }
-                    }
-                }
-
-                // 4) Проверить запрос ли:
-                if (i + 8 <= byteData.Length)
-                {
-                    byte[] request = new byte[8];
-                    byte functionCodeRequest = byteData[i + 1];
-                    if (functionCodeRequest == 3)
-                    {
-                        Array.Copy(byteData, i, request, 0, 8);
-                        commands.Add(request);
-                        i += 8;
                         continue;
                     }
                 }
 
-                // 5) Проверить ответ ли это
+                // Проверка на наличие одной пары запрос-ответ
+                if (i + 16 <= byteData.Length)
+                {
+                    if (Parser.TryParseRequestAndResponse(byteData, ref i, commands))
+                    {
+                        continue;
+                    }
+                }
+
+                // Проверка на наличие запроса
+                if (i + 8 <= byteData.Length)
+                {
+                    if (Parser.TryParseRequest(byteData, ref i, commands))
+                    {
+                        continue;
+                    }
+                }
+
+                // Проверка на наличие ответа
                 if (i + 7 <= byteData.Length)
                 {
-                    byte functionCodeRequest = byteData[i + 1];
-                    if (functionCodeRequest == 3)
+                    if (Parser.TryParseResponse(byteData, ref i, commands))
                     {
-                        byte byteCountResponse = byteData[i + 2];
-                        int responseLength = byteCountResponse + 3 + 2; // 3 байта заголовка ответа 2 байта crc
-                        if (i + responseLength <= byteData.Length)
-                        {
-                            byte[] response = new byte[responseLength];
-                            Array.Copy(byteData, i, response, 0, responseLength);
-                            commands.Add(response);
-                            i += responseLength;
-                            continue;
-                        }
+                        continue;
                     }
                 }
 
@@ -217,6 +63,7 @@ public static List<byte[]> CutToModbusRtuMessageList(byte[] byteData)
 
             return commands;
         }
+
 
 
 
@@ -397,6 +244,129 @@ public static List<byte[]> CutToModbusRtuMessageList(byte[] byteData)
             }
 
             return $"{messageType}: команда {functionCode} для устройства ID {modbusId} {registers}";
+        }
+
+        private class Parser()
+        {
+
+            public static bool TryParseTwoRequestsAndResponses(byte[] byteData, ref int i, List<byte[]> commands)
+            {
+                byte addressRequest1 = byteData[i];
+                byte functionCodeRequest1 = byteData[i + 1];
+                byte addressResponse1 = byteData[i + 8];
+                byte functionCodeResponse1 = byteData[i + 9];
+                byte byteCountResponse1 = byteData[i + 10];
+
+                int nextRequireIndex = i + 8 + 3 + 10 + byteCountResponse1;
+                if (nextRequireIndex <= byteData.Length)
+                {
+                    byte addressRequest2 = byteData[i + 8 + 3 + byteCountResponse1];
+                    byte functionCodeRequest2 = byteData[i + 8 + 3 + byteCountResponse1 + 1];
+                    byte addressResponse2 = byteData[i + 8 + 3 + byteCountResponse1 + 8];
+                    byte functionCodeResponse2 = byteData[i + 8 + 3 + byteCountResponse1 + 9];
+                    byte byteCountResponse2 = byteData[i + 8 + 3 + byteCountResponse1 + 10];
+
+                    nextRequireIndex = nextRequireIndex + 8 + 3 + 10 + byteCountResponse2;
+                    if (nextRequireIndex <= byteData.Length)
+                    {
+                        if (addressRequest1 == addressResponse1 && functionCodeRequest1 == functionCodeResponse1 &&
+                            addressRequest2 == addressResponse2 && functionCodeRequest2 == functionCodeResponse2)
+                        {
+                            if (functionCodeRequest1 == 3 && functionCodeRequest2 == 3)
+                            {
+                                int responseLength1 = byteCountResponse1 + 3 + 2;
+                                int responseLength2 = byteCountResponse2 + 3 + 2;
+                                if (i + 8 + responseLength1 + 8 + responseLength2 <= byteData.Length)
+                                {
+                                    byte[] request1 = new byte[8];
+                                    Array.Copy(byteData, i, request1, 0, 8);
+                                    commands.Add(request1);
+
+                                    byte[] response1 = new byte[responseLength1];
+                                    Array.Copy(byteData, i + 8, response1, 0, responseLength1);
+                                    commands.Add(response1);
+
+                                    byte[] request2 = new byte[8];
+                                    Array.Copy(byteData, i + 8 + responseLength1, request2, 0, 8);
+                                    commands.Add(request2);
+
+                                    byte[] response2 = new byte[responseLength2];
+                                    Array.Copy(byteData, i + 8 + responseLength1 + 8, response2, 0, responseLength2);
+                                    commands.Add(response2);
+
+                                    i += 8 + responseLength1 + 8 + responseLength2;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+
+            public static bool TryParseRequestAndResponse(byte[] byteData, ref int i, List<byte[]> commands)
+            {
+                byte addressRequest = byteData[i];
+                byte functionCodeRequest = byteData[i + 1];
+                byte addressResponse = byteData[i + 8];
+                byte functionCodeResponse = byteData[i + 9];
+                byte byteCountResponse = byteData[i + 10];
+
+                if (functionCodeRequest == 3 && functionCodeResponse == 3)
+                {
+                    if (addressRequest == addressResponse && functionCodeRequest == functionCodeResponse)
+                    {
+                        int responseLength = byteCountResponse + 3 + 2;
+                        if (i + 8 + responseLength <= byteData.Length)
+                        {
+                            byte[] request = new byte[8];
+                            Array.Copy(byteData, i, request, 0, 8);
+                            commands.Add(request);
+
+                            byte[] response = new byte[responseLength];
+                            Array.Copy(byteData, i + 8, response, 0, responseLength);
+                            commands.Add(response);
+
+                            i += 8 + responseLength;
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            public static bool TryParseRequest(byte[] byteData, ref int i, List<byte[]> commands)
+            {
+                byte functionCodeRequest = byteData[i + 1];
+                if (functionCodeRequest == 3)
+                {
+                    byte[] request = new byte[8];
+                    Array.Copy(byteData, i, request, 0, 8);
+                    commands.Add(request);
+                    i += 8;
+                    return true;
+                }
+                return false;
+            }
+
+            public static bool TryParseResponse(byte[] byteData, ref int i, List<byte[]> commands)
+            {
+                byte functionCodeRequest = byteData[i + 1];
+                if (functionCodeRequest == 3)
+                {
+                    byte byteCountResponse = byteData[i + 2];
+                    int responseLength = byteCountResponse + 3 + 2;
+                    if (i + responseLength <= byteData.Length)
+                    {
+                        byte[] response = new byte[responseLength];
+                        Array.Copy(byteData, i, response, 0, responseLength);
+                        commands.Add(response);
+                        i += responseLength;
+                        return true;
+                    }
+                }
+                return false;
+            }
         }
     }
 }
