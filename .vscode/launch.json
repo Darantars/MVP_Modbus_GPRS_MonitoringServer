@@ -5,6 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "C#: windows Debug",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}/Read_Write_GPRS_Server.csproj"
+        },
+        {
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
