@@ -13,10 +13,12 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
             List<byte[]> commands = new List<byte[]>();
             int i = 0;
 
+            Console.WriteLine(BitConverter.ToString(byteData));
+
             while (i < byteData.Length - 6)
             {
                 // Проверка на наличие двух запросов и ответов
-                if (i + 30 <= byteData.Length)
+                if (i + 28 <= byteData.Length)
                 {
                     if (Parser.TryParseTwoRequestsAndResponses(byteData, ref i, commands))
                     {
@@ -25,7 +27,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                 }
 
                 // Проверка на наличие одной пары запрос-ответ
-                if (i + 16 <= byteData.Length)
+                if (i + 14 <= byteData.Length)
                 {
                     if (Parser.TryParseRequestAndResponse(byteData, ref i, commands))
                     {
@@ -43,7 +45,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                 }
 
                 // Проверка на наличие ответа
-                if (i + 7 <= byteData.Length)
+                if (i + 6 <= byteData.Length)
                 {
                     if (Parser.TryParseResponse(byteData, ref i, commands))
                     {
@@ -248,55 +250,53 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
 
         private class Parser()
         {
-
             public static bool TryParseTwoRequestsAndResponses(byte[] byteData, ref int i, List<byte[]> commands)
             {
                 byte addressRequest1 = byteData[i];
                 byte functionCodeRequest1 = byteData[i + 1];
-                byte addressResponse1 = byteData[i + 8];
-                byte functionCodeResponse1 = byteData[i + 9];
-                byte byteCountResponse1 = byteData[i + 10];
+                byte byteCountRequest1 = 8;
+                byte addressRequest2 = byteData[i + 8];
+                byte functionCodeRequest2 = byteData[i + 9];
+                byte byteCountRequest2 = 8;
 
-                int nextRequireIndex = i + 8 + 3 + 10 + byteCountResponse1;
-                if (nextRequireIndex <= byteData.Length)
+                if (i + byteCountRequest1 + byteCountRequest2 <= byteData.Length)
                 {
-                    byte addressRequest2 = byteData[i + 8 + 3 + byteCountResponse1];
-                    byte functionCodeRequest2 = byteData[i + 8 + 3 + byteCountResponse1 + 1];
-                    byte addressResponse2 = byteData[i + 8 + 3 + byteCountResponse1 + 8];
-                    byte functionCodeResponse2 = byteData[i + 8 + 3 + byteCountResponse1 + 9];
-                    byte byteCountResponse2 = byteData[i + 8 + 3 + byteCountResponse1 + 10];
-
-                    nextRequireIndex = nextRequireIndex + 8 + 3 + 10 + byteCountResponse2;
-                    if (nextRequireIndex <= byteData.Length)
+                    //start index of resposponses 16
+                    byte addressResponce1 = byteData[i + 16];
+                    byte functionCodeResponce1 = byteData[i + 17];
+                    byte dataNumResponce1 = byteData[i + 18];
+                    int byteCountResponce1 = 3 + dataNumResponce1 + 2;
+                    
+                    if (i + byteCountRequest1 + byteCountRequest2 + byteCountResponce1 <= byteData.Length)
                     {
-                        if (addressRequest1 == addressResponse1 && functionCodeRequest1 == functionCodeResponse1 &&
-                            addressRequest2 == addressResponse2 && functionCodeRequest2 == functionCodeResponse2)
+                        byte addressResponce2 = byteData[i + 16 + byteCountResponce1];
+                        byte functionCodeResponce2 = byteData[i + 17 + byteCountResponce1];
+                        byte dataNumResponce2 = byteData[i + 18 + byteCountResponce1];
+                        int byteCountResponce2 = 3 + dataNumResponce2 + 2;
+
+                        if (i + byteCountRequest1 + byteCountRequest2 + byteCountResponce1 + byteCountResponce2 <= byteData.Length + 1)
                         {
-                            if (functionCodeRequest1 == 3 && functionCodeRequest2 == 3)
+                            if ((functionCodeRequest1 == functionCodeRequest2) && (functionCodeResponce1 == functionCodeResponce2) 
+                                && (functionCodeResponce2 == 3) && (functionCodeRequest1 == 3))
                             {
-                                int responseLength1 = byteCountResponse1 + 3 + 2;
-                                int responseLength2 = byteCountResponse2 + 3 + 2;
-                                if (i + 8 + responseLength1 + 8 + responseLength2 <= byteData.Length)
-                                {
-                                    byte[] request1 = new byte[8];
-                                    Array.Copy(byteData, i, request1, 0, 8);
-                                    commands.Add(request1);
+                                byte[] request1 = new byte[8];
+                                Array.Copy(byteData, i, request1, 0, 8);
+                                commands.Add(request1);
 
-                                    byte[] response1 = new byte[responseLength1];
-                                    Array.Copy(byteData, i + 8, response1, 0, responseLength1);
-                                    commands.Add(response1);
+                                byte[] request2 = new byte[8];
+                                Array.Copy(byteData, i + 8, request2, 0, 8);
+                                commands.Add(request2);
 
-                                    byte[] request2 = new byte[8];
-                                    Array.Copy(byteData, i + 8 + responseLength1, request2, 0, 8);
-                                    commands.Add(request2);
+                                byte[] responce1 = new byte[byteCountResponce1];
+                                Array.Copy(byteData, i + 16, responce1, 0, byteCountResponce1);
+                                commands.Add(responce1);
 
-                                    byte[] response2 = new byte[responseLength2];
-                                    Array.Copy(byteData, i + 8 + responseLength1 + 8, response2, 0, responseLength2);
-                                    commands.Add(response2);
+                                byte[] responce2 = new byte[byteCountResponce2];
+                                Array.Copy(byteData, i + 16 + byteCountResponce2, responce2, 0, byteCountResponce2);
+                                commands.Add(responce2);
 
-                                    i += 8 + responseLength1 + 8 + responseLength2;
-                                    return true;
-                                }
+                                i += byteCountRequest1 + byteCountRequest2 + byteCountResponce1 + byteCountResponce2;
+                                return true;
                             }
                         }
                     }
@@ -308,16 +308,19 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
             {
                 byte addressRequest = byteData[i];
                 byte functionCodeRequest = byteData[i + 1];
+                int requestLenght = 8;
+
                 byte addressResponse = byteData[i + 8];
                 byte functionCodeResponse = byteData[i + 9];
                 byte byteCountResponse = byteData[i + 10];
+                int responseLength = byteCountResponse + 3 + 2;
 
                 if (functionCodeRequest == 3 && functionCodeResponse == 3)
                 {
                     if (addressRequest == addressResponse && functionCodeRequest == functionCodeResponse)
                     {
-                        int responseLength = byteCountResponse + 3 + 2;
-                        if (i + 8 + responseLength <= byteData.Length)
+                        
+                        if (i + requestLenght + responseLength <= byteData.Length)
                         {
                             byte[] request = new byte[8];
                             Array.Copy(byteData, i, request, 0, 8);
