@@ -20,7 +20,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                 // Проверка на наличие двух запросов и ответов
                 if (i + 28 <= byteData.Length)
                 {
-                    if (Parser.TryParseTwoRequestsAndResponses(byteData, ref i, commands))
+                    if (Parser.TryParseMb3TwoRequestsAndResponses(byteData, ref i, commands))
                     {
                         continue;
                     }
@@ -29,25 +29,41 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                 // Проверка на наличие одной пары запрос-ответ
                 if (i + 14 <= byteData.Length)
                 {
-                    if (Parser.TryParseRequestAndResponse(byteData, ref i, commands))
+                    if (Parser.TryParseMb3RequestAndResponse(byteData, ref i, commands))
                     {
                         continue;
                     }
+                }
+
+
+                // Проверка на наличие запроса
+                if (i + 10 <= byteData.Length)
+                {
+                    byte functionCodeRequest = byteData[i + 1];
+
+                    if (Parser.TryParseMb10Request(byteData, ref i, commands))
+                    {
+                        continue;
+                    }
+                                               
                 }
 
                 // Проверка на наличие запроса
                 if (i + 8 <= byteData.Length)
                 {
-                    if (Parser.TryParseRequest(byteData, ref i, commands))
+                    byte functionCodeRequest = byteData[i + 1];
+
+                    if (Parser.TryParseMb3Request(byteData, ref i, commands))
                     {
                         continue;
                     }
+                       
                 }
 
                 // Проверка на наличие ответа
                 if (i + 6 <= byteData.Length)
                 {
-                    if (Parser.TryParseResponse(byteData, ref i, commands))
+                    if (Parser.TryParseMb3Response(byteData, ref i, commands))
                     {
                         continue;
                     }
@@ -218,7 +234,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                     }
                     break;
 
-                case 10: // Write Multiple Holding Registers
+                case 16: // Write Multiple Holding Registers
                     if (bytesRead < 7)
                     {
                         return "Недостаточная длина команды для записи нескольких регистров";
@@ -250,7 +266,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
 
         private class Parser()
         {
-            public static bool TryParseTwoRequestsAndResponses(byte[] byteData, ref int i, List<byte[]> commands)
+            public static bool TryParseMb3TwoRequestsAndResponses(byte[] byteData, ref int i, List<byte[]> commands)
             {
                 byte addressRequest1 = byteData[i];
                 byte functionCodeRequest1 = byteData[i + 1];
@@ -304,7 +320,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                 return false;
             }
 
-            public static bool TryParseRequestAndResponse(byte[] byteData, ref int i, List<byte[]> commands)
+            public static bool TryParseMb3RequestAndResponse(byte[] byteData, ref int i, List<byte[]> commands)
             {
                 byte addressRequest = byteData[i];
                 byte functionCodeRequest = byteData[i + 1];
@@ -338,7 +354,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                 return false;
             }
 
-            public static bool TryParseRequest(byte[] byteData, ref int i, List<byte[]> commands)
+            public static bool TryParseMb3Request(byte[] byteData, ref int i, List<byte[]> commands)
             {
                 byte functionCodeRequest = byteData[i + 1];
                 if (functionCodeRequest == 3)
@@ -352,7 +368,28 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                 return false;
             }
 
-            public static bool TryParseResponse(byte[] byteData, ref int i, List<byte[]> commands)
+            public static bool TryParseMb10Request(byte[] byteData, ref int i, List<byte[]> commands)
+            {
+                byte functionCodeRequest = byteData[i + 1];
+                if (functionCodeRequest == 16)
+                {
+                    byte byteCount = byteData[i + 6];
+
+                    int requestLength = 1 + 1 + 2 + 2 + 1 + byteCount + 2;
+
+                    if (i + requestLength <= byteData.Length)
+                    {
+                        byte[] request = new byte[requestLength];
+                        Array.Copy(byteData, i, request, 0, requestLength);
+                        commands.Add(request);
+                        i += requestLength;
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            public static bool TryParseMb3Response(byte[] byteData, ref int i, List<byte[]> commands)
             {
                 byte functionCodeRequest = byteData[i + 1];
                 if (functionCodeRequest == 3)
