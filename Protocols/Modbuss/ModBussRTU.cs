@@ -17,55 +17,64 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
 
             while (i < byteData.Length - 6)
             {
-                // Проверка на наличие двух запросов и ответов
-                if (i + 28 <= byteData.Length)
+                byte functionCodeRequest = byteData[i + 1];
+
+                if(functionCodeRequest == 3 || functionCodeRequest == 16)
                 {
-                    if (Parser.TryParseMb3TwoRequestsAndResponses(byteData, ref i, commands))
+                    // Проверка на наличие двух запросов и ответов
+                    if (i + 28 <= byteData.Length)
                     {
-                        continue;
+                        if (Parser.TryParseMb3TwoRequestsAndResponses(byteData, ref i, commands))
+                        {
+                            continue;
+                        }
                     }
-                }
 
-                // Проверка на наличие одной пары запрос-ответ
-                if (i + 14 <= byteData.Length)
-                {
-                    if (Parser.TryParseMb3RequestAndResponse(byteData, ref i, commands))
+                    // Проверка на наличие одной пары запрос-ответ
+                    if (i + 14 <= byteData.Length)
                     {
-                        continue;
+                        if (Parser.TryParseMb3RequestAndResponse(byteData, ref i, commands))
+                        {
+                            continue;
+                        }
                     }
-                }
 
 
-                // Проверка на наличие запроса
-                if (i + 10 <= byteData.Length)
-                {
-                    byte functionCodeRequest = byteData[i + 1];
-
-                    if (Parser.TryParseMb10Request(byteData, ref i, commands))
+                    // Проверка на наличие запроса
+                    if (i + 10 <= byteData.Length)
                     {
-                        continue;
+
+
+                        if (Parser.TryParseMb10Request(byteData, ref i, commands))
+                        {
+                            continue;
+                        }
+
                     }
-                                               
-                }
 
-                // Проверка на наличие запроса
-                if (i + 8 <= byteData.Length)
-                {
-                    byte functionCodeRequest = byteData[i + 1];
-
-                    if (Parser.TryParseMb3Request(byteData, ref i, commands))
+                    // Проверка на наличие запроса
+                    if (i + 8 <= byteData.Length)
                     {
-                        continue;
+
+                        if (Parser.TryParseMb3Request(byteData, ref i, commands))
+                        {
+                            continue;
+                        }
+
+                        if (Parser.TryParseMb10Response(byteData, ref i, commands))
+                        {
+                            continue;
+                        }
+
                     }
-                       
-                }
 
-                // Проверка на наличие ответа
-                if (i + 6 <= byteData.Length)
-                {
-                    if (Parser.TryParseMb3Response(byteData, ref i, commands))
+                    // Проверка на наличие ответа
+                    if (i + 6 <= byteData.Length)
                     {
-                        continue;
+                        if (Parser.TryParseMb3Response(byteData, ref i, commands))
+                        {
+                            continue;
+                        }
                     }
                 }
 
@@ -297,7 +306,15 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                     {
                         return "Недостаточная длина команды для записи нескольких регистров";
                     }
-                    startAddress = BitConverter.ToUInt16(buffer, 2);
+                    if (bytesRead == 8)
+                    {
+                        messageType = "Запрос";
+                    }
+                    else
+                    {
+                        messageType = "Ответ";
+                    }
+                        startAddress = BitConverter.ToUInt16(buffer, 2);
                     quantity = BitConverter.ToUInt16(buffer, 4);
                     byteCount = buffer[6];
                     registers = $"{startAddress}-{startAddress + quantity - 1}";
@@ -319,7 +336,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                     return "Неподдерживаемая функция Modbus";
             }
 
-            return $"{messageType}: команда {functionCode} для устройства ID {modbusId} {registers}";
+            return $"{messageType}: команда {functionCode} для устройства ID {modbusId}";
         }
 
         private class Parser()
@@ -454,6 +471,25 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                 {
                     byte byteCountResponse = byteData[i + 2];
                     int responseLength = byteCountResponse + 3 + 2;
+                    if (i + responseLength <= byteData.Length)
+                    {
+                        byte[] response = new byte[responseLength];
+                        Array.Copy(byteData, i, response, 0, responseLength);
+                        commands.Add(response);
+                        i += responseLength;
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            public static bool TryParseMb10Response(byte[] byteData, ref int i, List<byte[]> commands)
+            {
+                byte functionCodeRequest = byteData[i + 1];
+                if (functionCodeRequest == 16)
+                {
+                    byte byteCountResponse = byteData[i + 2];
+                    int responseLength = 8;
                     if (i + responseLength <= byteData.Length)
                     {
                         byte[] response = new byte[responseLength];
