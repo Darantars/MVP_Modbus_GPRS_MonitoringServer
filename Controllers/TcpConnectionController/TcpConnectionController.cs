@@ -18,8 +18,10 @@ namespace Read_Write_GPRS_Server.Controllers
     {
         public class ModbusInput
         {
-            public string ModbusReadID { get; set; }
-            public string ModbusReadColumnNumber { get; set; }
+            public string modbusID { get; set; }
+            public string modbusStartAdress { get; set; }
+            public string modbussQuanity { get; set; }
+            public string modbussData { get; set; }
         }
 
 
@@ -206,6 +208,7 @@ namespace Read_Write_GPRS_Server.Controllers
 
             public async Task SendMB3CommandToDevice(int deviceId, int address, int quantity)
             {
+                if (gprsOne == null) return;
                 if (gprsOne.tcpClient == null || !gprsOne.tcpClient.Connected)
                 {
                     await AddMessageToQueue("No client. Pleasr, await client");
@@ -218,7 +221,30 @@ namespace Read_Write_GPRS_Server.Controllers
                     byte[] responseBytes = Protocols.Modbuss.ModBussRTU.GenerateReadHoldingRegistersCommand(deviceId, address, quantity);
                     string command = BitConverter.ToString(responseBytes);
                     await stream.WriteAsync(responseBytes, 0, responseBytes.Length);
-                    await AddMessageToQueue($"Отправлено сообщение: Отправлена команда MB4  для {deviceId} ID {address} регистр 2 байта<br> hex command: {command}");
+                    await AddMessageToQueue($"Отправлено сообщение: Отправлена команда MB3  для {deviceId} ID {address} регистр 2 байта<br> hex command: {command}");
+                }
+                catch (Exception ex)
+                {
+                    await AddMessageToQueue($"Sending error: {ex.Message}");
+                }
+            }
+
+            public async Task SendMB10CommandToDevice(int deviceId, int address, int quantity, byte[] byteData)
+            {
+                if (gprsOne == null) return;
+                if (gprsOne.tcpClient == null || !gprsOne.tcpClient.Connected)
+                {
+                    await AddMessageToQueue("No client. Pleasr, await client");
+                    return;
+                }
+
+                try
+                {
+                    NetworkStream stream = gprsOne.tcpClient.GetStream();
+                    byte[] responseBytes = Protocols.Modbuss.ModBussRTU.GenerateWriteMultipleRegistersCommand(deviceId, address, quantity, quantity * 2, byteData);
+                    string command = BitConverter.ToString(responseBytes);
+                    await stream.WriteAsync(responseBytes, 0, responseBytes.Length);
+                    await AddMessageToQueue($"Отправлено сообщение: Отправлена команда MB10  для {deviceId} ID {address} регистр 2 байта<br> hex command: {command}");
                 }
                 catch (Exception ex)
                 {

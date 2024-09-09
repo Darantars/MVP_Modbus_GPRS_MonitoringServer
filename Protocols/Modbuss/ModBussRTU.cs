@@ -82,30 +82,65 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
             return commands;
         }
 
-
-
-
-
-        public static byte[] GenerateReadHoldingRegistersCommand(int modbusId, int startAddress, int quantity)
+        public static byte[] GenerateWriteMultipleRegistersCommand(int modbusId, int startAddress, int quantity, int byteCount, byte[] byteData)
         {
-            // Создаем буфер для команды
-            byte[] command = new byte[8];
+            // Проверка входных данных
+            if (modbusId < 0 || modbusId > 255)
+                throw new ArgumentOutOfRangeException(nameof(modbusId), "Modbus ID must be between 0 and 255.");
+            if (startAddress < 0 || startAddress > 65535)
+                throw new ArgumentOutOfRangeException(nameof(startAddress), "Start address must be between 0 and 65535.");
+            if (quantity < 1 || quantity > 123)
+                throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity must be between 1 and 123.");
+            if (byteCount != quantity * 2)
+                throw new ArgumentException("Byte count must be equal to quantity * 2.");
+            if (byteData.Length != byteCount)
+                throw new ArgumentException("Byte data length must be equal to byte count.");
 
-            // Заполняем буфер данными
-            command[0] = (byte)modbusId; // ID устройства
-            command[1] = 0x03; // Функция 3 (чтение нескольких регистров)
-            command[2] = (byte)(startAddress >> 8); // Старший байт начального адреса регистра
-            command[3] = (byte)(startAddress & 0xFF); // Младший байт начального адреса регистра
-            command[4] = (byte)(quantity >> 8); // Старший байт количества регистров
-            command[5] = (byte)(quantity & 0xFF); // Младший байт количества регистров
+            // Создаем массив для команды
+            byte[] command = new byte[9 + byteCount];
 
-            // Вычисляем контрольную сумму (CRC)
-            ushort crc = CalculateCRC(command, 6);
-            command[6] = (byte)(crc & 0xFF); // Младший байт CRC
-            command[7] = (byte)(crc >> 8); // Старший байт CRC
+            // Заполняем команду
+            command[0] = (byte)modbusId;                      // Адрес устройства
+            command[1] = 0x10;                                // Функция (Write Multiple Registers)
+            command[2] = (byte)(startAddress >> 8);           // Старший байт адреса начального регистра
+            command[3] = (byte)(startAddress & 0xFF);         // Младший байт адреса начального регистра
+            command[4] = (byte)(quantity >> 8);               // Старший байт количества регистров
+            command[5] = (byte)(quantity & 0xFF);             // Младший байт количества регистров
+            command[6] = (byte)byteCount;                      // Количество байт данных
+
+            // Копируем данные
+            Array.Copy(byteData, 0, command, 7, byteCount);
+
+            // Вычисляем CRC
+            ushort crc = CalculateCRC(command, 0, command.Length - 2);
+            command[command.Length - 2] = (byte)(crc & 0xFF);  // Младший байт CRC
+            command[command.Length - 1] = (byte)(crc >> 8);   // Старший байт CRC
 
             return command;
         }
+
+        public static ushort CalculateCRC(byte[] data, int start, int length)
+        {
+            ushort crc = 0xFFFF;
+            for (int i = start; i < start + length; i++)
+            {
+                crc ^= data[i];
+                for (int j = 0; j < 8; j++)
+                {
+                    if ((crc & 0x0001) != 0)
+                    {
+                        crc >>= 1;
+                        crc ^= 0xA001;
+                    }
+                    else
+                    {
+                        crc >>= 1;
+                    }
+                }
+            }
+            return crc;
+        }
+
 
         private static ushort CalculateCRC(byte[] data, int length)
         {
@@ -128,6 +163,29 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
             }
             return crc;
         }
+
+        public static byte[] GenerateReadHoldingRegistersCommand(int modbusId, int startAddress, int quantity)
+        {
+            // Создаем буфер для команды
+            byte[] command = new byte[8];
+
+            // Заполняем буфер данными
+            command[0] = (byte)modbusId; // ID устройства
+            command[1] = 0x03; // Функция 3 (чтение нескольких регистров)
+            command[2] = (byte)(startAddress >> 8); // Старший байт начального адреса регистра
+            command[3] = (byte)(startAddress & 0xFF); // Младший байт начального адреса регистра
+            command[4] = (byte)(quantity >> 8); // Старший байт количества регистров
+            command[5] = (byte)(quantity & 0xFF); // Младший байт количества регистров
+
+            // Вычисляем контрольную сумму (CRC)
+            ushort crc = CalculateCRC(command, 6);
+            command[6] = (byte)(crc & 0xFF); // Младший байт CRC
+            command[7] = (byte)(crc >> 8); // Старший байт CRC
+
+            return command;
+        }
+
+
 
         public static string DecodeModbusMessageValueMb3(byte[] buffer)
         {

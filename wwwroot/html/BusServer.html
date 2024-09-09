@@ -51,31 +51,67 @@
             }
         }
 
-        async function SendMb3ReadToDevice() {
-            const modbusReadID = document.getElementById('modbusReadID').value;
-            const modbusReadColumnNumber = document.getElementById('modbusReadColumnNumber').value;
-            const modbusInput = {
-                modbusReadID: modbusReadID,
-                modbusReadColumnNumber: modbusReadColumnNumber
-            };
-
-            console.log(modbusInput); // Добавьте это для отладки
-
-            const response = await fetch('/api/TCP/sendMb3', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(modbusInput)
-            });
-
-            if (response.ok) {
+        async function SendMb3ReadToDevice()
+        {
+            const modbusID = document.getElementById('modbusID').value;
+            const modbusStartAdress = document.getElementById('modbusStartAdress').value;
+            const modbusInput =
+                {
+                    modbusID: modbusID,
+                    modbusStartAdress: modbusStartAdress
+                };
+            const response = await fetch('/api/TCP/sendMb3',
+                {
+                    method: 'POST',
+                    headers:
+                    {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(modbusInput)
+                });
+            if (response.ok)
+            {
                 alert('Modbus command sent successfully!');
-            } else {
+            }
+            else
+            {
                 const errorText = await response.text();
                 alert('Failed to send Modbus command: ' + errorText);
             }
         }
+
+        async function SendMb10WriteToDevice()
+        {
+            const modbusID = document.getElementById('modbusID').value;
+            const modbusStartAdress = document.getElementById('modbusStartAdress').value;
+            const modbussQuanity = document.getElementById('modbussQuanity').value;
+            const modbussData = document.getElementById('modbussData').value;
+
+            const modbusInput =
+            {
+                modbusID: modbusID,
+                modbusStartAdress: modbusStartAdress,
+                modbussQuanity: modbussQuanity,
+                modbussData: modbussData
+            };
+            const response = await fetch('/api/TCP/sendMb10',
+                {
+                    method: 'POST',
+                    headers:
+                    {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(modbusInput)
+                });
+            if (response.ok) {
+                alert('Modbus command sent successfully!');
+            }
+            else {
+                const errorText = await response.text();
+                alert('Failed to send Modbus command: ' + errorText);
+            }
+        }
+
 
         setInterval(updateData, 200); // Обновление каждые 200 миллисекунд
         updateData(); // Первоначальное обновление
@@ -95,7 +131,6 @@
         </nav>
     </header>
     <div class="container">
-
         <h5 id="connectionStatus">Offline</h5>
         <div id="sendZone" class="row">
             <div class="input-field col s12">
@@ -103,15 +138,22 @@
                 <button class="btn waves-effect waves-light cian" onclick="SendToDevice()">Send Message</button>
             </div>
         </div>
-        <div id="ModbusReadComand" class="row">
+        <div id="ModbusComand" class="row">
             <div class="input-field col s6">
-                <input type="number" id="modbusReadID" placeholder="ModbusID">
+                <input type="number" id="modbusID" placeholder="ModbussID">
             </div>
             <div class="input-field col s6">
-                <input type="number" id="modbusReadColumnNumber" placeholder="ColumnNumber">
+                <input type="number" id="modbusStartAdress" placeholder="ModbussAdress">
+            </div>
+            <div class="input-field col s6">
+                <input type="number" id="modbussQuanity" placeholder="ModbussQuanity">
+            </div>
+            <div class="input-field col s6">
+                <input type="text" id="modbussData" placeholder="ModbussData">
             </div>
             <div class="col s12">
                 <button class="btn waves-effect waves-light cian" onclick="SendMb3ReadToDevice()">Send MB Read 3 Command</button>
+                <button class="btn waves-effect waves-light cian" onclick="SendMb10WriteToDevice()">Send MB Read 10 Command</button>
             </div>
         </div>
 

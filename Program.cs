@@ -76,9 +76,51 @@ app.MapPost("/api/TCP/sendMb3", async (HttpContext context) =>
 
         var modbusInput = JsonSerializer.Deserialize<TcpConnectionController.ModbusInput>(mbData, options);
 
-        if (int.TryParse(modbusInput.ModbusReadID, out int ID) && int.TryParse(modbusInput.ModbusReadColumnNumber, out int ColumnNum))
+        if (int.TryParse(modbusInput.modbusID, out int ID) && int.TryParse(modbusInput.modbusStartAdress, out int ColumnNum))
         {
             await tcpServer.SendMB3CommandToDevice(ID, ColumnNum, 1);
+            return Results.Ok();
+        }
+        else
+        {
+            return Results.BadRequest("Invalid input data");
+        }
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest("Invalid input data");
+    }
+});
+
+app.MapPost("/api/TCP/sendMb10", async (HttpContext context) =>
+{
+    var mbData = await new StreamReader(context.Request.Body).ReadToEndAsync();
+
+    try
+    {
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        };
+
+        var modbusInput = JsonSerializer.Deserialize<TcpConnectionController.ModbusInput>(mbData, options);
+
+        if (int.TryParse(modbusInput.modbusID, out int ID) 
+        && int.TryParse(modbusInput.modbusStartAdress, out int ColumnNum)
+        && int.TryParse(modbusInput.modbussQuanity, out int Quanity))
+        {
+            byte[] data = new byte[Quanity*2];
+            string[] dataBytes = modbusInput.modbussData.Split('_');
+
+            Console.WriteLine(modbusInput.modbusID + " " +  modbusInput.modbusStartAdress + " " + modbusInput.modbussQuanity + " " + dataBytes[0] + " " + dataBytes[1]);
+
+            for (int i = 0; i < dataBytes.Count(); i++)
+            {
+                data[i] = Convert.ToByte(dataBytes[i]);
+            }
+
+            await tcpServer.SendMB10CommandToDevice(ID, ColumnNum, Quanity, data);
             return Results.Ok();
         }
         else
