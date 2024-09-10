@@ -16,7 +16,7 @@ string ipAddress = "90.188.113.113";
 int port = 42360;
 TcpConnectionController.TcpServer tcpServer = new TcpConnectionController.TcpServer(10000);
 
-TcpConnectionController.TcpDeviceTable tcpDeviceTable = new TcpConnectionController.TcpDeviceTable();
+TcpConnectionController.TcpDeviceTableServer TcpDeviceTableServer = new TcpConnectionController.TcpDeviceTableServer();
 
 
 app.MapGet("/", async (HttpContext context) =>
@@ -156,16 +156,17 @@ app.MapGet("/Table", async (HttpContext context) =>
 
 app.MapGet("/api/Table/start", async () =>
 {
-    await tcpDeviceTable.Start(ipAddress, port);
+    await TcpDeviceTableServer.Start(ipAddress, port);
 });
 
 app.MapGet("/api/Table/stop", async () =>
 {
-    await tcpDeviceTable.Stop();
+    await TcpDeviceTableServer.Stop();
 });
 
 app.MapGet("/api/Table/UpdateTable/{index}", async (int index) =>
 {
+
         string answer = "zameni menia";
         if (answer != "no data")
             return Results.Content(answer, "text/plain");
@@ -175,7 +176,7 @@ app.MapGet("/api/Table/UpdateTable/{index}", async (int index) =>
 
 app.MapGet("/api/Table/GetConnectionStatus", async () =>
 {
-    string answer = tcpDeviceTable.connectionStatus;
+    string answer = TcpDeviceTableServer.connectionStatus;
         return Results.Content(answer, "text/plain");
 
 

@@ -28,6 +28,7 @@ namespace Read_Write_GPRS_Server.Controllers
         public class TcpServer
         {
             private readonly BlockingCollection<string> _messageQueue = new BlockingCollection<string>();
+
             private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
             public string messageLog { get; set; }
@@ -36,7 +37,7 @@ namespace Read_Write_GPRS_Server.Controllers
 
             public int messageBufferSize { get; set; }
 
-            public TcpDevice.UsrGPRS232_730 device;
+            public  UsrGPRS232_730 device;
 
             private TcpListener server { get; set; }
 
@@ -358,23 +359,18 @@ namespace Read_Write_GPRS_Server.Controllers
         }
 
 
-        public class TcpDeviceTable
+        public class TcpDeviceTableServer
         {
-            private CancellationTokenSource _cancellationTokenSource;
-            private readonly ConcurrentQueue<TaskCompletionSource<string>> _requestQueue = new ConcurrentQueue<TaskCompletionSource<string>>();
-            private readonly ConcurrentQueue<string> _responseQueue = new ConcurrentQueue<string>();
-            private readonly SemaphoreSlim getParamMb3Semaphore = new SemaphoreSlim(1, 1);
-
-            private TcpClient client;
+           
             public bool isRunning { get; set; }
             private TcpListener server;
 
-            private UsrGPRS232_730 device;
+            public UsrGPRS232_730 device;
             public string mbValue { get; set; }
 
             public string connectionStatus { get; set; }
 
-            public TcpDeviceTable()
+            public TcpDeviceTableServer()
             {
                 connectionStatus = "Disconnected";
                 isRunning = false;
@@ -382,7 +378,6 @@ namespace Read_Write_GPRS_Server.Controllers
 
             public async Task Start(string ipAddress, int port)
             {
-                _cancellationTokenSource = new CancellationTokenSource();
 
                 if (isRunning)
                 {
