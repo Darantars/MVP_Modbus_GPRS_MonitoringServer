@@ -24,12 +24,12 @@
             const connectionStatus = await response.text();
             document.getElementById(`conectionStatus`).innerHTML = connectionStatus;
 
-            for (let i = 1; i <= 10; i++) {
-                const response = await fetch(`/api/Table/UpdateTable/${i}`);
-                const data = await response.text();
-                document.getElementById(`dataTd${i}`).innerHTML = data;
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
+            //for (let i = 1; i <= 10; i++) {
+            //    const response = await fetch(`/api/Table/UpdateTable/${i}`);
+            //    const data = await response.text();
+            //    document.getElementById(`dataTd${i}`).innerHTML = data;
+            //    await new Promise(resolve => setTimeout(resolve, 100));
+            //}
         }
 
         setInterval(updateData, 100); // Обновление каждые 100 миллисекунд

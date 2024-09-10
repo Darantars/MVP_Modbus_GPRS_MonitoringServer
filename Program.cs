@@ -13,7 +13,7 @@ var app = builder.Build();
 
 // Указываем IP-адрес и порт для прослушивания
 string ipAddress = "90.188.113.113";
-int port = 42362;
+int port = 42360;
 TcpConnectionController.TcpServer tcpServer = new TcpConnectionController.TcpServer(10000);
 
 TcpConnectionController.TcpDeviceTable tcpDeviceTable = new TcpConnectionController.TcpDeviceTable();
@@ -78,7 +78,7 @@ app.MapPost("/api/TCP/sendMb3", async (HttpContext context) =>
 
         if (int.TryParse(modbusInput.modbusID, out int ID) && int.TryParse(modbusInput.modbusStartAdress, out int ColumnNum))
         {
-            await tcpServer.SendMB3CommandToDevice(ID, ColumnNum, 1);
+            await tcpServer.SendMB3CommandToDevice(tcpServer.device, ID, ColumnNum, 1);
             return Results.Ok();
         }
         else
@@ -120,7 +120,7 @@ app.MapPost("/api/TCP/sendMb10", async (HttpContext context) =>
                 data[i] = Convert.ToByte(dataBytes[i]);
             }
 
-            await tcpServer.SendMB10CommandToDevice(ID, ColumnNum, Quanity, data);
+            await tcpServer.SendMB10CommandToDevice(tcpServer.device, ID, ColumnNum, Quanity, data);
             return Results.Ok();
         }
         else
@@ -166,7 +166,7 @@ app.MapGet("/api/Table/stop", async () =>
 
 app.MapGet("/api/Table/UpdateTable/{index}", async (int index) =>
 {
-        string answer = await tcpDeviceTable.GetMb3ParamValueAsync(202, index, 1);
+        string answer = "zameni menia";
         if (answer != "no data")
             return Results.Content(answer, "text/plain");
         return Results.Content("Не получен ответ от устройства", "text/plain");

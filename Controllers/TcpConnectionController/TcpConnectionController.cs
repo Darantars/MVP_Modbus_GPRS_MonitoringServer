@@ -36,7 +36,7 @@ namespace Read_Write_GPRS_Server.Controllers
 
             public int messageBufferSize { get; set; }
 
-            private TcpDevice.UsrGPRS232_730 gprsOne;
+            public TcpDevice.UsrGPRS232_730 device;
 
             private TcpListener server { get; set; }
 
@@ -68,22 +68,22 @@ namespace Read_Write_GPRS_Server.Controllers
                     server.Start();
                     await AddMessageToQueue($"TCP-сервер запущен на {ipAddress}:{port}");
 
-                    gprsOne = new TcpDevice.UsrGPRS232_730("GPRS Online", 1); //потом заменить на задание со View
-                    gprsOne.tcpConnectionStatus = "Connecting...";
+                    device = new TcpDevice.UsrGPRS232_730("GPRS Online", 1); //потом заменить на задание со View
+                    device.tcpConnectionStatus = "Connecting...";
                     isRunning = true;
                     await AddMessageToQueue("Сервер развернут. Ожидание подключения устройства...");
                     
                     while (true)
                     {
-                        gprsOne.tcpClient = await server.AcceptTcpClientAsync();
+                        device.tcpClient = await server.AcceptTcpClientAsync();
                         await AddMessageToQueue("Подключено новое соединение.");
-                        lock (gprsOne.connectinLocker)
+                        lock (device.connectinLocker)
                         {
-                            _ = Task.Run(() => StartCheckConnectionToDeviceLoop(gprsOne));
+                            _ = Task.Run(() => StartCheckConnectionToDeviceLoop(device));
                         }
 
                         // Обрабатываем клиента в отдельной задаче
-                        _ = Task.Run(() => HandleClientAsync(gprsOne));
+                        _ = Task.Run(() => HandleClientAsync(device));
                     }
                 }
                 catch (Exception ex)
@@ -106,9 +106,9 @@ namespace Read_Write_GPRS_Server.Controllers
                     await AddMessageToQueue("TCP-сервер остановлен.");
                 }
 
-                if (gprsOne.tcpClient != null)
+                if (device.tcpClient != null)
                 {
-                    gprsOne.tcpClient.Close();
+                    device.tcpClient.Close();
                     await AddMessageToQueue("Клиентское соединение закрыто.");
                 }
 
@@ -178,15 +178,15 @@ namespace Read_Write_GPRS_Server.Controllers
             {
                 if (!isRunning)
                     return "Server is not running";
-                if (gprsOne != null)
-                    return gprsOne.tcpConnectionStatus;
+                if (device != null)
+                    return device.tcpConnectionStatus;
                 else
                     return "Not started yet";
             }
 
             public async Task SendMessgeToDeviceASCII(string message)
             {
-                if (gprsOne.tcpClient == null || !gprsOne.tcpClient.Connected)
+                if (device.tcpClient == null || !device.tcpClient.Connected)
                 {
                     await AddMessageToQueue("No client. Pleasr, await client");
                     return;
@@ -194,7 +194,7 @@ namespace Read_Write_GPRS_Server.Controllers
 
                 try
                 {
-                    NetworkStream stream = gprsOne.tcpClient.GetStream();
+                    NetworkStream stream = device.tcpClient.GetStream();
                     string response = message;
                     byte[] responseBytes = Encoding.ASCII.GetBytes(response);
                     await stream.WriteAsync(responseBytes, 0, responseBytes.Length);
@@ -206,10 +206,10 @@ namespace Read_Write_GPRS_Server.Controllers
                 }
             }
 
-            public async Task SendMB3CommandToDevice(int deviceId, int address, int quantity)
+            public async Task SendMB3CommandToDevice(UsrGPRS232_730 device, int deviceId, int address, int quantity)
             {
-                if (gprsOne == null) return;
-                if (gprsOne.tcpClient == null || !gprsOne.tcpClient.Connected)
+                if (device == null) return;
+                if (device.tcpClient == null || !device.tcpClient.Connected)
                 {
                     await AddMessageToQueue("No client. Pleasr, await client");
                     return;
@@ -217,7 +217,7 @@ namespace Read_Write_GPRS_Server.Controllers
 
                 try
                 {
-                    NetworkStream stream = gprsOne.tcpClient.GetStream();
+                    NetworkStream stream = device.tcpClient.GetStream();
                     byte[] responseBytes = Protocols.Modbuss.ModBussRTU.GenerateReadHoldingRegistersCommand(deviceId, address, quantity);
                     string command = BitConverter.ToString(responseBytes);
                     await stream.WriteAsync(responseBytes, 0, responseBytes.Length);
@@ -229,10 +229,10 @@ namespace Read_Write_GPRS_Server.Controllers
                 }
             }
 
-            public async Task SendMB10CommandToDevice(int deviceId, int address, int quantity, byte[] byteData)
+            public async Task SendMB10CommandToDevice(UsrGPRS232_730 device, int deviceId, int address, int quantity, byte[] byteData)
             {
-                if (gprsOne == null) return;
-                if (gprsOne.tcpClient == null || !gprsOne.tcpClient.Connected)
+                if (device == null) return;
+                if (device.tcpClient == null || !device.tcpClient.Connected)
                 {
                     await AddMessageToQueue("No client. Pleasr, await client");
                     return;
@@ -240,7 +240,7 @@ namespace Read_Write_GPRS_Server.Controllers
 
                 try
                 {
-                    NetworkStream stream = gprsOne.tcpClient.GetStream();
+                    NetworkStream stream = device.tcpClient.GetStream();
                     byte[] responseBytes = Protocols.Modbuss.ModBussRTU.GenerateWriteMultipleRegistersCommand(deviceId, address, quantity, quantity * 2, byteData);
                     string command = BitConverter.ToString(responseBytes);
                     await stream.WriteAsync(responseBytes, 0, responseBytes.Length);
@@ -360,27 +360,36 @@ namespace Read_Write_GPRS_Server.Controllers
 
         public class TcpDeviceTable
         {
-            private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+            private CancellationTokenSource _cancellationTokenSource;
             private readonly ConcurrentQueue<TaskCompletionSource<string>> _requestQueue = new ConcurrentQueue<TaskCompletionSource<string>>();
             private readonly ConcurrentQueue<string> _responseQueue = new ConcurrentQueue<string>();
             private readonly SemaphoreSlim getParamMb3Semaphore = new SemaphoreSlim(1, 1);
 
-            TcpClient client { get; set; }
-            bool serverRuning { get; set; }
-            TcpListener server { get; set; }
+            private TcpClient client;
+            public bool isRunning { get; set; }
+            private TcpListener server;
 
+            private UsrGPRS232_730 device;
             public string mbValue { get; set; }
 
-            public string connectionStatus {  get; set; }
+            public string connectionStatus { get; set; }
 
-            public TcpDeviceTable() { 
+            public TcpDeviceTable()
+            {
                 connectionStatus = "Disconnected";
-                serverRuning = false;
+                isRunning = false;
             }
 
             public async Task Start(string ipAddress, int port)
             {
-                Console.WriteLine("TryingStartTable");
+                _cancellationTokenSource = new CancellationTokenSource();
+
+                if (isRunning)
+                {
+                    //await AddMessageToQueue("Сервер уже запущен.");
+                    return;
+                }
+
                 try
                 {
                     server = new TcpListener(IPAddress.Any, port);
@@ -389,69 +398,36 @@ namespace Read_Write_GPRS_Server.Controllers
                     server.Start();
                     Console.WriteLine($"TCP-сервер связи с устройством запущен на {ipAddress}:{port}");
                     connectionStatus = $"Started on {ipAddress}:{port}, waiting for clients...";
+
+                    device = new UsrGPRS232_730("GPRS Online", 1); //потом заменить на задание со View
+                    device.tcpConnectionStatus = "Connecting...";
+                    isRunning = true;
+                    connectionStatus = "Сервер развернут. Ожидание подключения устройства...";
+
                     while (true)
                     {
-                        client = await server.AcceptTcpClientAsync();
-                        Console.WriteLine("Подключено новое соединение.");
+                        device.tcpClient = await server.AcceptTcpClientAsync();
                         connectionStatus = "Connected";
-                        serverRuning = true;
-                        //Обрабатываем клиента в отдельной задаче
-                        _ = Task.Run(() => HandleClientAnswerMb3Async(client));
+
+                        lock (device.connectinLocker)
+                        {
+                            _ = Task.Run(() => StartCheckConnectionToDeviceLoop(device));
+                        }
+
+                        // Обрабатываем клиента в отдельной задаче
+                        _ = Task.Run(() => HandleClientAsync(device));
                     }
                 }
                 catch (Exception ex)
                 {
+                    connectionStatus = $"Ошибка: {ex.Message}";
                     Console.WriteLine($"Ошибка: {ex.Message}");
                 }
-                Console.WriteLine("StartTable");
             }
 
-            public async Task<string> GetMb3ParamValueAsync(int deviceId, int address, int quantity)
+            private async Task HandleClientAsync(UsrGPRS232_730 device)
             {
-                await getParamMb3Semaphore.WaitAsync();
-                try
-                {
-                    if (serverRuning)
-                    {
-                        var tcs = new TaskCompletionSource<string>();
-                        _requestQueue.Enqueue(tcs);
-                        await SendMB3CommandToDeviceAsync(deviceId, address, quantity);
-                        return await tcs.Task;
-                    }
-                    return "Await client";
-                }
-                finally
-                {
-                    getParamMb3Semaphore.Release();
-                }
-            }
-
-            public async Task<string> SendMB3CommandToDeviceAsync(int deviceId, int address, int quantity)
-            {
-                if (client == null || !client.Connected)
-                {
-                    mbValue = "Loading...";
-                    return mbValue;
-                }
-
-                try
-                {
-                    NetworkStream stream = client.GetStream();
-                    byte[] responseBytes = Protocols.Modbuss.ModBussRTU.GenerateReadHoldingRegistersCommand(deviceId, address, quantity);
-                    string command = BitConverter.ToString(responseBytes);
-                    await stream.WriteAsync(responseBytes, 0, responseBytes.Length);
-                    Console.WriteLine($"Отправлено сообщение: Отправлена команда MB4 для {deviceId} ID {address} регистр 2 байта<br> hex command: {command}");
-                    return "Request sent";
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Sending error: {ex.Message}");
-                    return "no data";
-                }
-            }
-
-            private async Task HandleClientAnswerMb3Async(TcpClient client)
-            {
+                TcpClient client = device.tcpClient;
                 try
                 {
                     using (NetworkStream stream = client.GetStream())
@@ -462,29 +438,30 @@ namespace Read_Write_GPRS_Server.Controllers
                         // Читаем данные от клиента
                         while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                         {
-                            string response = Protocols.Modbuss.ModBussRTU.DecodeModbusMessageValueMb3(buffer);
-                            if (response != null && response != "no data")
+                            device.tcp5HeartBeatTimingMessageCounter = device.tcp5HeartBeatTimingMessageCounter + 1;
+                            byte[] newBuffer = new byte[bytesRead];
+                            Array.Copy(buffer, newBuffer, bytesRead);
+                            List<byte[]> responseList = await Task.Run(() => Protocols.Modbuss.ModBussRTU.CutToModbusRtuMessageListFastMb(newBuffer));
+
+                            string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+
+                            string decodedMbCommand = "";
+
+                            for (int i = 0; i < responseList.Count; i++)
                             {
-                                _responseQueue.Enqueue(response);
-                                Console.WriteLine($"Поймано {response}");
-
-                                if (_requestQueue.TryDequeue(out var tcs))
-                                {
-                                    tcs.SetResult(response);
-                                }
+                                decodedMbCommand = decodedMbCommand + "<br>"+ Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i]);
                             }
-                            //if (responseTimeoutHasElapsed) 
-                            //{
-                                //response = "Timeout has ellapsed";
-                                //_responseQueue.Enqueue(response);
-                                //Console.WriteLine($"Timeout has ellapsed");
 
-                                //if (_requestQueue.TryDequeue(out var tcs))
-                                //{
-                                //    tcs.SetResult(response);
-                                //}
-                            //}
-                        }
+                            string hexedNessage = BitConverter.ToString(buffer, 0, bytesRead);
+
+                            string cuttedMessageMB = "";
+                            for (int i = 0; i < responseList.Count; i++)
+                            {
+                                cuttedMessageMB = cuttedMessageMB + "<br>"+ BitConverter.ToString(responseList[i]);
+                            }
+
+                            Console.WriteLine($"<br> Получено сообщение: <br> ASCII: {message} <br> MB: {decodedMbCommand} <br> hex: {hexedNessage} <br> hex-commands(probably): {cuttedMessageMB}");
+                        }  
                     }
                 }
                 catch (Exception ex)
@@ -493,10 +470,114 @@ namespace Read_Write_GPRS_Server.Controllers
                 }
             }
 
+            private async Task StartCheckConnectionToDeviceLoop(UsrGPRS232_730 device)              ////T0 DO: Таска была открыта, таску нужно закрыть
+            {
+                double delayFiveHeartBeatReal = device.heartbeatMessageRateSec * 2;
+                int loopCounter = 1;
+                int[] heartBeatAtLoop = new int[5];
+
+
+                while (isRunning)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(2));
+                    heartBeatAtLoop[loopCounter - 1] = device.tcp5HeartBeatTimingMessageCounter;
+                    int missedPockets = 0;
+                    for (int i = 0; i < 4; i++)
+                    {
+                        if (heartBeatAtLoop[i] < i + 1)
+                            missedPockets++;
+                    }
+                    switch (missedPockets)
+                    {
+                        case 5:
+                            if (device.tcpClient != null)
+                                device.tcpConnectionStatus = "Bad connection 0% package recived";
+                                Console.WriteLine("Bad connection 0% package recived");
+                            break;
+                        case 4:
+                            device.tcpConnectionStatus = "Bad connection 20% package recived";
+                            Console.WriteLine("Bad connection 20% package recived");
+                            break;
+                        case 3:
+                            device.tcpConnectionStatus = "Bad connection 40% package recived";
+                            Console.WriteLine("Bad connection 40% package recived");
+                            break;
+                        case 2:
+                            device.tcpConnectionStatus = "Unstable connection 60% package recived";
+                            Console.WriteLine("Unstable connection 60% package recived");
+                            break;
+                        case 1:
+                            device.tcpConnectionStatus = "Connected 80% package recived";
+                            break;
+                        case 0:
+                            device.tcpConnectionStatus = "Fast connection 100% package recived";
+                            break;
+                        default:
+                            device.tcpConnectionStatus = "Connection supergood!";
+                            break;
+                    }
+                    connectionStatus = device.tcpConnectionStatus;
+
+                    if (loopCounter == 5)
+                    {
+                        loopCounter = 1;
+                        device.tcp5HeartBeatTimingMessageCounter = 0;
+                    }
+                    else
+                        loopCounter = loopCounter + 1;
+                }
+            }
+
+            public async Task SendMB3CommandToDevice(UsrGPRS232_730 device, int deviceId, int address, int quantity)
+            {
+                if (device == null) return;
+                if (device.tcpClient == null || !device.tcpClient.Connected)
+                {
+                    return;
+                }
+
+                try
+                {
+                    NetworkStream stream = device.tcpClient.GetStream();
+                    byte[] responseBytes = Protocols.Modbuss.ModBussRTU.GenerateReadHoldingRegistersCommand(deviceId, address, quantity);
+                    string command = BitConverter.ToString(responseBytes);
+                    await stream.WriteAsync(responseBytes, 0, responseBytes.Length);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Sending error: {ex.Message}");
+                }
+            }
+
+            public async Task SendMB10CommandToDevice(UsrGPRS232_730 device, int deviceId, int address, int quantity, byte[] byteData)
+            {
+                if (device == null) return;
+                if (device.tcpClient == null || !device.tcpClient.Connected)
+                {
+                    Console.WriteLine("No client. Pleasr, await client");
+                    return;
+                }
+
+                try
+                {
+                    NetworkStream stream = device.tcpClient.GetStream();
+                    byte[] responseBytes = Protocols.Modbuss.ModBussRTU.GenerateWriteMultipleRegistersCommand(deviceId, address, quantity, quantity * 2, byteData);
+                    string command = BitConverter.ToString(responseBytes);
+                    await stream.WriteAsync(responseBytes, 0, responseBytes.Length);
+                    Console.WriteLine($"Отправлено сообщение: Отправлена команда MB10  для {deviceId} ID {address} регистр 2 байта<br> hex command: {command}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Sending error: {ex.Message}");
+                }
+            }
             public async Task Stop()
             {
-                Console.WriteLine("TryingStopTable");
-                
+                if (!isRunning)
+                {
+                    Console.WriteLine("Сервер уже остановлен.");
+                    return;
+                }
 
                 if (server != null)
                 {
@@ -504,19 +585,18 @@ namespace Read_Write_GPRS_Server.Controllers
                     Console.WriteLine("TCP-сервер остановлен.");
                 }
 
-                if (client != null)
+                if (device.tcpClient != null)
                 {
-                    client.Close();
+                    device.tcpClient.Close();
                     Console.WriteLine("Клиентское соединение закрыто.");
                 }
-                serverRuning = false;
-                connectionStatus = "Disconnected";
-                Console.WriteLine("Сервер и клиентские соединения закрыты.");
-                _cancellationTokenSource.Cancel();
-            }
 
-            
+                isRunning = false;
+                connectionStatus = "Disconected";
+                Console.WriteLine("Сервер и клиентские соединения закрыты.");
+            }
         }
+
     }
 }
     
