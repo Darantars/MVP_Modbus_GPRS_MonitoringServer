@@ -20,7 +20,7 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
         public DataTable( int tableRowSize, int tableColumnSize, int[] tableAdreses, Controllers.TcpConnectionController.TcpDeviceTableServer tableTableServer) 
         {
-            if (tableRowSize < 0 || adreses.Count() != tableColumnSize - 1)
+            if (tableRowSize < 0 )
             {
                 throw new ArgumentException("invalid DataSet for Table");
             }
@@ -30,24 +30,24 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             columnSize = tableColumnSize;
             headers = new string[tableRowSize];
             adreses = tableAdreses;
+            tableDataValues = new string[tableColumnSize];
 
         }
 
-        public async void GetTableData(string mode, int modbusID)     //Версия для Uint16 только value
+        public async Task GetTableDataAsync(string mode, int modbusID)     //Версия для Uint16 только value
         {
-
             for (int i = 0; i < columnSize - 1; i++)
             {
-                tableDataValues[i] = await GetValueByAdressMb(mode, modbusID, this.adreses[i]);
+                tableDataValues[i] = await GetValueByAdressMbAsync(mode, modbusID, this.adreses[i]);
             }
         }
 
-        private async Task<string> GetValueByAdressMb(string mode, int modbusID, int adress)
+        private async Task<string> GetValueByAdressMbAsync(string mode, int modbusID, int adress)
         {
-            if (mode == default)
+            if (mode == "default")
             {
-                await this.TableServer.SendMB3CommandToDevice(TableServer.device, modbusID, adress, 0);
-                return await WaitingResponseMb3();
+                await this.TableServer.SendMB3CommandToDevice(TableServer.device, modbusID, adress, 1);
+                return await WaitingResponseMb3Async();
 
             }
             else
@@ -56,7 +56,7 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             }
         }
 
-        public async Task<string> WaitingResponseMb3() //Здесь мы ждем ответа от сервера подходящего под усл в течении 2 сек 
+        public async Task<string> WaitingResponseMb3Async() //Здесь мы ждем ответа от сервера подходящего под усл в течении 2 сек 
         {
             while (true) //заменить на tirElapsed
             {
@@ -66,7 +66,10 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             return "Нет данных";
         }
 
-
+        public string[] GetTableDataValues()
+        {
+            return tableDataValues;
+        }
 
     }
 }

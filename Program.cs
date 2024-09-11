@@ -141,7 +141,7 @@ app.MapGet("/api/TCP/stop", async () =>
 
 
 
-
+// ***** ДАЛЬШЕ БОГА НЕТ ******
 
 
 
@@ -164,14 +164,18 @@ app.MapGet("/api/Table/stop", async () =>
     await TcpDeviceTableServer.Stop();
 });
 
-app.MapGet("/api/Table/UpdateTable/{index}", async (int index) =>
+app.MapGet("/api/Table/GetTableData", async (int modbusID) =>
 {
+    if(TcpDeviceTableServer.isRunning && TcpDeviceTableServer.dataTable != null && false)
+    {
+        await TcpDeviceTableServer.dataTable.GetTableDataAsync("default", modbusID);    
+        var tableDataValues = TcpDeviceTableServer.dataTable.GetTableDataValues();
+        return Results.Json(tableDataValues);
+    }
 
-        string answer = "zameni menia";
-        if (answer != "no data")
-            return Results.Content(answer, "text/plain");
-        return Results.Content("Не получен ответ от устройства", "text/plain");
-
+    
+    return Results.Json(new string[] { "1", "12", "213", "0", "0", 
+        "Не получен ответ от устройства", "1", "23", "1", "97" });
 });
 
 app.MapGet("/api/Table/GetConnectionStatus", async () =>

@@ -24,12 +24,34 @@
             const connectionStatus = await response.text();
             document.getElementById(`conectionStatus`).innerHTML = connectionStatus;
 
-            //for (let i = 1; i <= 10; i++) {
-            //    const response = await fetch(`/api/Table/UpdateTable/${i}`);
-            //    const data = await response.text();
-            //    document.getElementById(`dataTd${i}`).innerHTML = data;
-            //    await new Promise(resolve => setTimeout(resolve, 100));
-            //}
+            // *** Работа с таблицей ***
+            const modbusID = document.getElementById('modbusID').value;
+            if (modbusID != "") {
+                const tableDataResponse = await fetch(`/api/Table/GetTableData?modbusID=${modbusID}`);
+                const tableData = await tableDataResponse.json();
+
+                const tableBody = document.getElementById('tableBody');
+                tableBody.innerHTML = ''; // Очистка текущей таблицы
+
+                tableData.forEach((row, index) => {
+                    const tr = document.createElement('tr');
+
+                    // Добавление столбца с названиями параметров
+                    const tdName = document.createElement('td');
+                    tdName.textContent = `Parameter ${index + 1}`; // Пример названия параметра
+                    tr.appendChild(tdName);
+
+                    const tdAddress = document.createElement('td');
+                    tdAddress.textContent = index + 1;
+                    tr.appendChild(tdAddress);
+
+                    const tdValue = document.createElement('td');
+                    tdValue.textContent = row;
+                    tr.appendChild(tdValue);
+
+                    tableBody.appendChild(tr);
+                });
+            }
         }
 
         setInterval(updateData, 100); // Обновление каждые 100 миллисекунд
@@ -41,33 +63,29 @@
         <nav class="waves-effect waves-light teal">
             <div class="nav-wrapper">
                 <ul id="nav" style=" margin-inline:15px ;" class="left hide-on-med-and-down">
-                    <li><a  href="#" onclick="Server()">Buss </a></li>
-                    <li><a  href="#" onclick="StartConnection()">Start</a></li>
-                    <li><a  href="#" onclick="StopConnection()">Stop</a></li>
-                    <li><a  href="#" style="font-weight: 600; padding-left: 20px; padding-right: 20px; " ;" class="brand-logo">Device-Table</a> </li>
+                    <li><a href="#" onclick="Server()">Buss </a></li>
+                    <li><a href="#" onclick="StartConnection()">Start</a></li>
+                    <li><a href="#" onclick="StopConnection()">Stop</a></li>
+                    <li><a href="#" style="font-weight: 600; padding-left: 20px; padding-right: 20px; " ;" class="brand-logo">Device-Table</a> </li>
                 </ul>
             </div>
         </nav>
     </header>
     <div class="container">
-
         <div>
-
             <h4 id="conectionStatus"></h4>
             <input type="number" id="modbusID" placeholder="ModbusID">
         </div>
         <table>
-            <tr><th>адресс</th><th>значение в uint16(dec)</th></tr>
-            <tr><td>1</td><td id="dataTd1">данные</td></tr>
-            <tr><td>2</td><td id="dataTd2">данные</td></tr>
-            <tr><td>3</td><td id="dataTd3">данные</td></tr>
-            <tr><td>4</td><td id="dataTd4">данные</td></tr>
-            <tr><td>5</td><td id="dataTd5">данные</td></tr>
-            <tr><td>6</td><td id="dataTd6">данные</td></tr>
-            <tr><td>7</td><td id="dataTd7">данные</td></tr>
-            <tr><td>8</td><td id="dataTd8">данные</td></tr>
-            <tr><td>9</td><td id="dataTd9">данные</td></tr>
-            <tr><td>10</td><td id="dataTd10">данные</td></tr>
+            <thead>
+                <tr>
+                    <th>Название параметра</th>
+                    <th>Адрес</th>
+                    <th>Значение в uint16 (dec)</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
         </table>
     </div>
 </body>

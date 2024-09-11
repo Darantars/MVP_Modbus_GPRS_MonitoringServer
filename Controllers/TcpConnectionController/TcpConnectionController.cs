@@ -370,11 +370,15 @@ namespace Read_Write_GPRS_Server.Controllers
 
             public string connectionStatus { get; set; }
 
+            public Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable dataTable{ get; set; }
+
             public TcpDeviceTableServer()
             {
                 connectionStatus = "Disconnected";
                 isRunning = false;
+                dataTable = new Plugins.DeviceTable.DataTable(10, 10, new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }, this);
             }
+
 
             public async Task Start(string ipAddress, int port)
             {
