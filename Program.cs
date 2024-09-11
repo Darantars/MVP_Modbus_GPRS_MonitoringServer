@@ -13,10 +13,10 @@ var app = builder.Build();
 
 // Указываем IP-адрес и порт для прослушивания
 string ipAddress = "90.188.113.113";
-int port = 42362;
+int port = 42360;
 TcpConnectionController.TcpServer tcpServer = new TcpConnectionController.TcpServer(10000);
 
-TcpConnectionController.TcpDeviceTable tcpDeviceTable = new TcpConnectionController.TcpDeviceTable();
+TcpConnectionController.TcpDeviceTableServer TcpDeviceTableServer = new TcpConnectionController.TcpDeviceTableServer();
 
 
 app.MapGet("/", async (HttpContext context) =>
@@ -78,7 +78,7 @@ app.MapPost("/api/TCP/sendMb3", async (HttpContext context) =>
 
         if (int.TryParse(modbusInput.modbusID, out int ID) && int.TryParse(modbusInput.modbusStartAdress, out int ColumnNum))
         {
-            await tcpServer.SendMB3CommandToDevice(ID, ColumnNum, 1);
+            await tcpServer.SendMB3CommandToDevice(tcpServer.device, ID, ColumnNum, 1);
             return Results.Ok();
         }
         else
@@ -120,7 +120,7 @@ app.MapPost("/api/TCP/sendMb10", async (HttpContext context) =>
                 data[i] = Convert.ToByte(dataBytes[i]);
             }
 
-            await tcpServer.SendMB10CommandToDevice(ID, ColumnNum, Quanity, data);
+            await tcpServer.SendMB10CommandToDevice(tcpServer.device, ID, ColumnNum, Quanity, data);
             return Results.Ok();
         }
         else
@@ -141,7 +141,7 @@ app.MapGet("/api/TCP/stop", async () =>
 
 
 
-
+// ***** ДАЛЬШЕ БОГА НЕТ ******
 
 
 
@@ -156,26 +156,31 @@ app.MapGet("/Table", async (HttpContext context) =>
 
 app.MapGet("/api/Table/start", async () =>
 {
-    await tcpDeviceTable.Start(ipAddress, port);
+    await TcpDeviceTableServer.Start(ipAddress, port);
 });
 
 app.MapGet("/api/Table/stop", async () =>
 {
-    await tcpDeviceTable.Stop();
+    await TcpDeviceTableServer.Stop();
 });
 
-app.MapGet("/api/Table/UpdateTable/{index}", async (int index) =>
+app.MapGet("/api/Table/GetTableData", async (int modbusID) =>
 {
-        string answer = await tcpDeviceTable.GetMb3ParamValueAsync(202, index, 1);
-        if (answer != "no data")
-            return Results.Content(answer, "text/plain");
-        return Results.Content("Не получен ответ от устройства", "text/plain");
+    if(TcpDeviceTableServer.isRunning && TcpDeviceTableServer.dataTable != null && false)
+    {
+        await TcpDeviceTableServer.dataTable.GetTableDataAsync("default", modbusID);    
+        var tableDataValues = TcpDeviceTableServer.dataTable.GetTableDataValues();
+        return Results.Json(tableDataValues);
+    }
 
+    
+    return Results.Json(new string[] { "1", "12", "213", "0", "0", 
+        "Не получен ответ от устройства", "1", "23", "1", "97" });
 });
 
 app.MapGet("/api/Table/GetConnectionStatus", async () =>
 {
-    string answer = tcpDeviceTable.connectionStatus;
+    string answer = TcpDeviceTableServer.connectionStatus;
         return Results.Content(answer, "text/plain");
 
 
