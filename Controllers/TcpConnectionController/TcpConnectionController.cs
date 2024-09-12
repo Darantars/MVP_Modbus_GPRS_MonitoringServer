@@ -489,7 +489,7 @@ namespace Read_Write_GPRS_Server.Controllers
                     switch (missedPockets)
                     {
                         case 5:
-                            if (device.tcpClient != null)
+                            if (device.tcpClient != null )
                                 device.tcpConnectionStatus = "Bad connection 0% package recived";
                                 Console.WriteLine("Bad connection 0% package recived");
                             break;

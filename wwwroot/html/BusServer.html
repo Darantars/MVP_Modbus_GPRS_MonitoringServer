@@ -14,7 +14,8 @@
         }
 
         async function StartConnection() {
-            await fetch('/api/TCP/start');
+            const connectionPort = document.getElementById('connectionPort').value;
+            await fetch(`/api/TCP/start?connectionPort=${connectionPort}`);
         }
 
         async function StopConnection() {
@@ -131,7 +132,11 @@
         </nav>
     </header>
     <div class="container">
-        <h5 id="connectionStatus">Offline</h5>
+        <div class="col s12">
+            <input type="number" id="connectionPort" placeholder="Enter connection port"/>
+            <h5 id="connectionStatus">Offline</h5>
+        </div>
+
         <div id="sendZone" class="row">
             <div class="input-field col s12">
                 <input type="text" id="messageInput" placeholder="Enter your message">
