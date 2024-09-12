@@ -13,7 +13,6 @@ var app = builder.Build();
 
 // Указываем IP-адрес и порт для прослушивания
 string ipAddress = "90.188.113.113";
-int port = 42360;
 TcpConnectionController.TcpServer tcpServer = new TcpConnectionController.TcpServer(10000);
 
 TcpConnectionController.TcpDeviceTableServer TcpDeviceTableServer = new TcpConnectionController.TcpDeviceTableServer();
@@ -37,9 +36,9 @@ app.MapGet("/TCP-Server", async (HttpContext context) =>
     await context.Response.WriteAsync(htmlContent);
 });
 
-app.MapGet("/api/TCP/start", async () =>
-{
-    await tcpServer.Start(ipAddress, port);
+app.MapGet("/api/TCP/start", async (int connectionPort) =>
+{   
+    await tcpServer.Start(ipAddress, connectionPort);
 });
 
 app.MapGet("/api/TCP/read", async () =>
@@ -141,10 +140,6 @@ app.MapGet("/api/TCP/stop", async () =>
 
 
 
-// ***** ДАЛЬШЕ БОГА НЕТ ******
-
-
-
 
 app.MapGet("/Table", async (HttpContext context) =>
 {
@@ -154,9 +149,9 @@ app.MapGet("/Table", async (HttpContext context) =>
     await context.Response.WriteAsync(htmlContent);
 });
 
-app.MapGet("/api/Table/start", async () =>
+app.MapGet("/api/Table/start", async (int connectionPort) =>
 {
-    await TcpDeviceTableServer.Start(ipAddress, port);
+    await TcpDeviceTableServer.Start(ipAddress, connectionPort);
 });
 
 app.MapGet("/api/Table/stop", async () =>

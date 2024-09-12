@@ -13,7 +13,8 @@
             window.location.href = '/TCP-Server';
         }
         async function StartConnection() {
-            await fetch('/api/Table/start');
+            const connectionPort = document.getElementById('connectionPort').value;
+            await fetch(`/api/Table/start?connectionPort=${connectionPort}`);
         }
         async function StopConnection() {
             await fetch('/api/Table/stop');
@@ -74,6 +75,7 @@
     <div class="container">
         <div>
             <h4 id="conectionStatus"></h4>
+            <input type="number" id="connectionPort" placeholder="Enter connection port" />
             <input type="number" id="modbusID" placeholder="ModbusID">
         </div>
         <table>
