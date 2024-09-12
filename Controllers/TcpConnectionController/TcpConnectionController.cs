@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.TagHelpers.Cache;
 using Microsoft.AspNetCore.Http;
 using Read_Write_GPRS_Server.TcpDevice;
 using Microsoft.JSInterop;
+using System.Data;
 
 namespace Read_Write_GPRS_Server.Controllers
 {
@@ -43,7 +44,8 @@ namespace Read_Write_GPRS_Server.Controllers
 
             private bool isRunning = false;
 
-            
+            private string lastIpAdress { get; set; }
+            private int lastPort { get; set; }
 
             public TcpServer(int messageBufferSize)
             {
@@ -59,7 +61,6 @@ namespace Read_Write_GPRS_Server.Controllers
                     await AddMessageToQueue("Сервер уже запущен.");
                     return;
                 }
-                await AddMessageToQueue("Await press start to run server");
 
                 try
                 {
@@ -68,6 +69,9 @@ namespace Read_Write_GPRS_Server.Controllers
                     // Начинаем прослушивание входящих соединений
                     server.Start();
                     await AddMessageToQueue($"TCP-сервер запущен на {ipAddress}:{port}");
+
+                    lastIpAdress = ipAddress;
+                    lastPort = port;
 
                     device = new TcpDevice.UsrGPRS232_730("GPRS Online", 1); //потом заменить на задание со View
                     device.tcpConnectionStatus = "Connecting...";
@@ -122,7 +126,7 @@ namespace Read_Write_GPRS_Server.Controllers
                 double delayFiveHeartBeatReal = device.heartbeatMessageRateSec * 2;
                 int loopCounter = 1;
                 int[] heartBeatAtLoop = new int[5];
-
+                int lostConnectionCounter = 0;
 
                 while (isRunning)
                 {
@@ -139,30 +143,50 @@ namespace Read_Write_GPRS_Server.Controllers
                         case 5:
                             if (device.tcpClient != null)
                                 device.tcpConnectionStatus = "Bad connection 0% package recived";
-                                _ = Task.Run(() => AddMessageToQueue("Bad connection 0% package recived"));
+                            await AddMessageToQueue("Bad connection 0% package recived");
+                            lostConnectionCounter++;
                             break;
                         case 4:
-                            device.tcpConnectionStatus = "Bad connection 20% package recived";
-                            _ = Task.Run(() => AddMessageToQueue("Bad connection 20% package recived"));
+                            device.tcpConnectionStatus = "Bad connection <= 20% package recived";
+                            await AddMessageToQueue("Bad connection <= 20% package recived");
+                            lostConnectionCounter++;
                             break;
                         case 3:
-                            device.tcpConnectionStatus = "Bad connection 40% package recived";
-                            _ = Task.Run(() => AddMessageToQueue("Bad connection 40% package recived"));
+                            device.tcpConnectionStatus = "Bad connection <= 40% package recived";
+                            await AddMessageToQueue("Bad connection <= 40% package recived");
                             break;
                         case 2:
-                            device.tcpConnectionStatus = "Unstable connection 60% package recived";
-                            _ = Task.Run(() => AddMessageToQueue("Unstable connection 60% package recived"));
+                            device.tcpConnectionStatus = "Unstable connection <= 60% package recived";
+                            await AddMessageToQueue("Unstable connection <= 60% package recived");
+                            if (lostConnectionCounter > 0)
+                                lostConnectionCounter--;
                             break;
                         case 1:
-                            device.tcpConnectionStatus = "Connected 80% package recived";
+                            device.tcpConnectionStatus = "Connected ~ 80% package recived";
+                            if (lostConnectionCounter > 0)
+                                lostConnectionCounter--;
                             break;
                         case 0:
                             device.tcpConnectionStatus = "Fast connection 100% package recived";
+                            if (lostConnectionCounter > 0)
+                                lostConnectionCounter--;
                             break;
                         default:
                             device.tcpConnectionStatus = "Connection supergood!";
+                            if (lostConnectionCounter > 0)
+                                lostConnectionCounter--;
                             break;
                     }
+
+                    if (lostConnectionCounter >= 5)
+                    {
+                        await Stop();
+                        await AddMessageToQueue("В связи с нестабильным соединением осуществляется переподключение");
+                        await Task.Delay(TimeSpan.FromSeconds(5));
+                        await Start(lastIpAdress, lastPort);
+                        lostConnectionCounter = 0;
+                    }
+                        
 
                     if (loopCounter == 5)
                     {
@@ -371,6 +395,8 @@ namespace Read_Write_GPRS_Server.Controllers
             public string connectionStatus { get; set; }
 
             public Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable dataTable{ get; set; }
+            private string lastIpAdress { get; set; }
+            private int lastPort { get; set; }
 
             public TcpDeviceTableServer()
             {
@@ -397,6 +423,9 @@ namespace Read_Write_GPRS_Server.Controllers
                     server.Start();
                     Console.WriteLine($"TCP-сервер связи с устройством запущен на {ipAddress}:{port}");
                     connectionStatus = $"Started on {ipAddress}:{port}, waiting for clients...";
+
+                    lastIpAdress = ipAddress;
+                    lastPort = port;
 
                     device = new UsrGPRS232_730("GPRS Online", 1); //потом заменить на задание со View
                     device.tcpConnectionStatus = "Connecting...";
@@ -474,7 +503,7 @@ namespace Read_Write_GPRS_Server.Controllers
                 double delayFiveHeartBeatReal = device.heartbeatMessageRateSec * 2;
                 int loopCounter = 1;
                 int[] heartBeatAtLoop = new int[5];
-
+                int lostConnectionCounter = 0;
 
                 while (isRunning)
                 {
@@ -486,36 +515,57 @@ namespace Read_Write_GPRS_Server.Controllers
                         if (heartBeatAtLoop[i] < i + 1)
                             missedPockets++;
                     }
+                    
+
                     switch (missedPockets)
                     {
                         case 5:
                             if (device.tcpClient != null )
                                 device.tcpConnectionStatus = "Bad connection 0% package recived";
                                 Console.WriteLine("Bad connection 0% package recived");
+                                lostConnectionCounter++;
                             break;
                         case 4:
-                            device.tcpConnectionStatus = "Bad connection 20% package recived";
-                            Console.WriteLine("Bad connection 20% package recived");
+                            device.tcpConnectionStatus = "Bad connection <= 20% package recived";
+                            Console.WriteLine("Bad connection <= 20% package recived");
+                            lostConnectionCounter++;
                             break;
                         case 3:
-                            device.tcpConnectionStatus = "Bad connection 40% package recived";
-                            Console.WriteLine("Bad connection 40% package recived");
+                            device.tcpConnectionStatus = "Bad connection <= 40% package recived";
+                            Console.WriteLine("Bad connection <= 40% package recived");
                             break;
                         case 2:
-                            device.tcpConnectionStatus = "Unstable connection 60% package recived";
-                            Console.WriteLine("Unstable connection 60% package recived");
+                            device.tcpConnectionStatus = "Unstable connection <= 60% package recived";
+                            Console.WriteLine("Unstable connection <= 60% package recived");
+                            if(lostConnectionCounter > 0)
+                                lostConnectionCounter--;
                             break;
                         case 1:
-                            device.tcpConnectionStatus = "Connected 80% package recived";
+                            device.tcpConnectionStatus = "Connected ~ 80% package recived";
+                            if (lostConnectionCounter > 0)
+                                lostConnectionCounter--;
                             break;
                         case 0:
                             device.tcpConnectionStatus = "Fast connection 100% package recived";
+                            if (lostConnectionCounter > 0)
+                                lostConnectionCounter--;
                             break;
                         default:
                             device.tcpConnectionStatus = "Connection supergood!";
+                            if (lostConnectionCounter > 0)
+                                lostConnectionCounter--;
                             break;
                     }
                     connectionStatus = device.tcpConnectionStatus;
+
+                    if (lostConnectionCounter >= 5)
+                    {
+                        await Stop();
+                        connectionStatus = "В связи с нестабильным соединением осуществляется переподключение";
+                        await Task.Delay(TimeSpan.FromSeconds(5));
+                        await Start(lastIpAdress, lastPort);
+                        lostConnectionCounter = 0;
+                    }
 
                     if (loopCounter == 5)
                     {
