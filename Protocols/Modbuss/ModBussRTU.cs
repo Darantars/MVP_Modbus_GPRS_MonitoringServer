@@ -194,60 +194,6 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
             return command;
         }
 
-
-
-        public static string DecodeModbusMessageValueMb3(byte[] buffer)
-        {
-            if (buffer.Length < 2)
-            {
-                return "Недостаточная длина команды";
-            }
-
-            byte modbusId = buffer[0];
-            byte functionCode = buffer[1];
-            int bytesRead = buffer.Length;
-
-            string registers = "";
-            ushort startAddress;
-            ushort quantity;
-            byte byteCount;
-
-            if (functionCode == 3)
-            {
-                if (bytesRead < 5)
-                {
-                    return "Недостаточная длина команды для чтения регистров";
-                }
-
-                // Определение типа сообщения
-                if (bytesRead == 8)
-                {
-                    startAddress = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(buffer, 2));
-                    quantity = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(buffer, 4));
-                    registers = $"{startAddress}-{startAddress + quantity - 1}";
-                }
-                else
-                {
-                    byteCount = buffer[2]; // Количество байт данных
-                    if (bytesRead < 3 + byteCount)
-                    {
-                        return "Недостаточная длина команды для чтения регистров";
-                    }
-
-                    // Извлечение данных регистров для функции 3
-                    StringBuilder data = new StringBuilder();
-                    for (int i = 0; i < byteCount / 2; i++)
-                    {
-                        ushort value = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(buffer, 3 + i * 2));
-                        data.Append($"{value} ");
-                    }
-                    registers = $"{data.ToString().Trim()}";
-                }
-                return registers;
-            }
-            else return "no data";
-        }
-
         public static string DecodeModbusMessage(byte[] buffer)
         {
             if (buffer.Length < 2)

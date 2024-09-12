@@ -161,7 +161,7 @@ app.MapGet("/api/Table/stop", async () =>
 
 app.MapGet("/api/Table/GetTableData", async (int modbusID) =>
 {
-    if(TcpDeviceTableServer.isRunning && TcpDeviceTableServer.dataTable != null && false)
+    if(TcpDeviceTableServer.isRunning && TcpDeviceTableServer.dataTable != null)
     {
         await TcpDeviceTableServer.dataTable.GetTableDataAsync("default", modbusID);    
         var tableDataValues = TcpDeviceTableServer.dataTable.GetTableDataValues();
@@ -169,8 +169,8 @@ app.MapGet("/api/Table/GetTableData", async (int modbusID) =>
     }
 
     
-    return Results.Json(new string[] { "1", "12", "213", "0", "0", 
-        "Не получен ответ от устройства", "1", "23", "1", "97" });
+    return Results.Json(new string[] { "Loading...", "Loading...", "Loading...", "Loading...", "Loading...",
+        "Loading...", "Loading...", "Loading...", "Loading...", "Loading..." });
 });
 
 app.MapGet("/api/Table/GetConnectionStatus", async () =>
