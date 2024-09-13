@@ -194,7 +194,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
             return command;
         }
 
-        public static string DecodeModbusMessage(byte[] buffer)
+        public static string DecodeModbusMessage(byte[] buffer, string mode)
         {
             if (buffer.Length < 2)
             {
@@ -281,8 +281,19 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                 default:
                     return "Неподдерживаемая функция Modbus";
             }
+            switch(mode)
+            {
+                case "getTypeAndAdress":
+                    return $"{messageType}: команда {functionCode} для устройства ID {modbusId}";
+                    break;
+                case "getValueInt16":
+                    return registers;
+                    break;
+                default:
+                    return "Неверный аргумент функции DecodeModbusMessage";
+                    break;
+            }
 
-            return $"{messageType}: команда {functionCode} для устройства ID {modbusId}";
         }
 
         private class Parser()

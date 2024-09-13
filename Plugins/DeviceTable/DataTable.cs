@@ -20,6 +20,7 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
         public string answerMb3 { get; set; }    // Вот в нее нужно положить последний ответ
 
+        public bool readyToGetTableData { get; set; }
 
         private int badRequestMb3Counter {  get; set; }
 
@@ -37,19 +38,27 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             adreses = tableAdreses;
             tableDataValues = new string[tableColumnSize];
             badRequestMb3Counter = 0;
+            readyToGetTableData = true;
 
         }
 
         public async Task GetTableDataAsync(string mode, int modbusID)     //Версия для Uint16 только value
         {
-            for (int i = 0; i < columnSize; i++)
+            if (readyToGetTableData)
             {
-                tableDataValues[i] = await GetValueByAdressMb(mode, modbusID, this.adreses[i]);
+                readyToGetTableData = false;
+                for (int i = 0; i < columnSize; i++)
+                {
+                    tableDataValues[i] = await GetValueByAdressMb(mode, modbusID, this.adreses[i]);
+                }
+                readyToGetTableData = true;
             }
+
         }
 
         private async Task<string> GetValueByAdressMb(string mode, int modbusID, int adress)
         {
+
             if (mode == "default")
             {
                 this.TableServer.SendMB3CommandToDevice(TableServer.device, modbusID, adress, 1);
@@ -73,28 +82,29 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
                     string response = CheckResponseBuffer();
                     if (!string.IsNullOrEmpty(response))
                     {
+                        answerMb3 = null;
                         badRequestMb3Counter = 0; // Обнуляем счетчик неудачных запросов
                         return response;
                     }
-
-                    await Task.Delay(100); // Ждем 100 мс перед следующей проверкой
                 }
 
                 badRequestMb3Counter++;
-                if (badRequestMb3Counter >= 3)
-                {
-                    await TableServer.Stop();
-                    badRequestMb3Counter = 0;
-                    return "Сервер остановлен из-за превышения лимита неудачных запросов";
-                }
+                //if (badRequestMb3Counter >= 3)
+                //{
+                //    await TableServer.Stop();
+                //    badRequestMb3Counter = 0;
+                //    return "Сервер остановлен из-за превышения лимита неудачных запросов";
+                //}
 
                 return "Не получены данные от устройства";  
         }
 
         private string CheckResponseBuffer()
         {
-
-                     return null;  //  ******      Нужно изменить       *******
+            if (answerMb3 != null)
+                return answerMb3;
+            else
+                return null;
         }
 
         public string[] GetTableDataValues()
