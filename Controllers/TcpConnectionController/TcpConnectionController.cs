@@ -301,10 +301,10 @@ namespace Read_Write_GPRS_Server.Controllers
 
                                 for (int i = 0; i < responseList.Count; i++)
                                 {
-                                    decodedMbCommand = decodedMbCommand + "<br>"+ Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i]);
+                                    decodedMbCommand = decodedMbCommand + "<br>"+ Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], "getTypeAndAdress");
                                 }
 
-                                string hexedNessage=  BitConverter.ToString(buffer, 0, bytesRead);
+                                string hexedNessage = BitConverter.ToString(buffer, 0, bytesRead);
 
                             string cuttedMessageMB = "";
                             for (int i = 0; i < responseList.Count; i++)
@@ -390,7 +390,6 @@ namespace Read_Write_GPRS_Server.Controllers
             private TcpListener server;
 
             public UsrGPRS232_730 device;
-            public string mbValue { get; set; }
 
             public string connectionStatus { get; set; }
 
@@ -477,7 +476,7 @@ namespace Read_Write_GPRS_Server.Controllers
 
                             for (int i = 0; i < responseList.Count; i++)
                             {
-                                decodedMbCommand = decodedMbCommand + "<br>"+ Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i]);
+                                decodedMbCommand = decodedMbCommand + "<br>"+ Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], "getTypeAndAdress");
                             }
 
                             string hexedNessage = BitConverter.ToString(buffer, 0, bytesRead);
@@ -486,6 +485,10 @@ namespace Read_Write_GPRS_Server.Controllers
                             for (int i = 0; i < responseList.Count; i++)
                             {
                                 cuttedMessageMB = cuttedMessageMB + "<br>"+ BitConverter.ToString(responseList[i]);
+                                if (responseList[i][1] == 3) 
+                                {
+                                    dataTable.answerMb3 =  Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], "getValueInt16");
+                                }
                             }
 
                             Console.WriteLine($"<br> Получено сообщение: <br> ASCII: {message} <br> MB: {decodedMbCommand} <br> hex: {hexedNessage} <br> hex-commands(probably): {cuttedMessageMB}");

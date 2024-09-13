@@ -18,6 +18,12 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
         private Controllers.TcpConnectionController.TcpDeviceTableServer TableServer {  get; set; }
 
+        public string answerMb3 { get; set; }    // Вот в нее нужно положить последний ответ
+
+        public bool readyToGetTableData { get; set; }
+
+        private int badRequestMb3Counter {  get; set; }
+
         public DataTable( int tableRowSize, int tableColumnSize, int[] tableAdreses, Controllers.TcpConnectionController.TcpDeviceTableServer tableTableServer) 
         {
             if (tableRowSize < 0 )
@@ -31,22 +37,31 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             headers = new string[tableRowSize];
             adreses = tableAdreses;
             tableDataValues = new string[tableColumnSize];
+            badRequestMb3Counter = 0;
+            readyToGetTableData = true;
 
         }
 
         public async Task GetTableDataAsync(string mode, int modbusID)     //Версия для Uint16 только value
         {
-            for (int i = 0; i < columnSize - 1; i++)
+            if (readyToGetTableData)
             {
-                tableDataValues[i] = await GetValueByAdressMbAsync(mode, modbusID, this.adreses[i]);
+                readyToGetTableData = false;
+                for (int i = 0; i < columnSize; i++)
+                {
+                    tableDataValues[i] = await GetValueByAdressMb(mode, modbusID, this.adreses[i]);
+                }
+                readyToGetTableData = true;
             }
+
         }
 
-        private async Task<string> GetValueByAdressMbAsync(string mode, int modbusID, int adress)
+        private async Task<string> GetValueByAdressMb(string mode, int modbusID, int adress)
         {
+
             if (mode == "default")
             {
-                await this.TableServer.SendMB3CommandToDevice(TableServer.device, modbusID, adress, 1);
+                this.TableServer.SendMB3CommandToDevice(TableServer.device, modbusID, adress, 1);
                 return await WaitingResponseMb3Async();
 
             }
@@ -56,14 +71,40 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             }
         }
 
-        public async Task<string> WaitingResponseMb3Async() //Здесь мы ждем ответа от сервера подходящего под усл в течении 2 сек 
+        public  async Task<string> WaitingResponseMb3Async() //Здесь мы ждем ответа от сервера подходящего под усл в течении 2 сек 
         {
-            while (true) //заменить на tirElapsed
-            {
-                return "Функционал еще не разработан";
-                //Нужно организовать буффер для сообщений примерно на 2 сек и искать по нему подходящие - это нужно делать в HandleAsinc
-            }
-            return "Нет данных";
+                DateTime startTime = DateTime.Now;
+                TimeSpan timeout = TimeSpan.FromSeconds(10);
+
+                while (DateTime.Now - startTime < timeout)
+                {
+                    // Проверяем буфер сообщений на наличие ответа
+                    string response = CheckResponseBuffer();
+                    if (!string.IsNullOrEmpty(response))
+                    {
+                        answerMb3 = null;
+                        badRequestMb3Counter = 0; // Обнуляем счетчик неудачных запросов
+                        return response;
+                    }
+                }
+
+                badRequestMb3Counter++;
+                //if (badRequestMb3Counter >= 3)
+                //{
+                //    await TableServer.Stop();
+                //    badRequestMb3Counter = 0;
+                //    return "Сервер остановлен из-за превышения лимита неудачных запросов";
+                //}
+
+                return "Не получены данные от устройства";  
+        }
+
+        private string CheckResponseBuffer()
+        {
+            if (answerMb3 != null)
+                return answerMb3;
+            else
+                return null;
         }
 
         public string[] GetTableDataValues()
