@@ -196,4 +196,6 @@ app.MapGet("/LiftView", async (HttpContext context) =>
     await context.Response.WriteAsync(htmlContent);
 });
 
+
+
 app.Run();

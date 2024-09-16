@@ -121,12 +121,50 @@
             window.location.href = '/Home';
         }
         async function StartConnection() {
-            const connectionPort = document.getElementById('connectionPort').value;
+            const connectionPort = document.getElementById('port_input').value;
             await fetch(`/api/Table/start?connectionPort=${connectionPort}`);
         }
         async function StopConnection() {
             await fetch('/api/Table/stop');
         }
+
+        async function updateData() {
+            const response = await fetch(`/api/Table/GetConnectionStatus`);
+            const connectionStatus = await response.text();
+            document.getElementById(`lift-block-status`).innerHTML = connectionStatus;
+
+            // *** Работа с таблицей ***
+            const modbusID = document.getElementById('modbusID_input').value;
+            if (modbusID != "") {
+                const tableDataResponse = await fetch(`/api/Table/GetTableData?modbusID=${modbusID}`);
+                const tableData = await tableDataResponse.json();
+
+                const tableBody = document.getElementById('tableBody');
+                tableBody.innerHTML = ''; // Очистка текущей таблицы
+
+                tableData.forEach((row, index) => {
+                    const tr = document.createElement('tr');
+
+                    // Добавление столбца с названиями параметров
+                    const tdName = document.createElement('td');
+                    tdName.textContent = `Parameter ${index + 1}`; // Пример названия параметра
+                    tr.appendChild(tdName);
+
+                    const tdAddress = document.createElement('td');
+                    tdAddress.textContent = index + 1;
+                    tr.appendChild(tdAddress);
+
+                    const tdValue = document.createElement('td');
+                    tdValue.textContent = row;
+                    tr.appendChild(tdValue);
+
+                    tableBody.appendChild(tr);
+                });
+            }
+        }
+
+        setInterval(updateData, 100); // Обновление каждые 100 миллисекунд
+        updateData(); // Первоначальное обновление
     </script>
 </head>
 <body>
@@ -182,17 +220,17 @@
             </svg>
             <div class="name-and-status-coontainer">
                 <h4 class="lift-block-name">Лифтовой блок N ------</h4>
-                <h8 class="lift-block-status">Статус подключения или сервисная инфо</h8>
+                <h8 id="lift-block-status" class="lift-block-status">Статус подключения или сервисная инфо</h8>
             </div>
             <div>
             </div>
             <div class="connection-inputs">
                 <div class="input-field col s6">
-                    <input id="port_input" type="number" class="validate">
+                    <input id="port_input" id="port_input" type="number" class="validate">
                     <label for="port_input">Введите порт</label>
                 </div>
                 <div class="input-field col s6">
-                    <input id="modbusID_input" type="number" class="validate">
+                    <input id="modbusID_input" id="modbusID_input" type="number" class="validate">
                     <label for="modbusID_input">Введите Modbus ID</label>
                 </div>
             </div>
@@ -217,7 +255,7 @@
                         </thead>
                         <tbody id="tableBody">
                             <tr>
-                                <th>-</th>
+                                <th><input /></th>
                                 <th>-</th>
                                 <th>-</th>
                                 <th>-</th>
