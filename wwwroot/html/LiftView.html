@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Table</title>
+    <title>Lift View</title>
     <!-- Materialize CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
     <!-- Materialize JavaScript -->
@@ -20,41 +20,21 @@
             await fetch('/api/Table/stop');
         }
 
-        async function updateData()
-        {
+        async function updateData() {
             const response = await fetch(`/api/Table/GetConnectionStatus`);
             const connectionStatus = await response.text();
             document.getElementById(`conectionStatus`).innerHTML = connectionStatus;
 
             // *** Работа с таблицей ***
             const modbusID = document.getElementById('modbusID').value;
-            if (modbusID != "")
-            {
+            if (modbusID != "") {
                 const tableDataResponse = await fetch(`/api/Table/GetTableData?modbusID=${modbusID}`);
                 const tableData = await tableDataResponse.json();
 
                 const tableBody = document.getElementById('tableBody');
                 tableBody.innerHTML = ''; // Очистка текущей таблицы
 
-                tableData.forEach((row, index) =>
-                {
-                    const tr = document.createElement('tr');
 
-                    // Добавление столбца с названиями параметров
-                    const tdName = document.createElement('td');
-                    tdName.textContent = `Parameter ${index + 1}`; // Пример названия параметра
-                    tr.appendChild(tdName);
-
-                    const tdAddress = document.createElement('td');
-                    tdAddress.textContent = index + 1;
-                    tr.appendChild(tdAddress);
-
-                    const tdValue = document.createElement('td');
-                    tdValue.textContent = row;
-                    tr.appendChild(tdValue);
-
-                    tableBody.appendChild(tr);
-                });
             }
         }
 
@@ -70,7 +50,7 @@
                     <li><a href="#" onclick="Home()">Home</a></li>
                     <li><a href="#" onclick="StartConnection()">Start</a></li>
                     <li><a href="#" onclick="StopConnection()">Stop</a></li>
-                    <li><a href="#" style="font-weight: 600; padding-left: 20px; padding-right: 20px; " ;" class="brand-logo">Device-Table</a> </li>
+                    <li><a href="#" style="font-weight: 600; padding-left: 20px; padding-right: 20px; " ;" class="brand-logo">Lift Viev</a> </li>
                 </ul>
             </div>
         </nav>

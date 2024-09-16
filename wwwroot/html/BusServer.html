@@ -8,9 +8,9 @@
     <!-- Materialize JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
-        async function Table() {
+        async function Home() {
             await fetch('/api/TCP/stop');
-            window.location.href = '/Table';
+            window.location.href = '/Home';
         }
 
         async function StartConnection() {
@@ -120,13 +120,13 @@
 </head>
 <body>
     <header>
-        <nav class="waves-effect waves-light teal">
+        <nav class="waves-effect waves-light blue">
             <div class="nav-wrapper">
                 <ul id="nav" style=" margin-inline:15px ;" class="left hide-on-med-and-down">
-                    <li><a  onclick="Table()">Table</a></li>
-                    <li><a  onclick="StartConnection()">Start</a></li>
-                    <li><a  onclick="StopConnection()">Stop</a></li>
-                    <li><a  style="font-weight: 600; padding-left: 20px; padding-right: 20px;" ;" class="brand-logo">GPRS-Buss</a> </li>
+                    <li><a onclick="Home()">Home</a></li>
+                    <li><a onclick="StartConnection()">Start</a></li>
+                    <li><a onclick="StopConnection()">Stop</a></li>
+                    <li><a style="font-weight: 600; padding-left: 20px; padding-right: 20px;" ;" class="brand-logo">GPRS-Buss</a> </li>
                 </ul>
             </div>
         </nav>
@@ -140,7 +140,7 @@
         <div id="sendZone" class="row">
             <div class="input-field col s12">
                 <input type="text" id="messageInput" placeholder="Enter your message">
-                <button class="btn waves-effect waves-light cian" onclick="SendToDevice()">Send Message</button>
+                <button class="btn waves-effect waves-light blue" onclick="SendToDevice()">Send Message</button>
             </div>
         </div>
         <div id="ModbusComand" class="row">
@@ -157,8 +157,8 @@
                 <input type="text" id="modbussData" placeholder="ModbussData">
             </div>
             <div class="col s12">
-                <button class="btn waves-effect waves-light cian" onclick="SendMb3ReadToDevice()">Send MB Read 3 Command</button>
-                <button class="btn waves-effect waves-light cian" onclick="SendMb10WriteToDevice()">Send MB Read 10 Command</button>
+                <button class="btn waves-effect waves-light blue" onclick="SendMb3ReadToDevice()">Send MB Read 3 Command</button>
+                <button class="btn waves-effect waves-light blue" onclick="SendMb10WriteToDevice()">Send MB Read 10 Command</button>
             </div>
         </div>
 
