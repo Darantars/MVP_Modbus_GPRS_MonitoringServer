@@ -285,15 +285,11 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
             {
                 case "getTypeAndAdress":
                     return $"{messageType}: команда {functionCode} для устройства ID {modbusId}";
-                    break;
                 case "getValueInt16":
                     return registers;
-                    break;
                 default:
                     return "Неверный аргумент функции DecodeModbusMessage";
-                    break;
             }
-
         }
 
         private class Parser()

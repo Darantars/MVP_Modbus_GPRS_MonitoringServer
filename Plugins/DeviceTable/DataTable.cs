@@ -61,7 +61,7 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
             if (mode == "default")
             {
-                this.TableServer.SendMB3CommandToDevice(TableServer.device, modbusID, adress, 1);
+                await this.TableServer.SendMB3CommandToDevice(TableServer.device, modbusID, adress, 1);
                 return await WaitingResponseMb3Async();
 
             }
@@ -71,32 +71,38 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             }
         }
 
-        public  async Task<string> WaitingResponseMb3Async() //Здесь мы ждем ответа от сервера подходящего под усл в течении 2 сек 
+        public async Task<string> WaitingResponseMb3Async()
         {
-                DateTime startTime = DateTime.Now;
-                TimeSpan timeout = TimeSpan.FromSeconds(10);
+            DateTime startTime = DateTime.Now;
+            TimeSpan timeout = TimeSpan.FromSeconds(10);
 
+            // Запускаем цикл while в фоновом потоке
+            string response = await Task.Run(() =>
+            {
                 while (DateTime.Now - startTime < timeout)
                 {
                     // Проверяем буфер сообщений на наличие ответа
-                    string response = CheckResponseBuffer();
-                    if (!string.IsNullOrEmpty(response))
+                    string currentResponse = CheckResponseBuffer();
+                    if (!string.IsNullOrEmpty(currentResponse))
                     {
                         answerMb3 = null;
                         badRequestMb3Counter = 0; // Обнуляем счетчик неудачных запросов
-                        return response;
+                        return currentResponse;
                     }
                 }
 
                 badRequestMb3Counter++;
                 //if (badRequestMb3Counter >= 3)
                 //{
-                //    await TableServer.Stop();
+                //    TableServer.Stop().Wait();
                 //    badRequestMb3Counter = 0;
                 //    return "Сервер остановлен из-за превышения лимита неудачных запросов";
                 //}
 
-                return "Не получены данные от устройства";  
+                return "Не получены данные от устройства";
+            });
+
+            return response;
         }
 
         private string CheckResponseBuffer()

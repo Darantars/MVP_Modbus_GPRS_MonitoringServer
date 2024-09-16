@@ -20,21 +20,24 @@
             await fetch('/api/Table/stop');
         }
 
-        async function updateData() {
+        async function updateData()
+        {
             const response = await fetch(`/api/Table/GetConnectionStatus`);
             const connectionStatus = await response.text();
             document.getElementById(`conectionStatus`).innerHTML = connectionStatus;
 
             // *** Работа с таблицей ***
             const modbusID = document.getElementById('modbusID').value;
-            if (modbusID != "") {
+            if (modbusID != "")
+            {
                 const tableDataResponse = await fetch(`/api/Table/GetTableData?modbusID=${modbusID}`);
                 const tableData = await tableDataResponse.json();
 
                 const tableBody = document.getElementById('tableBody');
                 tableBody.innerHTML = ''; // Очистка текущей таблицы
 
-                tableData.forEach((row, index) => {
+                tableData.forEach((row, index) =>
+                {
                     const tr = document.createElement('tr');
 
                     // Добавление столбца с названиями параметров
@@ -55,7 +58,7 @@
             }
         }
 
-        setInterval(updateData, 10); // Обновление каждые 100 миллисекунд
+        setInterval(updateData, 100); // Обновление каждые 100 миллисекунд
         updateData(); // Первоначальное обновление
     </script>
 </head>

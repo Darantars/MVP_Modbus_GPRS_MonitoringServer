@@ -16,11 +16,11 @@ namespace Read_Write_GPRS_Server.TcpDevice
         
         public object connectinLocker;
 
-        public UsrGPRS232_730(string heartbeatMessageTextASCII, int heartbeatMessageRateSec) 
+        public UsrGPRS232_730(string deviceHeartbeatMessageTextASCII, int deviceHeartbeatMessageRateSec) 
         {
-            heartbeatMessageRateSec = heartbeatMessageRateSec;
+            heartbeatMessageRateSec = deviceHeartbeatMessageRateSec;
 
-            heartbeatMessageTextASCII = heartbeatMessageTextASCII;
+            heartbeatMessageTextASCII = deviceHeartbeatMessageTextASCII;
             
             tcpClient = new TcpClient();
 

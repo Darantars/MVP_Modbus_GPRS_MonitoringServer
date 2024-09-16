@@ -470,17 +470,6 @@ namespace Read_Write_GPRS_Server.Controllers
                             Array.Copy(buffer, newBuffer, bytesRead);
                             List<byte[]> responseList = await Task.Run(() => Protocols.Modbuss.ModBussRTU.CutToModbusRtuMessageListFastMb(newBuffer));
 
-                            string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-
-                            string decodedMbCommand = "";
-
-                            for (int i = 0; i < responseList.Count; i++)
-                            {
-                                decodedMbCommand = decodedMbCommand + "<br>"+ Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], "getTypeAndAdress");
-                            }
-
-                            string hexedNessage = BitConverter.ToString(buffer, 0, bytesRead);
-
                             string cuttedMessageMB = "";
                             for (int i = 0; i < responseList.Count; i++)
                             {
@@ -491,7 +480,6 @@ namespace Read_Write_GPRS_Server.Controllers
                                 }
                             }
 
-                            Console.WriteLine($"<br> Получено сообщение: <br> ASCII: {message} <br> MB: {decodedMbCommand} <br> hex: {hexedNessage} <br> hex-commands(probably): {cuttedMessageMB}");
                         }  
                     }
                 }
