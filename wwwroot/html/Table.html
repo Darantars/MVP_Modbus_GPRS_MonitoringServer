@@ -5,6 +5,17 @@
     <title>Table</title>
     <!-- Materialize CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <style>
+        /* Переопределение стандартной подсветки на голубой цвет */
+        .input-field input:focus {
+            border-bottom: 2px solid #2196F3 !important; /* Голубой цвет */
+            box-shadow: 0 1px 0 0 #2196F3 !important; /* Голубой цвет */
+        }
+
+        .input-field input:focus + label {
+            color: #2196F3 !important; /* Голубой цвет */
+        }
+    </style>
     <!-- Materialize JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
@@ -78,8 +89,14 @@
     <div class="container">
         <div>
             <h4 id="conectionStatus"></h4>
-            <input type="number" id="connectionPort" placeholder="Enter connection port" />
-            <input type="number" id="modbusID" placeholder="ModbusID">
+            <div class="input-field col s6">
+                <input id="connectionPort" type="number" class="validate">
+                <label for="connectionPort">Enter connection port</label>
+            </div>
+            <div class="input-field col s6">
+                <input id="modbusID" type="number" class="validate">
+                <label for="modbusID">ModbusID</label>
+            </div>
         </div>
         <table>
             <thead>

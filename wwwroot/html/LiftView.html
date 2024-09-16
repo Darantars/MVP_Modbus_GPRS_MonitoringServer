@@ -7,6 +7,114 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
     <!-- Materialize JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <style>
+        .main-container{
+            margin-left: 15px;
+        }
+
+        .lift-block-status-row {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 10px;
+            margin-inline-start: 15px;
+            margin-inline-end: 10px;
+            
+        }
+
+        .name-and-status-coontainer {
+            margin-left: 25px; 
+        }
+
+        .lift-block-name {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .lift-block-status {
+            margin: 0;
+            font-size: 14px;
+            color: #777;
+        }
+
+        /* Переопределение стандартной подсветки на голубой цвет */
+        .input-field input:focus {
+            border-bottom: 2px solid #2196F3 !important; /* Голубой цвет */
+            box-shadow: 0 1px 0 0 #2196F3 !important; /* Голубой цвет */
+        }
+
+        .input-field input:focus + label {
+            color: #2196F3 !important; /* Голубой цвет */
+        }
+
+        .input-field{
+            margin-left: 15px;
+        }
+
+        .connection-inputs {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            margin-left: 15px;
+            margin-inline: 20px;
+            justify-items: stretch;
+        }
+
+        .table-section {
+            margin: 15px;
+            padding: 20px;
+            border: 1px solid #2196F3;
+            width:fit-content;
+        }
+        
+        .table-section-body{
+            display:flex;
+            flex-direction:row;
+        }
+
+        .table-section-header {
+            color: #2782C3;
+            font-family: Roboto;
+            font-size: 24px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .table-section-body {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: baseline;
+            gap: 25px;
+
+            
+        }
+
+        .table-section-table{
+
+        }
+
+        .table-section-log-control {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .log-status {
+            color: #292929;
+            text-align: center;
+            font-family: Roboto;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+        
+
+    </style>
     <script>
         async function Home() {
             StopConnection();
@@ -19,27 +127,6 @@
         async function StopConnection() {
             await fetch('/api/Table/stop');
         }
-
-        async function updateData() {
-            const response = await fetch(`/api/Table/GetConnectionStatus`);
-            const connectionStatus = await response.text();
-            document.getElementById(`conectionStatus`).innerHTML = connectionStatus;
-
-            // *** Работа с таблицей ***
-            const modbusID = document.getElementById('modbusID').value;
-            if (modbusID != "") {
-                const tableDataResponse = await fetch(`/api/Table/GetTableData?modbusID=${modbusID}`);
-                const tableData = await tableDataResponse.json();
-
-                const tableBody = document.getElementById('tableBody');
-                tableBody.innerHTML = ''; // Очистка текущей таблицы
-
-
-            }
-        }
-
-        setInterval(updateData, 100); // Обновление каждые 100 миллисекунд
-        updateData(); // Первоначальное обновление
     </script>
 </head>
 <body>
@@ -55,23 +142,235 @@
             </div>
         </nav>
     </header>
-    <div class="container">
-        <div>
-            <h4 id="conectionStatus"></h4>
-            <input type="number" id="connectionPort" placeholder="Enter connection port" />
-            <input type="number" id="modbusID" placeholder="ModbusID">
+    <div class="main-container">
+        <div class="lift-block-status-row">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="41" viewBox="0 0 48 41" fill="none">
+                <g filter="url(#filter0_i_34_27)">
+                    <path d="M16.4523 4.62037C20.001 -0.843169 27.999 -0.843174 31.5476 4.62037L46.1471 27.0977C50.036 33.0851 45.739 41 38.5994 41H9.40056C2.26099 41 -2.03603 33.0851 1.85292 27.0977L16.4523 4.62037Z" fill="#FFF736" fill-opacity="0.56" />
+                </g>
+                <path d="M16.8717 4.89273C20.2232 -0.267287 27.7768 -0.267291 31.1283 4.89272L45.7278 27.37C49.4007 33.0248 45.3423 40.5 38.5994 40.5H9.40056C2.65764 40.5 -1.40067 33.0248 2.27224 27.37L16.8717 4.89273Z" stroke="black" stroke-opacity="0.4" />
+                <defs>
+                    <filter id="filter0_i_34_27" x="0.385742" y="0.52272" width="47.2285" height="44.4773" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                        <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                        <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+                        <feOffset dy="4" />
+                        <feGaussianBlur stdDeviation="2" />
+                        <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+                        <feBlend mode="normal" in2="shape" result="effect1_innerShadow_34_27" />
+                    </filter>
+                </defs>
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="43" height="40" viewBox="0 0 43 40" fill="none">
+                <g filter="url(#filter0_i_32_19)">
+                    <ellipse cx="21.5" cy="20" rx="21.5" ry="20" fill="#7FFBA2" />
+                </g>
+                <path d="M42.5 20C42.5 30.7361 33.1327 39.5 21.5 39.5C9.86735 39.5 0.5 30.7361 0.5 20C0.5 9.26389 9.86735 0.5 21.5 0.5C33.1327 0.5 42.5 9.26389 42.5 20Z" stroke="black" stroke-opacity="0.4" />
+                <defs>
+                    <filter id="filter0_i_32_19" x="0" y="0" width="43" height="44" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                        <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                        <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+                        <feOffset dy="4" />
+                        <feGaussianBlur stdDeviation="2" />
+                        <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+                        <feBlend mode="normal" in2="shape" result="effect1_innerShadow_32_19" />
+                    </filter>
+                </defs>
+            </svg>
+            <div class="name-and-status-coontainer">
+                <h4 class="lift-block-name">Лифтовой блок N ------</h4>
+                <h8 class="lift-block-status">Статус подключения или сервисная инфо</h8>
+            </div>
+            <div>
+            </div>
+            <div class="connection-inputs">
+                <div class="input-field col s6">
+                    <input id="port_input" type="number" class="validate">
+                    <label for="port_input">Введите порт</label>
+                </div>
+                <div class="input-field col s6">
+                    <input id="modbusID_input" type="number" class="validate">
+                    <label for="modbusID_input">Введите Modbus ID</label>
+                </div>
+            </div>
+            <button class="btn waves-effect waves-light blue">Добавить</button>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Название параметра</th>
-                    <th>Адрес</th>
-                    <th>Значение в uint16 (dec)</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-            </tbody>
-        </table>
+        <!-- Дальнейшие секции жесткое наебалово и их нужно будет заменить на React элементы-->
+        <section class="table-section">
+            <h4 class="table-section-header">Статус станции</h4>
+            <div class="table-section-body">
+                <div class="table-section-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Название параметра</th>
+                                <th>Значение</th>
+                                <th>Ед.изм</th>
+                                <th>Адрес</th>
+                                <th>Формат</th>
+                                <th>Вид</th>
+                                <th>Размер</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                            </tr>
+                            <tr>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-section-log-control">
+                    <span class="log-status">Лог отключен</span>
+                    <button class="btn waves-effect waves-light blue">Логировать</button>
+                    <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
+                </div>
+            </div>
+        </section>
+        <section class="table-section">
+            <h4 class="table-section-header">Коды ошибок станции</h4>
+            <div class="table-section-body">
+                <div class="table-section-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Название параметра</th>
+                                <th>Значение</th>
+                                <th>Ед.изм</th>
+                                <th>Адрес</th>
+                                <th>Формат</th>
+                                <th>Вид</th>
+                                <th>Размер</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                            </tr>
+                            <tr>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                            </tr>
+                            <tr>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                            </tr>
+                            <tr>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-section-log-control">
+                    <span class="log-status">Лог отключен</span>
+                    <button class="btn waves-effect waves-light blue">Логировать</button>
+                    <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
+                </div>
+            </div>
+        </section>
+        <section class="table-section">
+            <h4 class="table-section-header">Вибрация</h4>
+            <div class="table-section-body">
+                <div class="table-section-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Название параметра</th>
+                                <th>Значение</th>
+                                <th>Ед.изм</th>
+                                <th>Адрес</th>
+                                <th>Формат</th>
+                                <th>Вид</th>
+                                <th>Размер</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                            </tr>
+                            <tr>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                            </tr>
+                            <tr>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                            </tr>
+                            <tr>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-section-log-control">
+                    <span class="log-status">Лог отключен</span>
+                    <button class="btn waves-effect waves-light blue">Логировать</button>
+                    <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
+                </div>
+            </div>
+        </section>
     </div>
 </body>
 </html>
