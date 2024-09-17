@@ -12,13 +12,15 @@
             box-shadow: 0 1px 0 0 #2196F3 !important; /* Голубой цвет */
         }
 
-        .input-field input:focus + label {
-            color: #2196F3 !important; /* Голубой цвет */
-        }
+            .input-field input:focus + label {
+                color: #2196F3 !important; /* Голубой цвет */
+            }
     </style>
     <!-- Materialize JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
+        let tables = [];
+
         async function Home() {
             StopConnection();
             window.location.href = '/Home';
@@ -31,41 +33,84 @@
             await fetch('/api/Table/stop');
         }
 
-        async function updateData()
-        {
+        async function addTable() {
+            const tableId = document.getElementById('newTableId').value;
+            const addresses = document.getElementById('addresses').value;
+
+            if (!tableId || !addresses) {
+                alert('Пожалуйста, заполните все поля.');
+                return;
+            }
+
+            const addressesArray = addresses.split(',').map(Number);
+
+            const response = await fetch(`/api/Table/AddNewTable`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: tableId, addresses: addressesArray })
+            });
+
+            if (response.ok) {
+                const tableContainer = document.createElement('div');
+                tableContainer.innerHTML =
+                    `
+                        <h4>${tableId}</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Название параметра</th>
+                                    <th>Адрес</th>
+                                    <th>Значение в uint16 (dec)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="${tableId}">
+                            </tbody>
+                        </table>
+                    `;
+                document.getElementById('tablesContainer').appendChild(tableContainer);
+                tables.push({ id: tableId, addresses: addressesArray });
+            } else {
+                alert('Ошибка при добавлении таблицы.');
+            }
+        }
+
+        async function updateData() {
             const response = await fetch(`/api/Table/GetConnectionStatus`);
             const connectionStatus = await response.text();
             document.getElementById(`conectionStatus`).innerHTML = connectionStatus;
 
             // *** Работа с таблицей ***
             const modbusID = document.getElementById('modbusID').value;
-            if (modbusID != "")
-            {
-                const tableDataResponse = await fetch(`/api/Table/GetTableData?modbusID=${modbusID}`);
-                const tableData = await tableDataResponse.json();
+            if (modbusID != "") {
+                for (const table of tables) {
+                    const tableId = table.id;
+                    const tableDataResponse = await fetch(`/api/Table/GetTableData?modbusID=${modbusID}&tableId=${tableId}`);
+                    const tableData = await tableDataResponse.json();
 
-                const tableBody = document.getElementById('tableBody');
-                tableBody.innerHTML = ''; // Очистка текущей таблицы
+                    const tableBody = document.getElementById(tableId);
+                    tableBody.innerHTML = ''; // Очистка текущей таблицы
 
-                tableData.forEach((row, index) =>
-                {
-                    const tr = document.createElement('tr');
+                    tableData.forEach((row, index) => {
+                        const tr = document.createElement('tr');
 
-                    // Добавление столбца с названиями параметров
-                    const tdName = document.createElement('td');
-                    tdName.textContent = `Parameter ${index + 1}`; // Пример названия параметра
-                    tr.appendChild(tdName);
+                        // Добавление столбца с названиями параметров
+                        const tdName = document.createElement('td');
+                        tdName.textContent = `Parameter ${index + 1}`; // Пример названия параметра
+                        tr.appendChild(tdName);
 
-                    const tdAddress = document.createElement('td');
-                    tdAddress.textContent = index + 1;
-                    tr.appendChild(tdAddress);
+                        const tdAddress = document.createElement('td');
+                        tdAddress.textContent = table.addresses[index];
+                        tr.appendChild(tdAddress);
 
-                    const tdValue = document.createElement('td');
-                    tdValue.textContent = row;
-                    tr.appendChild(tdValue);
+                        const tdValue = document.createElement('td');
+                        tdValue.textContent = row;
+                        tr.appendChild(tdValue);
 
-                    tableBody.appendChild(tr);
-                });
+                        tableBody.appendChild(tr);
+                    });
+                }
             }
         }
 
@@ -77,11 +122,11 @@
     <header>
         <nav class="waves-effect waves-light blue">
             <div class="nav-wrapper">
-                <ul id="nav" style=" margin-inline:15px ;" class="left hide-on-med-and-down">
+                <ul id="nav" style="margin-inline:15px;" class="left hide-on-med-and-down">
                     <li><a href="#" onclick="Home()">Home</a></li>
                     <li><a href="#" onclick="StartConnection()">Start</a></li>
                     <li><a href="#" onclick="StopConnection()">Stop</a></li>
-                    <li><a href="#" style="font-weight: 600; padding-left: 20px; padding-right: 20px; " ;" class="brand-logo">Device-Table</a> </li>
+                    <li><a href="#" style="font-weight: 600; padding-left: 20px; padding-right: 20px;" class="brand-logo">Device-Table</a></li>
                 </ul>
             </div>
         </nav>
@@ -97,18 +142,21 @@
                 <input id="modbusID" type="number" class="validate">
                 <label for="modbusID">ModbusID</label>
             </div>
+            <div class="row">
+                <div class="input-field col s4">
+                    <input id="newTableId" type="text" class="validate">
+                    <label for="newTableId">ID</label>
+                </div>
+                <div class="input-field col s4">
+                    <input id="addresses" type="text" class="validate">
+                    <label for="addresses">Массив адресов (через запятую)</label>
+                </div>
+                <div class="col s4">
+                    <button class="btn waves-effect waves-light" onclick="addTable()">Добавить таблицу</button>
+                </div>
+            </div>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Название параметра</th>
-                    <th>Адрес</th>
-                    <th>Значение в uint16 (dec)</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-            </tbody>
-        </table>
+        <div id="tablesContainer"></div>
     </div>
 </body>
 </html>

@@ -166,18 +166,41 @@ app.MapGet("/api/Table/stop", async () =>
     await TcpDeviceTableServer.Stop();
 });
 
-app.MapGet("/api/Table/GetTableData", async (int modbusID) =>
+app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
 {
-    if(TcpDeviceTableServer.isRunning && TcpDeviceTableServer.dataTable != null)
+    var requestBody = await new StreamReader(context.Request.Body).ReadToEndAsync();
+    var data = JsonSerializer.Deserialize<Dictionary<string, object>>(requestBody);
+
+    if (data.TryGetValue("id", out var idObj) && data.TryGetValue("addresses", out var addressesObj))
     {
-        await TcpDeviceTableServer.dataTable.GetTableDataAsync("default", modbusID);    
-        var tableDataValues = TcpDeviceTableServer.dataTable.GetTableDataValues();
-        return Results.Json(tableDataValues);
+        var id = idObj.ToString();
+        var addresses = JsonSerializer.Deserialize<List<int>>(addressesObj.ToString());
+
+        await TcpDeviceTableServer.AddNewTable(id, 10, addresses.Count, addresses);
+
+        context.Response.StatusCode = StatusCodes.Status200OK;
+    }
+    else
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+    }
+});
+
+
+app.MapGet("/api/Table/GetTableData", async (int modbusID, string tableId) =>
+{
+    if (TcpDeviceTableServer.isRunning && TcpDeviceTableServer.dataTablesList != null)
+    {
+        var table = TcpDeviceTableServer.dataTablesList.FirstOrDefault(t => t.id == tableId);
+        if (table != null)
+        {
+            await table.GetTableDataAsync("default", modbusID);
+            var tableDataValues = table.GetTableDataValues();
+            return Results.Json(tableDataValues);
+        }
     }
 
-    
-    return Results.Json(new string[] { "Loading...", "Loading...", "Loading...", "Loading...", "Loading...",
-        "Loading...", "Loading...", "Loading...", "Loading...", "Loading..." });
+    return Results.Json(new string[] { "Loading..." });
 });
 
 app.MapGet("/api/Table/GetConnectionStatus", async () =>

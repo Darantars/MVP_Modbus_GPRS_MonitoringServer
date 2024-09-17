@@ -396,17 +396,26 @@ namespace Read_Write_GPRS_Server.Controllers
 
             public string connectionStatus { get; set; }
 
-            public Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable dataTable{ get; set; }
+            public List<Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable> dataTablesList { get; set; }
+
             private string lastIpAdress { get; set; }
             private int lastPort { get; set; }
-
+            public bool readyToGetTableData { get; set; }
+            public string answerMb3 { get; set; }    // Вот в нее нужно положить последний ответ
             public TcpDeviceTableServer()
             {
                 connectionStatus = "Disconnected";
                 isRunning = false;
-                dataTable = new Plugins.DeviceTable.DataTable(10, 10, new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }, this);
+                dataTablesList = new List<Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable>();
+                readyToGetTableData = true;
+                answerMb3 = null;
             }
 
+            public async Task AddNewTable(string id, int tableRowSize, int tableColumnSize, List<int> tableAdreses)
+            {
+                Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable dataTable = new Plugins.DeviceTable.DataTable(id, tableRowSize, tableColumnSize, tableAdreses, this);
+                dataTablesList.Add(dataTable);
+            }
 
             public async Task Start(string ipAddress, int port)
             {
@@ -482,7 +491,7 @@ namespace Read_Write_GPRS_Server.Controllers
                                     cuttedMessageMB = cuttedMessageMB + "<br>"+ BitConverter.ToString(responseList[i]);
                                     if (responseList[i][1] == 3)
                                     {
-                                        dataTable.answerMb3 =  Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], "getValueInt16");
+                                        answerMb3 =  Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], "getValueInt16");      //Сменить для перехода на несколько таблиц
                                     }
                                 }
                             });
@@ -495,7 +504,7 @@ namespace Read_Write_GPRS_Server.Controllers
                 }
             }
 
-            private async Task StartCheckConnectionToDeviceLoop(UsrGPRS232_730 device)              ////T0 DO: Таска была открыта, таску нужно закрыть
+            private async Task StartCheckConnectionToDeviceLoop(UsrGPRS232_730 device)        
             {
                 double delayFiveHeartBeatReal = device.heartbeatMessageRateSec * 2;
                 int loopCounter = 1;
