@@ -243,7 +243,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                             ushort value = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(buffer, 3 + i * 2));
                             data.Append($"{value} ");
                         }
-                        registers = $"Данные: {data.ToString().Trim()}";
+                        registers = $"{data.ToString().Trim()}";
                     }
                     break;
 
@@ -274,7 +274,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                             ushort value = BitConverter.ToUInt16(buffer, 7 + i * 2);
                             data.Append($"{value} ");
                         }
-                        registers += $" (Данные: {data.ToString().Trim()}) ";
+                        registers += $"{data.ToString().Trim()} ";
                     }
                     break;
 
