@@ -292,8 +292,10 @@ namespace Read_Write_GPRS_Server.Controllers
                         {
                             device.tcp5HeartBeatTimingMessageCounter = device.tcp5HeartBeatTimingMessageCounter + 1;
                             byte[] newBuffer = new byte[bytesRead];
-                            Array.Copy(buffer, newBuffer, bytesRead);    
-                            List<byte[]> responseList = await Task.Run(() => Protocols.Modbuss.ModBussRTU.CutToModbusRtuMessageListFastMb(newBuffer));
+                            Array.Copy(buffer, newBuffer, bytesRead);
+                            await Task.Run(async () =>
+                            {
+                                List<byte[]> responseList = await Task.Run(() => Protocols.Modbuss.ModBussRTU.CutToModbusRtuMessageListFastMb(newBuffer));
 
                                 string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
 
@@ -306,13 +308,14 @@ namespace Read_Write_GPRS_Server.Controllers
 
                                 string hexedNessage = BitConverter.ToString(buffer, 0, bytesRead);
 
-                            string cuttedMessageMB = "";
-                            for (int i = 0; i < responseList.Count; i++)
-                            {
-                                cuttedMessageMB = cuttedMessageMB + "<br>"+ BitConverter.ToString(responseList[i]);
-                            }
+                                string cuttedMessageMB = "";
+                                for (int i = 0; i < responseList.Count; i++)
+                                {
+                                    cuttedMessageMB = cuttedMessageMB + "<br>"+ BitConverter.ToString(responseList[i]);
+                                }
 
-                            await AddMessageToQueue($"<br> Получено сообщение: <br> ASCII: {message} <br> MB: {decodedMbCommand} <br> hex: {hexedNessage} <br> hex-commands(probably): {cuttedMessageMB}");
+                                await AddMessageToQueue($"<br> Получено сообщение: <br> ASCII: {message} <br> MB: {decodedMbCommand} <br> hex: {hexedNessage} <br> hex-commands(probably): {cuttedMessageMB}");
+                            });
                         }
                     }
                 }
@@ -468,18 +471,21 @@ namespace Read_Write_GPRS_Server.Controllers
                             device.tcp5HeartBeatTimingMessageCounter = device.tcp5HeartBeatTimingMessageCounter + 1;
                             byte[] newBuffer = new byte[bytesRead];
                             Array.Copy(buffer, newBuffer, bytesRead);
-                            List<byte[]> responseList = await Task.Run(() => Protocols.Modbuss.ModBussRTU.CutToModbusRtuMessageListFastMb(newBuffer));
 
-                            string cuttedMessageMB = "";
-                            for (int i = 0; i < responseList.Count; i++)
+                            await Task.Run(async () =>
                             {
-                                cuttedMessageMB = cuttedMessageMB + "<br>"+ BitConverter.ToString(responseList[i]);
-                                if (responseList[i][1] == 3) 
-                                {
-                                    dataTable.answerMb3 =  Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], "getValueInt16");
-                                }
-                            }
+                                List<byte[]> responseList = await Task.Run(() => Protocols.Modbuss.ModBussRTU.CutToModbusRtuMessageListFastMb(newBuffer));
 
+                                string cuttedMessageMB = "";
+                                for (int i = 0; i < responseList.Count; i++)
+                                {
+                                    cuttedMessageMB = cuttedMessageMB + "<br>"+ BitConverter.ToString(responseList[i]);
+                                    if (responseList[i][1] == 3)
+                                    {
+                                        dataTable.answerMb3 =  Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], "getValueInt16");
+                                    }
+                                }
+                            });
                         }  
                     }
                 }

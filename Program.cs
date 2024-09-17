@@ -26,6 +26,13 @@ app.MapGet("/", async (HttpContext context) =>
     await context.Response.WriteAsync(htmlContent);
 });
 
+app.MapGet("/Home", async (HttpContext context) =>
+{
+    var filePath = Path.Combine(context.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath, "html", "index.html");
+    var htmlContent = await System.IO.File.ReadAllTextAsync(filePath);
+    context.Response.ContentType = "text/html";
+    await context.Response.WriteAsync(htmlContent);
+});
 
 
 app.MapGet("/TCP-Server", async (HttpContext context) =>
@@ -180,5 +187,15 @@ app.MapGet("/api/Table/GetConnectionStatus", async () =>
 
 
 });
+
+app.MapGet("/LiftView", async (HttpContext context) =>
+{
+    var filePath = Path.Combine(context.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath, "html", "LiftView.html");
+    var htmlContent = await System.IO.File.ReadAllTextAsync(filePath);
+    context.Response.ContentType = "text/html";
+    await context.Response.WriteAsync(htmlContent);
+});
+
+
 
 app.Run();
