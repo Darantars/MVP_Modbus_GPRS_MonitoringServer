@@ -8,7 +8,7 @@
     <!-- Materialize JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <style>
-        .main-container{
+        .main-container {
             margin-left: 15px;
         }
 
@@ -20,11 +20,10 @@
             gap: 10px;
             margin-inline-start: 15px;
             margin-inline-end: 10px;
-            
         }
 
-        .name-and-status-coontainer {
-            margin-left: 25px; 
+        .name-and-status-container {
+            margin-left: 25px;
         }
 
         .lift-block-name {
@@ -45,11 +44,11 @@
             box-shadow: 0 1px 0 0 #2196F3 !important; /* Голубой цвет */
         }
 
-        .input-field input:focus + label {
-            color: #2196F3 !important; /* Голубой цвет */
-        }
+            .input-field input:focus + label {
+                color: #2196F3 !important; /* Голубой цвет */
+            }
 
-        .input-field{
+        .input-field {
             margin-left: 15px;
         }
 
@@ -66,12 +65,12 @@
             margin: 15px;
             padding: 20px;
             border: 1px solid #2196F3;
-            width:fit-content;
+            width: fit-content;
         }
-        
-        .table-section-body{
-            display:flex;
-            flex-direction:row;
+
+        .table-section-body {
+            display: flex;
+            flex-direction: row;
         }
 
         .table-section-header {
@@ -89,12 +88,10 @@
             justify-content: flex-start;
             align-items: baseline;
             gap: 25px;
-
-            
         }
 
-        .table-section-table{
-
+        .table-section-table {
+            /* Стили для таблицы */
         }
 
         .table-section-log-control {
@@ -112,72 +109,131 @@
             font-weight: 400;
             line-height: normal;
         }
-        
-
     </style>
     <script>
+        let tables = [];
+        addDefaultTables();
+
         async function Home() {
             StopConnection();
             window.location.href = '/Home';
         }
+
         async function StartConnection() {
             const connectionPort = document.getElementById('port_input').value;
             await fetch(`/api/Table/start?connectionPort=${connectionPort}`);
         }
+
         async function StopConnection() {
             await fetch('/api/Table/stop');
         }
 
+        async function addDefaultTables()
+        {
+            const manualAddressesArray1 = [1, 2];
+            const manualAddressesArray2 = [1, 2, 3, 4];
+            const manualAddressesArray3 = [1, 2, 3, 4];
+
+            const tableId1 = "Статус станции"; 
+            const tableId2 = "Коды ошибок станции"; 
+            const tableId3 = "Датчики вибрации"; 
+
+            const response1 = await fetch(`/api/Table/AddNewTable`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: tableId1, addresses: manualAddressesArray1 })
+            });
+
+            if (response1.ok) {
+                tables.push({ id: tableId1, addresses: manualAddressesArray1 });
+            } else {
+                alert('Ошибка при добавлении таблицы: Статус станции.');
+            }
+
+            const response2 = await fetch(`/api/Table/AddNewTable`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: tableId2, addresses: manualAddressesArray2 })
+            });
+
+            if (response2.ok) {
+                tables.push({ id: tableId2, addresses: manualAddressesArray2 });
+            } else {
+                alert('Ошибка при добавлении таблицы: Коды ошибок станции.');
+            }
+
+            const response3 = await fetch(`/api/Table/AddNewTable`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: tableId3, addresses: manualAddressesArray3 })
+            });
+
+            if (response3.ok) {
+                tables.push({ id: tableId3, addresses: manualAddressesArray3 });
+            } else {
+                alert('Ошибка при добавлении таблицы: Датчики вибрации.');
+            }
+        }
+
         async function updateData() {
-            const response = await fetch(`/api/Table/GetConnectionStatus`);
-            const connectionStatus = await response.text();
-            document.getElementById(`lift-block-status`).innerHTML = connectionStatus;
+        const response = await fetch(`/api/Table/GetConnectionStatus`);
+        const connectionStatus = await response.text();
+        document.getElementById(`lift-block-status`).innerHTML = connectionStatus;
 
             // *** Работа с таблицей ***
             const modbusID = document.getElementById('modbusID_input').value;
             if (modbusID != "") {
-                const tableDataResponse = await fetch(`/api/Table/GetTableData?modbusID=${modbusID}`);
-                const tableData = await tableDataResponse.json();
+                for (const table of tables) {
+                    const tableId = table.id;
+                    const tableDataResponse = await fetch(`/api/Table/GetTableData?modbusID=${modbusID}&tableId=${tableId}`);
+                    const tableData = await tableDataResponse.json();
 
-                const tableBody = document.getElementById('tableBody');
-                tableBody.innerHTML = ''; // Очистка текущей таблицы
+                    const tableBody = document.getElementById(tableId);
+                    tableBody.innerHTML = ''; // Очистка текущей таблицы
 
-                tableData.forEach((row, index) => {
-                    const tr = document.createElement('tr');
+                    tableData.forEach((row, index) => {
+                        const tr = document.createElement('tr');
 
-                    // Добавление столбца с названиями параметров
-                    const tdName = document.createElement('td');
-                    tdName.textContent = `Parameter ${index + 1}`; // Пример названия параметра
-                    tr.appendChild(tdName);
+                        // Добавление столбца с названиями параметров
+                        const tdName = document.createElement('td');
+                        tdName.textContent = `Parameter ${index + 1}`; // Пример названия параметра
+                        tr.appendChild(tdName);
 
-                    const tdValue = document.createElement('td');
-                    tdValue.textContent = row;
-                    tr.appendChild(tdValue);
+                        const tdValue = document.createElement('td');
+                        tdValue.textContent = row;
+                        tr.appendChild(tdValue);
 
-                    const tdUnitType = document.createElement('td');
-                    tdUnitType.textContent = "-";
-                    tr.appendChild(tdUnitType);
+                        const tdUnitType = document.createElement('td');
+                        tdUnitType.textContent = "-";
+                        tr.appendChild(tdUnitType);
 
-                    const tdAddress = document.createElement('td');
-                    tdAddress.textContent = index + 1;
-                    tr.appendChild(tdAddress);
+                        const tdAddress = document.createElement('td');
+                        tdAddress.textContent = table.addresses[index];
+                        tr.appendChild(tdAddress);
 
-                    const tdValueFormat = document.createElement('td');
-                    tdValueFormat.textContent = "int16";
-                    tr.appendChild(tdValueFormat);
+                        const tdValueFormat = document.createElement('td');
+                        tdValueFormat.textContent = "int16";
+                        tr.appendChild(tdValueFormat);
 
-                    const tdValueType = document.createElement('td');
-                    tdValueType.textContent = "dec";
-                    tr.appendChild(tdValueType);
+                        const tdValueType = document.createElement('td');
+                        tdValueType.textContent = "dec";
+                        tr.appendChild(tdValueType);
 
-                    const tdValueSize = document.createElement('td');
-                    tdValueSize.textContent = "1";
-                    tr.appendChild(tdValueSize);
+                        const tdValueSize = document.createElement('td');
+                        tdValueSize.textContent = "1";
+                        tr.appendChild(tdValueSize);
 
-                    tableBody.appendChild(tr);
-                });
+                        tableBody.appendChild(tr);
+                    });
+                }
             }
-        }
+    }
 
         setInterval(updateData, 100); // Обновление каждые 100 миллисекунд
         updateData(); // Первоначальное обновление
@@ -187,11 +243,11 @@
     <header>
         <nav class="waves-effect waves-light blue">
             <div class="nav-wrapper">
-                <ul id="nav" style=" margin-inline:15px ;" class="left hide-on-med-and-down">
+                <ul id="nav" style="margin-inline:15px;" class="left hide-on-med-and-down">
                     <li><a href="#" onclick="Home()">Home</a></li>
                     <li><a href="#" onclick="StartConnection()">Start</a></li>
                     <li><a href="#" onclick="StopConnection()">Stop</a></li>
-                    <li><a href="#" style="font-weight: 600; padding-left: 20px; padding-right: 20px; " ;" class="brand-logo">Lift Viev</a> </li>
+                    <li><a href="#" style="font-weight: 600; padding-left: 20px; padding-right: 20px;" class="brand-logo">Lift View</a></li>
                 </ul>
             </div>
         </nav>
@@ -234,11 +290,9 @@
                     </filter>
                 </defs>
             </svg>
-            <div class="name-and-status-coontainer">
+            <div class="name-and-status-container">
                 <h4 class="lift-block-name">Лифтовой блок N ------</h4>
                 <h8 id="lift-block-status" class="lift-block-status">Статус подключения или сервисная инфо</h8>
-            </div>
-            <div>
             </div>
             <div class="connection-inputs">
                 <div class="input-field col s6">
@@ -269,16 +323,7 @@
                                 <th>Размер</th>
                             </tr>
                         </thead>
-                        <tbody id="tableBody">
-                            <tr>
-                                <th><input /></th>
-                                <th>-</th>
-                                <th>-</th>
-                                <th>-</th>
-                                <th>-</th>
-                                <th>-</th>
-                                <th>-</th>
-                            </tr>
+                        <tbody id="Статус станции">
                             <tr>
                                 <th>-</th>
                                 <th>-</th>
@@ -288,7 +333,15 @@
                                 <th>-</th>
                                 <th>-</th>
                             </tr>
-
+                            <tr>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                                <th>-</th>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -315,7 +368,7 @@
                                 <th>Размер</th>
                             </tr>
                         </thead>
-                        <tbody id="tableBody">
+                        <tbody id="Коды ошибок станции">
                             <tr>
                                 <th>-</th>
                                 <th>-</th>
@@ -378,7 +431,7 @@
                                 <th>Размер</th>
                             </tr>
                         </thead>
-                        <tbody id="tableBody">
+                        <tbody id="Датчики вибрации">
                             <tr>
                                 <th>-</th>
                                 <th>-</th>
