@@ -132,6 +132,10 @@
 
         async function addDefaultTables()
         {
+            const manualNamesArray1 = ["-", "-"];
+            const manualNamesArray2 = ["-", "-", "-", "-"];
+            const manualNamesArray3 = ["-", "-", "-", "-"];
+
             const manualAddressesArray1 = [2, 4];
             const manualAddressesArray2 = [1, 2, 3, 14];
             const manualAddressesArray3 = [1, 2, 3, 4];
@@ -161,11 +165,11 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ id: tableId1, addresses: manualAddressesArray1, sizes: sizes1, types: types1, unitTypes: unitTypes1, formats: formats1 })
+                body: JSON.stringify({ id: tableId1, names: manualNamesArray1,  addresses: manualAddressesArray1, sizes: sizes1, types: types1, unitTypes: unitTypes1, formats: formats1 })
             });
 
             if (response1.ok) {
-                tables.push({ id: tableId1, addresses: manualAddressesArray1, sizes: sizes1, types: types1, unitTypes: unitTypes1, formats: formats1 });
+                tables.push({ id: tableId1, names: manualNamesArray1, addresses: manualAddressesArray1, sizes: sizes1, types: types1, unitTypes: unitTypes1, formats: formats1 });
             } else {
                 alert('Ошибка при добавлении таблицы: Статус станции.');
             }
@@ -175,11 +179,11 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ id: tableId2, addresses: manualAddressesArray2, sizes: sizes2, types: types2, unitTypes: unitTypes2, formats: formats2 })
+                body: JSON.stringify({ id: tableId2, names: manualNamesArray2, addresses: manualAddressesArray2, sizes: sizes2, types: types2, unitTypes: unitTypes2, formats: formats2 })
             });
 
             if (response2.ok) {
-                tables.push({ id: tableId2, addresses: manualAddressesArray2, sizes: sizes2, types: types2, unitTypes: unitTypes2, formats: formats2 });
+                tables.push({ id: tableId2, names: manualNamesArray2, addresses: manualAddressesArray2, sizes: sizes2, types: types2, unitTypes: unitTypes2, formats: formats2 });
             } else {
                 alert('Ошибка при добавлении таблицы: Коды ошибок станции.');
             }
@@ -189,11 +193,11 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ id: tableId3, addresses: manualAddressesArray3, sizes: sizes3, types: types3, unitTypes: unitTypes3, formats: formats3 })
+                body: JSON.stringify({ id: tableId3, names: manualNamesArray3, addresses: manualAddressesArray3, sizes: sizes3, types: types3, unitTypes: unitTypes3, formats: formats3 })
             });
 
             if (response3.ok) {
-                tables.push({ id: tableId3, addresses: manualAddressesArray3, sizes: sizes3, types: types3, unitTypes: unitTypes3, formats: formats3 });
+                tables.push({ id: tableId3, names: manualNamesArray3, addresses: manualAddressesArray3, sizes: sizes3, types: types3, unitTypes: unitTypes3, formats: formats3 });
             } else {
                 alert('Ошибка при добавлении таблицы: Датчики вибрации.');
             }
@@ -226,7 +230,7 @@
 
                             // Добавление столбца с названиями параметров
                             const tdName = document.createElement('td');
-                            tdName.textContent = `Parameter ${index + 1}`; // Пример названия параметра
+                            tdName.textContent = table.names[index];
                             tr.appendChild(tdName);
 
                             const tdValue = document.createElement('td');

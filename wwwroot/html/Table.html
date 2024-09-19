@@ -37,6 +37,7 @@
 
         async function addTable() {
             const tableId = document.getElementById('newTableId').value;
+            const names = document.getElementById('newTableNames').value;
             const addresses = document.getElementById('addresses').value;
             const sizes = document.getElementById('newTableSizes').value;
             const types = document.getElementById('newTableTypes').value;
@@ -48,6 +49,7 @@
                 return;
             }
 
+            const namesArray = names.split(',').map(String);
             const addressesArray = addresses.split(',').map(Number);
             const sizesArray = sizes.split(',').map(Number);
             const typesArray = types.split(',').map(String);
@@ -59,7 +61,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ id: tableId, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray })
+                body: JSON.stringify({ id: tableId, names: namesArray, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray })
             });
 
             if (response.ok) {
@@ -84,7 +86,7 @@
                         </table>
                     `;
                 document.getElementById('tablesContainer').appendChild(tableContainer);
-                tables.push({ id: tableId, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray });
+                tables.push({ id: tableId, names: namesArray, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray });
             } else {
                 alert('Ошибка при добавлении таблицы.');
             }
@@ -117,7 +119,7 @@
 
                             // Добавление столбца с названиями параметров
                             const tdName = document.createElement('td');
-                            tdName.textContent = `Parameter ${index + 1}`; // Пример названия параметра
+                            tdName.textContent = table.names[index];
                             tr.appendChild(tdName);
 
                             const tdValue = document.createElement('td');
@@ -189,9 +191,15 @@
                     <label for="newTableId">ID</label>
                 </div>
                 <div class="input-field col s4">
+                    <input id="newTableNames" type="text" class="validate">
+                    <label for="newTableNames">Массив названий (через запятую)</label>
+                </div>
+                <div class="input-field col s4">
                     <input id="addresses" type="text" class="validate">
                     <label for="addresses">Массив адресов (через запятую)</label>
                 </div>
+            </div>
+            <div class="row">
                 <div class="input-field col s4">
                     <input id="newTableSizes" type="text" class="validate">
                     <label for="newTableSizes">Массив размеров (через запятую)</label>
@@ -204,13 +212,15 @@
                     <input id="newTableUnitTypes" type="text" class="validate">
                     <label for="newTableUnitTypes">Массив единиц изм. (через запятую)</label>
                 </div>
+            </div>
+            <div class="row">
                 <div class="input-field col s4">
                     <input id="newTableFormats" type="text" class="validate">
                     <label for="newTableFormats">Массив форматов (через запятую)</label>
                 </div>
-            </div>
-            <div class="col s4">
-                <button class="btn waves-effect waves-light" onclick="addTable()">Добавить таблицу</button>
+                <div class="col s4">
+                    <button class="btn waves-effect waves-light" onclick="addTable()">Добавить таблицу</button>
+                </div>
             </div>
         </div>
         <div id="tablesContainer"></div>

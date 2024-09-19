@@ -13,6 +13,8 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
         private string[] defHeaders = new string[] {"Имя", "Значение", "Ед. измер", "Адрес(dec)", "Формат", "Вид", "Размер", "Запись", "Минимум", "Максимум", "Заводские"};
 
+        private List<string> paramNames { get; set; }
+
         private string[] tableDataValues {  get; set; } 
 
         private List<int> paramAdreses { get; set; }
@@ -29,7 +31,7 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
         private int badRequestMb3Counter {  get; set; }
 
-        public DataTable(string tableId, int tableRowSize, int tableColumnSize, List<int> tableParamAdreses, List<int> tableParamSizes, List<string> tableParamTypes, List<string> tableParamUnitTypes, List<string> tableParamFormats, Controllers.TcpConnectionController.TcpDeviceTableServer tableTableServer) 
+        public DataTable(string tableId, int tableRowSize, int tableColumnSize, List<string> tableParamNames, List<int> tableParamAdreses, List<int> tableParamSizes, List<string> tableParamTypes, List<string> tableParamUnitTypes, List<string> tableParamFormats, Controllers.TcpConnectionController.TcpDeviceTableServer tableTableServer) 
         {
             if (tableRowSize < 0 )
             {
@@ -41,6 +43,7 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             rowSize = tableRowSize;
             columnSize = tableColumnSize;
             headers = new string[tableRowSize];
+            paramNames = tableParamNames;
             paramAdreses = tableParamAdreses;
             paramSizes = tableParamSizes;
             paramTypes = tableParamTypes;
