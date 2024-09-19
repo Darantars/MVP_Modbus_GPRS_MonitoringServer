@@ -414,9 +414,9 @@ namespace Read_Write_GPRS_Server.Controllers
                 answerType = "int16";
             }
 
-            public async Task AddNewTable(string id, int tableRowSize, int tableColumnSize, List<int> tableAdreses, List<int> tableSizes, List<string> tableTypes)
+            public async Task AddNewTable(string id, int tableRowSize, int tableColumnSize, List<int> tableAdreses, List<int> tableSizes, List<string> tableTypes, List<string> tableParamUnitTypes, List<string>TableFormats)
             {
-                Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable dataTable = new Plugins.DeviceTable.DataTable(id, tableRowSize, tableColumnSize, tableAdreses, tableSizes, tableTypes, this);
+                Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable dataTable = new Plugins.DeviceTable.DataTable(id, tableRowSize, tableColumnSize, tableAdreses, tableSizes, tableTypes, tableParamUnitTypes, TableFormats, this);
                 dataTablesList.Add(dataTable);
             }
 

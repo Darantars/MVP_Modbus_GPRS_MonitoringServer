@@ -174,9 +174,16 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
     if (data.TryGetValue("id", out var idObj)
         && data.TryGetValue("addresses", out var addressesObj)
         && data.TryGetValue("sizes", out var sizesObj)
-        && data.TryGetValue("types", out var typesObj))
+        && data.TryGetValue("types", out var typesObj)
+        && data.TryGetValue("unitTypes", out var untTypesObj)
+        && data.TryGetValue("formats", out var formatsObj))
     {
-        if (idObj == null || addressesObj == null || sizesObj == null || typesObj == null)
+        if (idObj == null 
+        || addressesObj == null 
+        || sizesObj == null 
+        || typesObj == null
+        || untTypesObj == null
+        || formatsObj == null)
         {
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             return;
@@ -188,8 +195,10 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
             var addresses = JsonSerializer.Deserialize<List<int>>(addressesObj.ToString());
             var sizes = JsonSerializer.Deserialize<List<int>>(sizesObj.ToString());
             var types = JsonSerializer.Deserialize<List<string>>(typesObj.ToString());
+            var unitTypes = JsonSerializer.Deserialize<List<string>>(untTypesObj.ToString());
+            var formats = JsonSerializer.Deserialize<List<string>>(formatsObj.ToString());
 
-            await TcpDeviceTableServer.AddNewTable(id, 10, addresses.Count, addresses, sizes, types);
+            await TcpDeviceTableServer.AddNewTable(id, 10, addresses.Count, addresses, sizes, types, unitTypes, formats);
 
             context.Response.StatusCode = StatusCodes.Status200OK;
         }

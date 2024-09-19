@@ -40,6 +40,8 @@
             const addresses = document.getElementById('addresses').value;
             const sizes = document.getElementById('newTableSizes').value;
             const types = document.getElementById('newTableTypes').value;
+            const unitTypes = document.getElementById('newTableUnitTypes').value;
+            const formats = document.getElementById('newTableFormats').value;
 
             if (!tableId || !addresses) {
                 alert('Пожалуйста, заполните все поля.');
@@ -48,14 +50,16 @@
 
             const addressesArray = addresses.split(',').map(Number);
             const sizesArray = sizes.split(',').map(Number);
-            const typesArray = types.split(',').map(String);              
+            const typesArray = types.split(',').map(String);
+            const unitTypesArray = unitTypes.split(',').map(String);
+            const formatsArray = formats.split(',').map(String);
 
             const response = await fetch(`/api/Table/AddNewTable`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ id: tableId, addresses: addressesArray, sizes: sizesArray, types: typesArray  })
+                body: JSON.stringify({ id: tableId, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray })
             });
 
             if (response.ok) {
@@ -80,7 +84,7 @@
                         </table>
                     `;
                 document.getElementById('tablesContainer').appendChild(tableContainer);
-                tables.push({ id: tableId, addresses: addressesArray, sizes: sizesArray, types: typesArray });
+                tables.push({ id: tableId, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray });
             } else {
                 alert('Ошибка при добавлении таблицы.');
             }
@@ -121,7 +125,7 @@
                             tr.appendChild(tdValue);
 
                             const tdUnitType = document.createElement('td');
-                            tdUnitType.textContent = "-";
+                            tdUnitType.textContent = table.unitTypes[index];
                             tr.appendChild(tdUnitType);
 
                             const tdAddress = document.createElement('td');
@@ -129,11 +133,11 @@
                             tr.appendChild(tdAddress);
 
                             const tdValueFormat = document.createElement('td');
-                            tdValueFormat.textContent = table.types[index];
+                            tdValueFormat.textContent = table.formats[index];
                             tr.appendChild(tdValueFormat);
 
                             const tdValueType = document.createElement('td');
-                            tdValueType.textContent = "dec";
+                            tdValueType.textContent = table.types[index];;
                             tr.appendChild(tdValueType);
 
                             const tdValueSize = document.createElement('td');
@@ -196,9 +200,17 @@
                     <input id="newTableTypes" type="text" class="validate">
                     <label for="newTableTypes">Массив видов (через запятую)</label>
                 </div>
-                <div class="col s4">
-                    <button class="btn waves-effect waves-light" onclick="addTable()">Добавить таблицу</button>
+                <div class="input-field col s4">
+                    <input id="newTableUnitTypes" type="text" class="validate">
+                    <label for="newTableUnitTypes">Массив единиц изм. (через запятую)</label>
                 </div>
+                <div class="input-field col s4">
+                    <input id="newTableFormats" type="text" class="validate">
+                    <label for="newTableFormats">Массив форматов (через запятую)</label>
+                </div>
+            </div>
+            <div class="col s4">
+                <button class="btn waves-effect waves-light" onclick="addTable()">Добавить таблицу</button>
             </div>
         </div>
         <div id="tablesContainer"></div>

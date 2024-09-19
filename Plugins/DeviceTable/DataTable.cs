@@ -21,11 +21,15 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
         private List<string> paramTypes { get; set; }
 
+        private List<string> paramUnitTypes { get; set; }
+
+        private List<string> paramFormats { get; set; }
+
         private Controllers.TcpConnectionController.TcpDeviceTableServer TableServer {  get; set; }
 
         private int badRequestMb3Counter {  get; set; }
 
-        public DataTable(string tableId, int tableRowSize, int tableColumnSize, List<int> tableParamAdreses, List<int> tableParamSizes, List<string> tableParamTypes, Controllers.TcpConnectionController.TcpDeviceTableServer tableTableServer) 
+        public DataTable(string tableId, int tableRowSize, int tableColumnSize, List<int> tableParamAdreses, List<int> tableParamSizes, List<string> tableParamTypes, List<string> tableParamUnitTypes, List<string> tableParamFormats, Controllers.TcpConnectionController.TcpDeviceTableServer tableTableServer) 
         {
             if (tableRowSize < 0 )
             {
@@ -40,10 +44,10 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             paramAdreses = tableParamAdreses;
             paramSizes = tableParamSizes;
             paramTypes = tableParamTypes;
+            paramUnitTypes = tableParamUnitTypes;
+            paramFormats = tableParamFormats;
             tableDataValues = new string[tableColumnSize];
             badRequestMb3Counter = 0;
-            
-
         }
 
         public async Task GetTableDataAsync(string mode, int modbusID)   
