@@ -15,10 +15,46 @@
             .input-field input:focus + label {
                 color: #2196F3 !important; /* Голубой цвет */
             }
+        .table-section {
+            margin: 15px;
+            padding: 20px;
+            border: 1px solid #2196F3;
+            width: fit-content;
+        }
+
+        .table-section-body {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .table-section-header {
+            color: #2782C3;
+            font-family: Roboto;
+            font-size: 24px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .table-section-body {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: baseline;
+            gap: 25px;
+        }
+
+        .table-section-table {
+            /* Стили для таблицы */
+        }
     </style>
     <!-- Materialize JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var elems = document.querySelectorAll('.collapsible');
+            var instances = M.Collapsible.init(elems);
+        });
 
         let tables = [];
         let updateToken = true;
@@ -68,23 +104,27 @@
                 const tableContainer = document.createElement('div');
                 tableContainer.innerHTML =
                     `
-                        <h4>${tableId}</h4>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Название параметра</th>
-                                    <th>Значение</th>
-                                    <th>Ед.изм</th>
-                                    <th>Адрес</th>
-                                    <th>Формат</th>
-                                    <th>Вид</th>
-                                    <th>Размер</th>
-                                </tr>
-                            </thead>
-                            <tbody id="${tableId}">
-                            </tbody>
-                        </table>
-                    `;
+                    <section class="table-section">
+                        <h4 class="table-section-header">${tableId}</h4>
+                            <div class="table-section-body">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Название параметра</th>
+                                        <th>Значение</th>
+                                        <th>Ед.изм</th>
+                                        <th>Адрес</th>
+                                        <th>Формат</th>
+                                        <th>Вид</th>
+                                        <th>Размер</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="${tableId}">
+                                </tbody>
+                            </table>
+                            </div>
+                        </section>
+                        `;
                 document.getElementById('tablesContainer').appendChild(tableContainer);
                 tables.push({ id: tableId, names: namesArray, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray });
             } else {
@@ -92,15 +132,12 @@
             }
         }
 
-        async function updateData()
-        {
-
+        async function updateData() {
             const response = await fetch(`/api/Table/GetConnectionStatus`);
             const connectionStatus = await response.text();
             document.getElementById(`conectionStatus`).innerHTML = connectionStatus;
 
-            if (updateToken === true)
-            {
+            if (updateToken === true) {
                 updateToken = false;
 
                 // *** Работа с таблицей ***
@@ -153,8 +190,6 @@
 
                 updateToken = true;
             }
-
-            
         }
 
         setInterval(updateData, 100); // Обновление каждые 100 миллисекунд
@@ -175,54 +210,74 @@
         </nav>
     </header>
     <div class="container">
-        <div>
+        <div class="row">
             <h4 id="conectionStatus"></h4>
-            <div class="input-field col s6">
-                <input id="connectionPort" type="number" class="validate">
-                <label for="connectionPort">Enter connection port</label>
-            </div>
-            <div class="input-field col s6">
-                <input id="modbusID" type="number" class="validate">
-                <label for="modbusID">ModbusID</label>
-            </div>
-            <div class="row">
-                <div class="input-field col s4">
-                    <input id="newTableId" type="text" class="validate">
-                    <label for="newTableId">ID</label>
-                </div>
-                <div class="input-field col s4">
-                    <input id="newTableNames" type="text" class="validate">
-                    <label for="newTableNames">Массив названий (через запятую)</label>
-                </div>
-                <div class="input-field col s4">
-                    <input id="addresses" type="text" class="validate">
-                    <label for="addresses">Массив адресов (через запятую)</label>
-                </div>
-            </div>
-            <div class="row">
-                <div class="input-field col s4">
-                    <input id="newTableSizes" type="text" class="validate">
-                    <label for="newTableSizes">Массив размеров (через запятую)</label>
-                </div>
-                <div class="input-field col s4">
-                    <input id="newTableTypes" type="text" class="validate">
-                    <label for="newTableTypes">Массив видов (через запятую)</label>
-                </div>
-                <div class="input-field col s4">
-                    <input id="newTableUnitTypes" type="text" class="validate">
-                    <label for="newTableUnitTypes">Массив единиц изм. (через запятую)</label>
-                </div>
-            </div>
-            <div class="row">
-                <div class="input-field col s4">
-                    <input id="newTableFormats" type="text" class="validate">
-                    <label for="newTableFormats">Массив форматов (через запятую)</label>
-                </div>
-                <div class="col s4">
-                    <button class="btn waves-effect waves-light" onclick="addTable()">Добавить таблицу</button>
-                </div>
-            </div>
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">Настройки соединения</div>
+                    <div class="collapsible-body">
+                        <div class="row">
+                            <div class="input-field col s6">
+                                <input id="connectionPort" type="number" class="validate">
+                                <label for="connectionPort">Enter connection port</label>
+                            </div>
+                            <div class="input-field col s6">
+                                <input id="modbusID" type="number" class="validate">
+                                <label for="modbusID">ModbusID</label>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
         </div>
+        <ul class="collapsible">
+            <li>
+                <div class="collapsible-header">Добавление таблицы</div>
+                <div class="collapsible-body">
+                    <div class="row">
+                        <div class="input-field col s4">
+                            <input id="newTableId" type="text" class="validate">
+                            <label for="newTableId">ID</label>
+                        </div>
+                        <div class="input-field col s4">
+                            <input id="newTableNames" type="text" class="validate">
+                            <label for="newTableNames">Массив названий (через запятую)</label>
+                        </div>
+                        <div class="input-field col s4">
+                            <input id="addresses" type="text" class="validate">
+                            <label for="addresses">Массив адресов (через запятую)</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="input-field col s4">
+                            <input id="newTableSizes" type="text" class="validate">
+                            <label for="newTableSizes">Массив размеров (через запятую)</label>
+                        </div>
+                        <div class="input-field col s4">
+                            <input id="newTableTypes" type="text" class="validate">
+                            <label for="newTableTypes">Массив видов (через запятую)</label>
+                        </div>
+                        <div class="input-field col s4">
+                            <input id="newTableUnitTypes" type="text" class="validate">
+                            <label for="newTableUnitTypes">Массив единиц изм. (через запятую)</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="input-field col s4">
+                            <input id="newTableFormats" type="text" class="validate">
+                            <label for="newTableFormats">Массив форматов (через запятую)</label>
+                        </div>
+                        <div class="col s4">
+                            <button class="btn waves-effect waves-light blue" onclick="addTable()">Добавить таблицу по заданным параметрам</button>
+                        </div>
+                        <div class="col s4">
+                            <button class="btn waves-effect waves-light blue" onclick="addTableByExel()">Добавить таблицу из файла(Keil)</button>
+                        </div>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    
         <div id="tablesContainer"></div>
     </div>
 </body>
