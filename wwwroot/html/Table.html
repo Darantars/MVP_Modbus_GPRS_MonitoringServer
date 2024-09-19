@@ -21,6 +21,7 @@
     <script>
 
         let tables = [];
+        let updateToken = true;
 
         async function Home() {
             StopConnection();
@@ -37,6 +38,8 @@
         async function addTable() {
             const tableId = document.getElementById('newTableId').value;
             const addresses = document.getElementById('addresses').value;
+            const sizes = document.getElementById('newTableSizes').value;
+            const types = document.getElementById('newTableTypes').value;
 
             if (!tableId || !addresses) {
                 alert('Пожалуйста, заполните все поля.');
@@ -44,13 +47,15 @@
             }
 
             const addressesArray = addresses.split(',').map(Number);
+            const sizesArray = sizes.split(',').map(Number);
+            const typesArray = types.split(',').map(String);              
 
             const response = await fetch(`/api/Table/AddNewTable`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ id: tableId, addresses: addressesArray })
+                body: JSON.stringify({ id: tableId, addresses: addressesArray, sizes: sizesArray, types: typesArray  })
             });
 
             if (response.ok) {
@@ -75,67 +80,78 @@
                         </table>
                     `;
                 document.getElementById('tablesContainer').appendChild(tableContainer);
-                tables.push({ id: tableId, addresses: addressesArray });
+                tables.push({ id: tableId, addresses: addressesArray, sizes: sizesArray, types: typesArray });
             } else {
                 alert('Ошибка при добавлении таблицы.');
             }
         }
 
-        async function updateData() {
+        async function updateData()
+        {
+
             const response = await fetch(`/api/Table/GetConnectionStatus`);
             const connectionStatus = await response.text();
             document.getElementById(`conectionStatus`).innerHTML = connectionStatus;
 
-            // *** Работа с таблицей ***
-            const modbusID = document.getElementById('modbusID').value;
-            if (modbusID != "") {
-                for (const table of tables) {
-                    const tableId = table.id;
-                    const tableDataResponse = await fetch(`/api/Table/GetTableData?modbusID=${modbusID}&tableId=${tableId}`);
-                    const tableData = await tableDataResponse.json();
+            if (updateToken === true)
+            {
+                updateToken = false;
 
-                    const tableBody = document.getElementById(tableId);
-                    tableBody.innerHTML = ''; // Очистка текущей таблицы
+                // *** Работа с таблицей ***
+                const modbusID = document.getElementById('modbusID').value;
+                if (modbusID != "") {
+                    for (const table of tables) {
+                        const tableId = table.id;
+                        const tableDataResponse = await fetch(`/api/Table/GetTableData?modbusID=${modbusID}&tableId=${tableId}`);
+                        const tableData = await tableDataResponse.json();
 
-                    tableData.forEach((row, index) => {
-                        const tr = document.createElement('tr');
+                        const tableBody = document.getElementById(tableId);
+                        tableBody.innerHTML = ''; // Очистка текущей таблицы
 
-                        // Добавление столбца с названиями параметров
-                        const tdName = document.createElement('td');
-                        tdName.textContent = `Parameter ${index + 1}`; // Пример названия параметра
-                        tr.appendChild(tdName);
+                        tableData.forEach((row, index) => {
+                            const tr = document.createElement('tr');
 
-                        const tdValue = document.createElement('td');
-                        tdValue.textContent = row;
-                        tr.appendChild(tdValue);
+                            // Добавление столбца с названиями параметров
+                            const tdName = document.createElement('td');
+                            tdName.textContent = `Parameter ${index + 1}`; // Пример названия параметра
+                            tr.appendChild(tdName);
 
-                        const tdUnitType = document.createElement('td');
-                        tdUnitType.textContent = "-";
-                        tr.appendChild(tdUnitType);
+                            const tdValue = document.createElement('td');
+                            tdValue.textContent = row;
+                            tr.appendChild(tdValue);
 
-                        const tdAddress = document.createElement('td');
-                        tdAddress.textContent = table.addresses[index];
-                        tr.appendChild(tdAddress);
+                            const tdUnitType = document.createElement('td');
+                            tdUnitType.textContent = "-";
+                            tr.appendChild(tdUnitType);
 
-                        const tdValueFormat = document.createElement('td');
-                        tdValueFormat.textContent = "int16";
-                        tr.appendChild(tdValueFormat);
+                            const tdAddress = document.createElement('td');
+                            tdAddress.textContent = table.addresses[index];
+                            tr.appendChild(tdAddress);
 
-                        const tdValueType = document.createElement('td');
-                        tdValueType.textContent = "dec";
-                        tr.appendChild(tdValueType);
+                            const tdValueFormat = document.createElement('td');
+                            tdValueFormat.textContent = table.types[index];
+                            tr.appendChild(tdValueFormat);
 
-                        const tdValueSize = document.createElement('td');
-                        tdValueSize.textContent = "1";
-                        tr.appendChild(tdValueSize);
+                            const tdValueType = document.createElement('td');
+                            tdValueType.textContent = "dec";
+                            tr.appendChild(tdValueType);
 
-                        tableBody.appendChild(tr);
-                    });
+                            const tdValueSize = document.createElement('td');
+                            tdValueSize.textContent = table.sizes[index];
+                            tr.appendChild(tdValueSize);
+
+                            tableBody.appendChild(tr);
+                        });
+                    }
                 }
+
+                updateToken = true;
             }
+
+            
         }
 
-        setInterval(updateData, 1); // Обновление каждые 100 миллисекунд
+        setInterval(updateData, 100); // Обновление каждые 100 миллисекунд
         updateData(); // Первоначальное обновление
     </script>
 </head>
@@ -171,6 +187,14 @@
                 <div class="input-field col s4">
                     <input id="addresses" type="text" class="validate">
                     <label for="addresses">Массив адресов (через запятую)</label>
+                </div>
+                <div class="input-field col s4">
+                    <input id="newTableSizes" type="text" class="validate">
+                    <label for="newTableSizes">Массив размеров (через запятую)</label>
+                </div>
+                <div class="input-field col s4">
+                    <input id="newTableTypes" type="text" class="validate">
+                    <label for="newTableTypes">Массив видов (через запятую)</label>
                 </div>
                 <div class="col s4">
                     <button class="btn waves-effect waves-light" onclick="addTable()">Добавить таблицу</button>

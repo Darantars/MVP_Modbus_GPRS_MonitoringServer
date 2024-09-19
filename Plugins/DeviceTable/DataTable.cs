@@ -15,13 +15,17 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
         private string[] tableDataValues {  get; set; } 
 
-        private List<int> adreses { get; set; }
+        private List<int> paramAdreses { get; set; }
+
+        private List<int> paramSizes { get; set; }
+
+        private List<string> paramTypes { get; set; }
 
         private Controllers.TcpConnectionController.TcpDeviceTableServer TableServer {  get; set; }
 
         private int badRequestMb3Counter {  get; set; }
 
-        public DataTable(string tableId, int tableRowSize, int tableColumnSize, List<int> tableAdreses, Controllers.TcpConnectionController.TcpDeviceTableServer tableTableServer) 
+        public DataTable(string tableId, int tableRowSize, int tableColumnSize, List<int> tableParamAdreses, List<int> tableParamSizes, List<string> tableParamTypes, Controllers.TcpConnectionController.TcpDeviceTableServer tableTableServer) 
         {
             if (tableRowSize < 0 )
             {
@@ -33,33 +37,36 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             rowSize = tableRowSize;
             columnSize = tableColumnSize;
             headers = new string[tableRowSize];
-            adreses = tableAdreses;
+            paramAdreses = tableParamAdreses;
+            paramSizes = tableParamSizes;
+            paramTypes = tableParamTypes;
             tableDataValues = new string[tableColumnSize];
             badRequestMb3Counter = 0;
             
 
         }
 
-        public async Task GetTableDataAsync(string mode, int modbusID)     //Версия для Uint16 только value
+        public async Task GetTableDataAsync(string mode, int modbusID)   
         {
             if (TableServer.readyToGetTableData)
             {
                 TableServer.readyToGetTableData = false;
                 for (int i = 0; i < columnSize; i++)
                 {
-                    tableDataValues[i] = await GetValueByAdressMb(mode, modbusID, this.adreses[i]);
+                    tableDataValues[i] = await GetValueByAdressMb(mode, modbusID, this.paramAdreses[i], this.paramSizes[i], paramTypes[i]);
                 }
                 TableServer.readyToGetTableData = true;
             }
 
         }
 
-        private async Task<string> GetValueByAdressMb(string mode, int modbusID, int adress)
+        private async Task<string> GetValueByAdressMb(string mode, int modbusID, int adress, int size, string type)
         {
 
             if (mode == "default")
             {
-                await this.TableServer.SendMB3CommandToDevice(TableServer.device, modbusID, adress, 1);
+                this.TableServer.answerType = type;
+                await this.TableServer.SendMB3CommandToDevice(TableServer.device, modbusID, adress, size / 2);
                 return await WaitingResponseMb3Async();
 
             }

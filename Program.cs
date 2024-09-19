@@ -171,14 +171,33 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
     var requestBody = await new StreamReader(context.Request.Body).ReadToEndAsync();
     var data = JsonSerializer.Deserialize<Dictionary<string, object>>(requestBody);
 
-    if (data.TryGetValue("id", out var idObj) && data.TryGetValue("addresses", out var addressesObj))
+    if (data.TryGetValue("id", out var idObj)
+        && data.TryGetValue("addresses", out var addressesObj)
+        && data.TryGetValue("sizes", out var sizesObj)
+        && data.TryGetValue("types", out var typesObj))
     {
-        var id = idObj.ToString();
-        var addresses = JsonSerializer.Deserialize<List<int>>(addressesObj.ToString());
+        if (idObj == null || addressesObj == null || sizesObj == null || typesObj == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return;
+        }
 
-        await TcpDeviceTableServer.AddNewTable(id, 10, addresses.Count, addresses);
+        try
+        {
+            var id = idObj.ToString();
+            var addresses = JsonSerializer.Deserialize<List<int>>(addressesObj.ToString());
+            var sizes = JsonSerializer.Deserialize<List<int>>(sizesObj.ToString());
+            var types = JsonSerializer.Deserialize<List<string>>(typesObj.ToString());
 
-        context.Response.StatusCode = StatusCodes.Status200OK;
+            await TcpDeviceTableServer.AddNewTable(id, 10, addresses.Count, addresses, sizes, types);
+
+            context.Response.StatusCode = StatusCodes.Status200OK;
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            await context.Response.WriteAsync($"Error deserializing data: {ex.Message}");
+        }
     }
     else
     {
@@ -207,8 +226,6 @@ app.MapGet("/api/Table/GetConnectionStatus", async () =>
 {
     string answer = TcpDeviceTableServer.connectionStatus;
         return Results.Content(answer, "text/plain");
-
-
 });
 
 app.MapGet("/LiftView", async (HttpContext context) =>

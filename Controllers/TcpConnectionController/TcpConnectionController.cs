@@ -38,7 +38,7 @@ namespace Read_Write_GPRS_Server.Controllers
 
             public int messageBufferSize { get; set; }
 
-            public  UsrGPRS232_730 device;
+            public UsrGPRS232_730 device;
 
             private TcpListener server { get; set; }
 
@@ -77,7 +77,7 @@ namespace Read_Write_GPRS_Server.Controllers
                     device.tcpConnectionStatus = "Connecting...";
                     isRunning = true;
                     await AddMessageToQueue("Сервер развернут. Ожидание подключения устройства...");
-                    
+
                     while (true)
                     {
                         device.tcpClient = await server.AcceptTcpClientAsync();
@@ -186,7 +186,7 @@ namespace Read_Write_GPRS_Server.Controllers
                         await Start(lastIpAdress, lastPort);
                         lostConnectionCounter = 0;
                     }
-                        
+
 
                     if (loopCounter == 5)
                     {
@@ -199,7 +199,7 @@ namespace Read_Write_GPRS_Server.Controllers
                 }
             }
 
-            public string GetDeviceConnectionStatus() 
+            public string GetDeviceConnectionStatus()
             {
                 if (!isRunning)
                     return "Server is not running";
@@ -388,7 +388,6 @@ namespace Read_Write_GPRS_Server.Controllers
 
         public class TcpDeviceTableServer
         {
-           
             public bool isRunning { get; set; }
             private TcpListener server;
 
@@ -401,7 +400,10 @@ namespace Read_Write_GPRS_Server.Controllers
             private string lastIpAdress { get; set; }
             private int lastPort { get; set; }
             public bool readyToGetTableData { get; set; }
-            public string answerMb3 { get; set; }    // Вот в нее нужно положить последний ответ
+
+            public string answerType { get; set; }
+            public string answerMb3 { get; set; }
+
             public TcpDeviceTableServer()
             {
                 connectionStatus = "Disconnected";
@@ -409,20 +411,19 @@ namespace Read_Write_GPRS_Server.Controllers
                 dataTablesList = new List<Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable>();
                 readyToGetTableData = true;
                 answerMb3 = null;
+                answerType = "int16";
             }
 
-            public async Task AddNewTable(string id, int tableRowSize, int tableColumnSize, List<int> tableAdreses)
+            public async Task AddNewTable(string id, int tableRowSize, int tableColumnSize, List<int> tableAdreses, List<int> tableSizes, List<string> tableTypes)
             {
-                Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable dataTable = new Plugins.DeviceTable.DataTable(id, tableRowSize, tableColumnSize, tableAdreses, this);
+                Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable dataTable = new Plugins.DeviceTable.DataTable(id, tableRowSize, tableColumnSize, tableAdreses, tableSizes, tableTypes, this);
                 dataTablesList.Add(dataTable);
             }
 
             public async Task Start(string ipAddress, int port)
             {
-
                 if (isRunning)
                 {
-                    //await AddMessageToQueue("Сервер уже запущен.");
                     return;
                 }
 
@@ -488,23 +489,27 @@ namespace Read_Write_GPRS_Server.Controllers
                                 string cuttedMessageMB = "";
                                 for (int i = 0; i < responseList.Count; i++)
                                 {
-                                    cuttedMessageMB = cuttedMessageMB + "<br>"+ BitConverter.ToString(responseList[i]);
+                                    cuttedMessageMB = cuttedMessageMB + "<br>" + BitConverter.ToString(responseList[i]);
                                     if (responseList[i][1] == 3)
                                     {
-                                        answerMb3 =  Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], "getValueInt16");      //Сменить для перехода на несколько таблиц
+                                        answerMb3 = Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], answerType); //Сменить для перехода на несколько таблиц
                                     }
                                 }
                             });
-                        }  
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Client error: {ex.Message}");
                 }
+                finally
+                {
+                    client.Close();
+                }
             }
 
-            private async Task StartCheckConnectionToDeviceLoop(UsrGPRS232_730 device)        
+            private async Task StartCheckConnectionToDeviceLoop(UsrGPRS232_730 device)
             {
                 double delayFiveHeartBeatReal = device.heartbeatMessageRateSec * 2;
                 int loopCounter = 1;
@@ -521,15 +526,14 @@ namespace Read_Write_GPRS_Server.Controllers
                         if (heartBeatAtLoop[i] < i + 1)
                             missedPockets++;
                     }
-                    
 
                     switch (missedPockets)
                     {
                         case 5:
-                            if (device.tcpClient != null )
+                            if (device.tcpClient != null)
                                 device.tcpConnectionStatus = "Bad connection 0% package recived";
-                                Console.WriteLine("Bad connection 0% package recived");
-                                lostConnectionCounter++;
+                            Console.WriteLine("Bad connection 0% package recived");
+                            lostConnectionCounter++;
                             break;
                         case 4:
                             device.tcpConnectionStatus = "Bad connection <= 20% package recived";
@@ -543,7 +547,7 @@ namespace Read_Write_GPRS_Server.Controllers
                         case 2:
                             device.tcpConnectionStatus = "Unstable connection <= 60% package recived";
                             Console.WriteLine("Unstable connection <= 60% package recived");
-                            if(lostConnectionCounter > 0)
+                            if (lostConnectionCounter > 0)
                                 lostConnectionCounter--;
                             break;
                         case 1:
@@ -647,6 +651,10 @@ namespace Read_Write_GPRS_Server.Controllers
                 }
 
                 isRunning = false;
+                connectionStatus = "Disconection...";    //Лютый костыль из-за небыстрого закрытия потока вывода и ассинхронности конектион статуса
+                Task.Delay(1000);
+                connectionStatus = "Disconection...";
+                Task.Delay(1000);
                 connectionStatus = "Disconected";
                 Console.WriteLine("Сервер и клиентские соединения закрыты.");
             }
@@ -654,4 +662,4 @@ namespace Read_Write_GPRS_Server.Controllers
 
     }
 }
-    
+
