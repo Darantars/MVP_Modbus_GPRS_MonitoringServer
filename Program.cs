@@ -197,9 +197,9 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
             var names = JsonSerializer.Deserialize<List<string>>(namesObj.ToString());
             var addresses = JsonSerializer.Deserialize<List<int>>(addressesObj.ToString());
             var sizes = JsonSerializer.Deserialize<List<int>>(sizesObj.ToString());
-            var types = JsonSerializer.Deserialize<List<string>>(typesObj.ToString());
+            var types = JsonSerializer.Deserialize<List<string>>(typesObj.ToString().ToLower());
             var unitTypes = JsonSerializer.Deserialize<List<string>>(untTypesObj.ToString());
-            var formats = JsonSerializer.Deserialize<List<string>>(formatsObj.ToString());
+            var formats = JsonSerializer.Deserialize<List<string>>(formatsObj.ToString().ToLower());
 
             await TcpDeviceTableServer.AddNewTable(id, 10, addresses.Count, names, addresses, sizes, types, unitTypes, formats);
 
@@ -209,6 +209,7 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
         {
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             await context.Response.WriteAsync($"Error deserializing data: {ex.Message}");
+            Console.WriteLine($"Error deserializing data: {ex.Message}"); 
         }
     }
     else
@@ -220,7 +221,7 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
 
 app.MapGet("/api/Table/GetTableData", async (int modbusID, string tableId) =>
 {
-    if (TcpDeviceTableServer.isRunning && TcpDeviceTableServer.dataTablesList != null)
+    if (TcpDeviceTableServer.dataTablesList != null)
     {
         var table = TcpDeviceTableServer.dataTablesList.FirstOrDefault(t => t.id == tableId);
         if (table != null)

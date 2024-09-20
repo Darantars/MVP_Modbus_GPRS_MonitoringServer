@@ -60,19 +60,23 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
                 TableServer.readyToGetTableData = false;
                 for (int i = 0; i < columnSize; i++)
                 {
-                    tableDataValues[i] = await GetValueByAdressMb(mode, modbusID, this.paramAdreses[i], this.paramSizes[i], paramTypes[i]);
+                    tableDataValues[i] = await GetValueByAdressMb(mode, modbusID, this.paramAdreses[i], this.paramSizes[i], this.paramFormats[i]);
                 }
                 TableServer.readyToGetTableData = true;
             }
 
         }
 
-        private async Task<string> GetValueByAdressMb(string mode, int modbusID, int adress, int size, string type)
+        private async Task<string> GetValueByAdressMb(string mode, int modbusID, int adress, int size, string format)
         {
+            if(size == 0)
+            {
+                return "null";
+            }
 
             if (mode == "default")
             {
-                this.TableServer.answerType = type;
+                this.TableServer.answerFormat = format;
                 await this.TableServer.SendMB3CommandToDevice(TableServer.device, modbusID, adress, size / 2);
                 return await WaitingResponseMb3Async();
 

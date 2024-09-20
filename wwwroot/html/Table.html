@@ -6,6 +6,14 @@
     <!-- Materialize CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
     <style>
+
+        .tables-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
         /* Переопределение стандартной подсветки на голубой цвет */
         .input-field input:focus {
             border-bottom: 2px solid #2196F3 !important; /* Голубой цвет */
@@ -15,6 +23,7 @@
             .input-field input:focus + label {
                 color: #2196F3 !important; /* Голубой цвет */
             }
+
         .table-section {
             margin: 15px;
             padding: 20px;
@@ -50,6 +59,8 @@
     </style>
     <!-- Materialize JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <!-- xlsx Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var elems = document.querySelectorAll('.collapsible');
@@ -104,27 +115,27 @@
                 const tableContainer = document.createElement('div');
                 tableContainer.innerHTML =
                     `
-                    <section class="table-section">
-                        <h4 class="table-section-header">${tableId}</h4>
-                            <div class="table-section-body">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Название параметра</th>
-                                        <th>Значение</th>
-                                        <th>Ед.изм</th>
-                                        <th>Адрес</th>
-                                        <th>Формат</th>
-                                        <th>Вид</th>
-                                        <th>Размер</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="${tableId}">
-                                </tbody>
-                            </table>
-                            </div>
-                        </section>
-                        `;
+                        <section class="table-section">
+                            <h4 class="table-section-header">${tableId}</h4>
+                                <div class="table-section-body">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Название параметра</th>
+                                            <th>Значение</th>
+                                            <th>Ед.изм</th>
+                                            <th>Адрес</th>
+                                            <th>Формат</th>
+                                            <th>Вид</th>
+                                            <th>Размер</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="${tableId}">
+                                    </tbody>
+                                </table>
+                                </div>
+                            </section>
+                            `;
                 document.getElementById('tablesContainer').appendChild(tableContainer);
                 tables.push({ id: tableId, names: namesArray, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray });
             } else {
@@ -189,6 +200,127 @@
                 }
 
                 updateToken = true;
+            }
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                let currentTableId = null;
+                let currentTable = null;
+
+                jsonData.forEach(row => {
+                    const idParts = row[0].split('.');
+                    const tableId = idParts[0];
+                    const subGroup = idParts[1];
+                    const parameter = idParts[2];
+
+                    if (tableId !== currentTableId) {
+                        if (currentTable) {
+                            addTableFromData(currentTableId, currentTable.names, currentTable.addresses, currentTable.sizes, currentTable.types, currentTable.unitTypes, currentTable.formats);
+                        }
+                        currentTableId = tableId;
+                        currentTable = {
+                            names: [],
+                            addresses: [],
+                            sizes: [],
+                            types: [],
+                            unitTypes: [],
+                            formats: []
+                        };
+                    }
+                    
+
+                    currentTable.names.push(row[1]);
+                    currentTable.unitTypes.push(row[3]);
+                    currentTable.types.push(row[5]);
+                    currentTable.formats.push(row[4]);
+                    currentTable.addresses.push(row[6]);
+                    currentTable.sizes.push(row[12]);
+
+                });
+
+                if (currentTable) {
+                    addTableFromData(currentTableId, currentTable.names, currentTable.addresses, currentTable.sizes, currentTable.types, currentTable.unitTypes, currentTable.formats);
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        async function addTableFromData(tableId, names, addresses, sizes, types, unitTypes, formats) {
+            try {
+                // Преобразование строк в числа
+                addresses = addresses.map(addr => addr === "" ? 0 : parseInt(addr, 10));
+                sizes = sizes.map(size => size === "" ? 0 : parseInt(size, 10));
+
+                const jsonData = JSON.stringify({
+                    id: tableId,
+                    names: names,
+                    addresses: addresses,
+                    sizes: sizes,
+                    types: types,
+                    unitTypes: unitTypes,
+                    formats: formats
+                });
+                console.log('JSON данные для отправки:', jsonData);
+                const response = await fetch(`/api/Table/AddNewTable`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: tableId,
+                        names: names,
+                        addresses: addresses,
+                        sizes: sizes,
+                        types: types,
+                        unitTypes: unitTypes,
+                        formats: formats
+                    })
+                });
+
+                if (response.ok) {
+                    const tableContainer = document.createElement('div');
+                    tableContainer.innerHTML =
+                        `
+                <section class="table-section">
+                    <h4 class="table-section-header">${tableId}</h4>
+                    <div class="table-section-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Название параметра</th>
+                                    <th>Значение</th>
+                                    <th>Ед.изм</th>
+                                    <th>Адрес</th>
+                                    <th>Вид</th>
+                                    <th>Формат</th>
+                                    <th>Размер</th>
+                                </tr>
+                            </thead>
+                            <tbody id="${tableId}">
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                `;
+                    document.getElementById('tablesContainer').appendChild(tableContainer);
+                    tables.push({ id: tableId, names: names, addresses: addresses, sizes: sizes, types: types, unitTypes: unitTypes, formats: formats });
+                } else {
+                    alert('Ошибка при добавлении таблицы.');
+                }
+            } catch (error) {
+                console.error('Ошибка при отправке данных на сервер:', error);
+                alert('Произошла ошибка при отправке данных на сервер. Пожалуйста, проверьте формат данных.');
             }
         }
 
@@ -271,14 +403,14 @@
                             <button class="btn waves-effect waves-light blue" onclick="addTable()">Добавить таблицу по заданным параметрам</button>
                         </div>
                         <div class="col s4">
-                            <button class="btn waves-effect waves-light blue" onclick="addTableByExel()">Добавить таблицу из файла(Keil)</button>
+                            <input type="file" id="fileInput" onchange="handleFileUpload(event)" accept=".xlsx, .xls">
                         </div>
                     </div>
                 </div>
             </li>
         </ul>
-    
-        <div id="tablesContainer"></div>
+    </div>
+    <div id="tablesContainer" class="tables-container"></div>
     </div>
 </body>
 </html>

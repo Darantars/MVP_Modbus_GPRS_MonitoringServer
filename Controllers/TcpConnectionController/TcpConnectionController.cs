@@ -401,7 +401,7 @@ namespace Read_Write_GPRS_Server.Controllers
             private int lastPort { get; set; }
             public bool readyToGetTableData { get; set; }
 
-            public string answerType { get; set; }
+            public string answerFormat { get; set; }
             public string answerMb3 { get; set; }
 
             public TcpDeviceTableServer()
@@ -411,7 +411,7 @@ namespace Read_Write_GPRS_Server.Controllers
                 dataTablesList = new List<Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable>();
                 readyToGetTableData = true;
                 answerMb3 = null;
-                answerType = "int16";
+                answerFormat = "int16";
             }
 
             public async Task AddNewTable(string id, int tableRowSize, int tableColumnSize, List<string> tableNames, List<int> tableAdreses, List<int> tableSizes, List<string> tableTypes, List<string> tableParamUnitTypes, List<string>TableFormats)
@@ -492,7 +492,7 @@ namespace Read_Write_GPRS_Server.Controllers
                                     cuttedMessageMB = cuttedMessageMB + "<br>" + BitConverter.ToString(responseList[i]);
                                     if (responseList[i][1] == 3)
                                     {
-                                        answerMb3 = Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], answerType); //Сменить для перехода на несколько таблиц
+                                        answerMb3 = Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], answerFormat); //Сменить для перехода на несколько таблиц
                                     }
                                 }
                             });

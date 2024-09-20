@@ -204,7 +204,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
             {
                 return "Недостаточная длина команды";
             }
-
+            mode = mode.ToLower();
             byte modbusId = buffer[0];
             byte functionCode = buffer[1];
             int bytesRead = buffer.Length;
@@ -239,15 +239,24 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                         {
                             return "Недостаточная длина команды для чтения регистров";
                         }
-
+                        StringBuilder data = new StringBuilder();
                         // Извлечение данных регистров для функции 3
                         switch (mode)
                         {
                             case "int16":
-                                StringBuilder data = new StringBuilder();
+                                data = new StringBuilder();
                                 for (int i = 0; i < byteCount / 2; i++)
                                 {
                                     ushort value = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(buffer, 3 + i * 2));
+                                    data.Append($"{value} ");
+                                }
+                                registers = $"{data.ToString().Trim()}";
+                                break;
+                            case "uint16":
+                                data = new StringBuilder();
+                                for (int i = 0; i < byteCount / 2; i++)
+                                {
+                                    ushort value = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToUInt16(buffer, 3 + i * 2));
                                     data.Append($"{value} ");
                                 }
                                 registers = $"{data.ToString().Trim()}";
@@ -352,12 +361,14 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                     return $"{messageType}: команда {functionCode} для устройства ID {modbusId}";
                 case "int16":
                     return registers;
+                case "uint16":
+                    return registers;
                 case "int32":
                     return registers;
                 case "uint32":
                     return registers;
                 default:
-                    return "Неверный аргумент функции DecodeModbusMessage";
+                    return $"Формат {mode} еще не введен";
             }
         }
 
