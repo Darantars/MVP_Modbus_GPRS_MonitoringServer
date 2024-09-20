@@ -424,6 +424,7 @@ namespace Read_Write_GPRS_Server.Controllers
             {
                 if (isRunning)
                 {
+                    Console.WriteLine("Сервер уже запущен.");
                     return;
                 }
 
@@ -444,7 +445,7 @@ namespace Read_Write_GPRS_Server.Controllers
                     isRunning = true;
                     connectionStatus = "Сервер развернут. Ожидание подключения устройства...";
 
-                    while (true)
+                    while (isRunning)
                     {
                         device.tcpClient = await server.AcceptTcpClientAsync();
                         connectionStatus = "Connected";
@@ -462,6 +463,7 @@ namespace Read_Write_GPRS_Server.Controllers
                 {
                     connectionStatus = $"Ошибка: {ex.Message}";
                     Console.WriteLine($"Ошибка: {ex.Message}");
+                    isRunning = false;
                 }
             }
 
@@ -638,25 +640,31 @@ namespace Read_Write_GPRS_Server.Controllers
                     return;
                 }
 
-                if (server != null)
+                try
                 {
-                    server.Stop();
-                    Console.WriteLine("TCP-сервер остановлен.");
-                }
+                    if (server != null)
+                    {
+                        server.Stop();
+                        Console.WriteLine("TCP-сервер остановлен.");
+                    }
 
-                if (device.tcpClient != null)
+                    if (device.tcpClient != null)
+                    {
+                        device.tcpClient.Close();
+                        Console.WriteLine("Клиентское соединение закрыто.");
+                    }
+
+                    isRunning = false;
+                    connectionStatus = "Disconnecting...";
+                    await Task.Delay(1000); // Даем время на закрытие потока вывода
+                    connectionStatus = "Disconnected";
+                    Console.WriteLine("Сервер и клиентские соединения закрыты.");
+                }
+                catch (Exception ex)
                 {
-                    device.tcpClient.Close();
-                    Console.WriteLine("Клиентское соединение закрыто.");
+                    connectionStatus = $"Ошибка при остановке сервера: {ex.Message}";
+                    Console.WriteLine($"Ошибка при остановке сервера: {ex.Message}");
                 }
-
-                isRunning = false;
-                connectionStatus = "Disconection...";    //Лютый костыль из-за небыстрого закрытия потока вывода и ассинхронности конектион статуса
-                Task.Delay(1000);
-                connectionStatus = "Disconection...";
-                Task.Delay(1000);
-                connectionStatus = "Disconected";
-                Console.WriteLine("Сервер и клиентские соединения закрыты.");
             }
         }
 
