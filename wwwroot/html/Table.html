@@ -205,6 +205,7 @@
 
         function handleFileUpload(event) {
             const file = event.target.files[0];
+            const fileName = file.name.replace(/\.[^/.]+$/, ""); // Удаляем расширение файла
             const reader = new FileReader();
 
             reader.onload = function (e) {
@@ -216,18 +217,22 @@
 
                 let currentTableId = null;
                 let currentTable = null;
+                let currentGroupName = null;
 
                 jsonData.forEach(row => {
                     const idParts = row[0].split('.');
-                    const tableId = idParts[0];
-                    const subGroup = idParts[1];
+                    const tableIdPart = idParts[0];
+                    const groupName = row[1];
                     const parameter = idParts[2];
 
-                    if (tableId !== currentTableId) {
+                    const tableId = `${fileName}    ${groupName}`;
+
+                    if (tableIdPart !== currentTableId) {
                         if (currentTable) {
-                            addTableFromData(currentTableId, currentTable.names, currentTable.addresses, currentTable.sizes, currentTable.types, currentTable.unitTypes, currentTable.formats);
+                            addTableFromData(`${fileName}   ${currentGroupName}`, currentTable.names, currentTable.addresses, currentTable.sizes, currentTable.types, currentTable.unitTypes, currentTable.formats);
                         }
-                        currentTableId = tableId;
+                        currentTableId = tableIdPart;
+                        currentGroupName = groupName;
                         currentTable = {
                             names: [],
                             addresses: [],
@@ -237,7 +242,6 @@
                             formats: []
                         };
                     }
-                    
 
                     currentTable.names.push(row[1]);
                     currentTable.unitTypes.push(row[3]);
@@ -249,7 +253,7 @@
                 });
 
                 if (currentTable) {
-                    addTableFromData(currentTableId, currentTable.names, currentTable.addresses, currentTable.sizes, currentTable.types, currentTable.unitTypes, currentTable.formats);
+                    addTableFromData(`${fileName}   ${currentGroupName}`, currentTable.names, currentTable.addresses, currentTable.sizes, currentTable.types, currentTable.unitTypes, currentTable.formats);
                 }
             };
 
@@ -302,8 +306,8 @@
                                     <th>Значение</th>
                                     <th>Ед.изм</th>
                                     <th>Адрес</th>
-                                    <th>Вид</th>
                                     <th>Формат</th>
+                                    <th>Вид</th>
                                     <th>Размер</th>
                                 </tr>
                             </thead>
@@ -323,6 +327,7 @@
                 alert('Произошла ошибка при отправке данных на сервер. Пожалуйста, проверьте формат данных.');
             }
         }
+
 
         setInterval(updateData, 100); // Обновление каждые 100 миллисекунд
         updateData(); // Первоначальное обновление
