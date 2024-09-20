@@ -56,6 +56,20 @@
         .table-section-table {
             /* Стили для таблицы */
         }
+        .table-section-log-control {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .log-status {
+            color: #292929;
+            text-align: center;
+            font-family: Roboto;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
     </style>
     <!-- Materialize JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
@@ -117,7 +131,7 @@
                     `
                         <section class="table-section">
                             <h4 class="table-section-header">${tableId}</h4>
-                                <div class="table-section-body">
+                            <div class="table-section-body">
                                 <table>
                                     <thead>
                                         <tr>
@@ -133,8 +147,14 @@
                                     <tbody id="${tableId}">
                                     </tbody>
                                 </table>
+
+                                <div class="table-section-log-control">
+                                    <span class="log-status">Лог отключен</span>
+                                    <button class="btn waves-effect waves-light blue">Логировать</button>
+                                    <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
                                 </div>
-                            </section>
+                            </div>
+                        </section>
                             `;
                 document.getElementById('tablesContainer').appendChild(tableContainer);
                 tables.push({ id: tableId, names: namesArray, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray });
@@ -296,26 +316,32 @@
                     const tableContainer = document.createElement('div');
                     tableContainer.innerHTML =
                         `
-                <section class="table-section">
-                    <h4 class="table-section-header">${tableId}</h4>
-                    <div class="table-section-body">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Название параметра</th>
-                                    <th>Значение</th>
-                                    <th>Ед.изм</th>
-                                    <th>Адрес</th>
-                                    <th>Формат</th>
-                                    <th>Вид</th>
-                                    <th>Размер</th>
-                                </tr>
-                            </thead>
-                            <tbody id="${tableId}">
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
+                            <section class="table-section">
+                                <h4 class="table-section-header">${tableId}</h4>
+                                <div class="table-section-body">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Название параметра</th>
+                                                <th>Значение</th>
+                                                <th>Ед.изм</th>
+                                                <th>Адрес</th>
+                                                <th>Формат</th>
+                                                <th>Вид</th>
+                                                <th>Размер</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="${tableId}">
+                                        </tbody>
+                                    </table>
+
+                                    <div class="table-section-log-control">
+                                        <span class="log-status">Лог отключен</span>
+                                        <button class="btn waves-effect waves-light blue">Логировать</button>
+                                        <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
+                                    </div>
+                                </div>
+                            </section>
                 `;
                     document.getElementById('tablesContainer').appendChild(tableContainer);
                     tables.push({ id: tableId, names: names, addresses: addresses, sizes: sizes, types: types, unitTypes: unitTypes, formats: formats });
