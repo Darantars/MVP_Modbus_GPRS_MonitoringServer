@@ -6,7 +6,6 @@
     <!-- Materialize CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
     <style>
-
         .tables-container {
             display: flex;
             flex-direction: column;
@@ -56,6 +55,7 @@
         .table-section-table {
             /* Стили для таблицы */
         }
+
         .table-section-log-control {
             display: flex;
             flex-direction: column;
@@ -96,7 +96,8 @@
             await fetch('/api/Table/stop');
         }
 
-        async function addTable() {
+        async function addTable()
+        {
             const tableId = document.getElementById('newTableId').value;
             const names = document.getElementById('newTableNames').value;
             const addresses = document.getElementById('addresses').value;
@@ -125,40 +126,54 @@
                 body: JSON.stringify({ id: tableId, names: namesArray, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray })
             });
 
-            if (response.ok) {
+            if (response.ok)
+            {
                 const tableContainer = document.createElement('div');
                 tableContainer.innerHTML =
                     `
-                        <section class="table-section">
-                            <h4 class="table-section-header">${tableId}</h4>
-                            <div class="table-section-body">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Название параметра</th>
-                                            <th>Значение</th>
-                                            <th>Ед.изм</th>
-                                            <th>Адрес</th>
-                                            <th>Формат</th>
-                                            <th>Вид</th>
-                                            <th>Размер</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="${tableId}">
-                                    </tbody>
-                                </table>
+                            <section class="table-section">
+                                <h4 class="table-section-header">${tableId}</h4>
+                                <div class="table-section-body">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Название параметра</th>
+                                                <th>Значение</th>
+                                                <th>Ед.изм</th>
+                                                <th>Адрес</th>
+                                                <th>Формат</th>
+                                                <th>Вид</th>
+                                                <th>Размер</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="${tableId}">
+                                            ${namesArray.map((name, index) => `
+                                                <tr>
+                                                    <td>${name}</td>
+                                                    <td>Не опрашивается</td>
+                                                    <td>${unitTypesArray[index]}</td>
+                                                    <td>${addressesArray[index]}</td>
+                                                    <td>${formatsArray[index]}</td>
+                                                    <td>${typesArray[index]}</td>
+                                                    <td>${sizesArray[index]}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
 
-                                <div class="table-section-log-control">
-                                    <span class="log-status">Лог отключен</span>
-                                    <button class="btn waves-effect waves-light blue">Логировать</button>
-                                    <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
+                                    <div class="table-section-log-control">
+                                        <span class="log-status">Лог отключен</span>
+                                        <button class="btn waves-effect waves-light blue">Логировать</button>
+                                        <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
+                                    </div>
                                 </div>
-                            </div>
-                        </section>
-                            `;
+                            </section>
+                        `;
                 document.getElementById('tablesContainer').appendChild(tableContainer);
                 tables.push({ id: tableId, names: namesArray, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray });
-            } else {
+            }
+            else
+            {
                 alert('Ошибка при добавлении таблицы.');
             }
         }
@@ -168,7 +183,8 @@
             const connectionStatus = await response.text();
             document.getElementById(`conectionStatus`).innerHTML = connectionStatus;
 
-            if (updateToken === true) {
+            if (updateToken === true)
+            {
                 updateToken = false;
 
                 // *** Работа с таблицей ***
@@ -180,42 +196,26 @@
                         const tableData = await tableDataResponse.json();
 
                         const tableBody = document.getElementById(tableId);
-                        tableBody.innerHTML = ''; // Очистка текущей таблицы
 
-                        tableData.forEach((row, index) => {
-                            const tr = document.createElement('tr');
+                        if (tableData.includes("Не опрашивается")) {
+                            // Заполнение таблицы строками с "Не опрашивается"
+                            table.names.forEach((name, index) => {
+                                const tr = tableBody.querySelectorAll('tr')[index];
 
-                            // Добавление столбца с названиями параметров
-                            const tdName = document.createElement('td');
-                            tdName.textContent = table.names[index];
-                            tr.appendChild(tdName);
+                                // Добавление столбца с названиями параметров
+                                const tdValue = tr.querySelectorAll('td')[1];
+                                tdValue.textContent = "Не опрашивается";
+                            });
+                        } else {
+                            // Заполнение таблицы реальными данными
+                            tableData.forEach((row, index) => {
+                                const tr = tableBody.querySelectorAll('tr')[index];
 
-                            const tdValue = document.createElement('td');
-                            tdValue.textContent = row;
-                            tr.appendChild(tdValue);
-
-                            const tdUnitType = document.createElement('td');
-                            tdUnitType.textContent = table.unitTypes[index];
-                            tr.appendChild(tdUnitType);
-
-                            const tdAddress = document.createElement('td');
-                            tdAddress.textContent = table.addresses[index];
-                            tr.appendChild(tdAddress);
-
-                            const tdValueFormat = document.createElement('td');
-                            tdValueFormat.textContent = table.formats[index];
-                            tr.appendChild(tdValueFormat);
-
-                            const tdValueType = document.createElement('td');
-                            tdValueType.textContent = table.types[index];;
-                            tr.appendChild(tdValueType);
-
-                            const tdValueSize = document.createElement('td');
-                            tdValueSize.textContent = table.sizes[index];
-                            tr.appendChild(tdValueSize);
-
-                            tableBody.appendChild(tr);
-                        });
+                                // Добавление столбца с названиями параметров
+                                const tdValue = tr.querySelectorAll('td')[1];
+                                tdValue.textContent = row;
+                            });
+                        }
                     }
                 }
 
@@ -224,6 +224,9 @@
         }
 
         function handleFileUpload(event) {
+
+            /*********                               ********* KEIL *********                                *********/
+
             const file = event.target.files[0];
             const fileName = file.name.replace(/\.[^/.]+$/, ""); // Удаляем расширение файла
             const reader = new FileReader();
@@ -316,33 +319,44 @@
                     const tableContainer = document.createElement('div');
                     tableContainer.innerHTML =
                         `
-                            <section class="table-section">
-                                <h4 class="table-section-header">${tableId}</h4>
-                                <div class="table-section-body">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Название параметра</th>
-                                                <th>Значение</th>
-                                                <th>Ед.изм</th>
-                                                <th>Адрес</th>
-                                                <th>Формат</th>
-                                                <th>Вид</th>
-                                                <th>Размер</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="${tableId}">
-                                        </tbody>
-                                    </table>
+                                <section class="table-section">
+                                    <h4 class="table-section-header">${tableId}</h4>
+                                    <div class="table-section-body">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Название параметра</th>
+                                                    <th>Значение</th>
+                                                    <th>Ед.изм</th>
+                                                    <th>Адрес</th>
+                                                    <th>Формат</th>
+                                                    <th>Вид</th>
+                                                    <th>Размер</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="${tableId}">
+                                                ${names.map((name, index) => `
+                                                    <tr>
+                                                        <td>${name}</td>
+                                                        <td>Не опрашивается</td>
+                                                        <td>${unitTypes[index]}</td>
+                                                        <td>${addresses[index]}</td>
+                                                        <td>${formats[index]}</td>
+                                                        <td>${types[index]}</td>
+                                                        <td>${sizes[index]}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
 
-                                    <div class="table-section-log-control">
-                                        <span class="log-status">Лог отключен</span>
-                                        <button class="btn waves-effect waves-light blue">Логировать</button>
-                                        <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
+                                        <div class="table-section-log-control">
+                                            <span class="log-status">Лог отключен</span>
+                                            <button class="btn waves-effect waves-light blue">Логировать</button>
+                                            <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
+                                        </div>
                                     </div>
-                                </div>
-                            </section>
-                `;
+                                </section>
+                            `;
                     document.getElementById('tablesContainer').appendChild(tableContainer);
                     tables.push({ id: tableId, names: names, addresses: addresses, sizes: sizes, types: types, unitTypes: unitTypes, formats: formats });
                 } else {
@@ -353,7 +367,6 @@
                 alert('Произошла ошибка при отправке данных на сервер. Пожалуйста, проверьте формат данных.');
             }
         }
-
 
         setInterval(updateData, 100); // Обновление каждые 100 миллисекунд
         updateData(); // Первоначальное обновление
@@ -442,6 +455,5 @@
         </ul>
     </div>
     <div id="tablesContainer" class="tables-container"></div>
-    </div>
 </body>
 </html>

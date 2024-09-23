@@ -232,7 +232,7 @@ app.MapGet("/api/Table/GetTableData", async (int modbusID, string tableId) =>
         }
     }
 
-    return Results.Json(new string[] { "Loading..." });
+    return Results.Json(new string[] { "Не опрашивается" });
 });
 
 app.MapGet("/api/Table/GetConnectionStatus", async () =>
