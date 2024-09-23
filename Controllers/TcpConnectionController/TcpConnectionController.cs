@@ -397,6 +397,7 @@ namespace Read_Write_GPRS_Server.Controllers
 
             public List<Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable> dataTablesList { get; set; }
 
+            private CancellationTokenSource _cts = new CancellationTokenSource();
             private string lastIpAdress { get; set; }
             private int lastPort { get; set; }
             public bool readyToGetTableData { get; set; }
@@ -452,11 +453,11 @@ namespace Read_Write_GPRS_Server.Controllers
 
                         lock (device.connectinLocker)
                         {
-                            _ = Task.Run(() => StartCheckConnectionToDeviceLoop(device));
+                            _ = Task.Run(() => StartCheckConnectionToDeviceLoop(device, _cts.Token));
                         }
 
                         // Обрабатываем клиента в отдельной задаче
-                        _ = Task.Run(() => HandleClientAsync(device));
+                        _ = Task.Run(() => HandleClientAsync(device, _cts.Token));
                     }
                 }
                 catch (Exception ex)
@@ -467,7 +468,7 @@ namespace Read_Write_GPRS_Server.Controllers
                 }
             }
 
-            private async Task HandleClientAsync(UsrGPRS232_730 device)
+            private async Task HandleClientAsync(UsrGPRS232_730 device, CancellationToken cancellationToken)
             {
                 TcpClient client = device.tcpClient;
                 try
@@ -478,7 +479,7 @@ namespace Read_Write_GPRS_Server.Controllers
                         int bytesRead;
 
                         // Читаем данные от клиента
-                        while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                        while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
                         {
                             device.tcp5HeartBeatTimingMessageCounter = device.tcp5HeartBeatTimingMessageCounter + 1;
                             byte[] newBuffer = new byte[bytesRead];
@@ -501,6 +502,18 @@ namespace Read_Write_GPRS_Server.Controllers
                         }
                     }
                 }
+                catch (SocketException ex)
+                {
+                    Console.WriteLine($"Socket error: {ex.Message}");
+                }
+                catch (IOException ex)
+                {
+                    Console.WriteLine($"IO error: {ex.Message}");
+                }
+                catch (OperationCanceledException)
+                {
+                    Console.WriteLine("Operation canceled.");
+                }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Client error: {ex.Message}");
@@ -511,7 +524,7 @@ namespace Read_Write_GPRS_Server.Controllers
                 }
             }
 
-            private async Task StartCheckConnectionToDeviceLoop(UsrGPRS232_730 device)
+            private async Task StartCheckConnectionToDeviceLoop(UsrGPRS232_730 device, CancellationToken cancellationToken)
             {
                 double delayFiveHeartBeatReal = device.heartbeatMessageRateSec * 2;
                 int loopCounter = 1;
@@ -520,7 +533,7 @@ namespace Read_Write_GPRS_Server.Controllers
 
                 while (isRunning)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(2));
+                    await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
                     heartBeatAtLoop[loopCounter - 1] = device.tcp5HeartBeatTimingMessageCounter;
                     int missedPockets = 0;
                     for (int i = 0; i < 4; i++)
@@ -574,7 +587,7 @@ namespace Read_Write_GPRS_Server.Controllers
                     {
                         await Stop();
                         device.tcpConnectionStatus = "В связи с нестабильным соединением осуществляется переподключение";
-                        await Task.Delay(TimeSpan.FromSeconds(5));
+                        await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
                         await Start(lastIpAdress, lastPort);
                         lostConnectionCounter = 0;
                     }
@@ -588,6 +601,7 @@ namespace Read_Write_GPRS_Server.Controllers
                         loopCounter = loopCounter + 1;
                 }
             }
+
 
             public async Task SendMB3CommandToDevice(UsrGPRS232_730 device, int deviceId, int address, int quantity)
             {
@@ -642,6 +656,8 @@ namespace Read_Write_GPRS_Server.Controllers
 
                 try
                 {
+                    _cts.Cancel();
+
                     if (server != null)
                     {
                         server.Stop();
