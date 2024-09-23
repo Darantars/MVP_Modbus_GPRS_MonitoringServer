@@ -238,11 +238,14 @@
                 const worksheet = workbook.Sheets[sheetName];
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
+                // Пропускаем первую строку (заголовок)
+                const dataRows = jsonData.slice(1);
+
                 let currentTableId = null;
                 let currentTable = null;
                 let currentGroupName = null;
 
-                jsonData.forEach(row => {
+                dataRows.forEach(row => {
                     const idParts = row[0].split('.');
                     const tableIdPart = idParts[0];
                     const groupName = row[1];
@@ -272,7 +275,6 @@
                     currentTable.formats.push(row[4]);
                     currentTable.addresses.push(row[6]);
                     currentTable.sizes.push(row[12]);
-
                 });
 
                 if (currentTable) {

@@ -573,7 +573,7 @@ namespace Read_Write_GPRS_Server.Controllers
                     if (lostConnectionCounter >= 5)
                     {
                         await Stop();
-                        connectionStatus = "В связи с нестабильным соединением осуществляется переподключение";
+                        device.tcpConnectionStatus = "В связи с нестабильным соединением осуществляется переподключение";
                         await Task.Delay(TimeSpan.FromSeconds(5));
                         await Start(lastIpAdress, lastPort);
                         lostConnectionCounter = 0;
