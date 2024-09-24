@@ -5,6 +5,53 @@
     <title>GPRS</title>
     <!-- Materialize CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #808080;
+        }
+
+        .menu-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .menu-card {
+            width: 400px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+            .menu-card h4 {
+                color: #1485dd;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            .menu-card .input-field {
+                margin-bottom: 20px;
+            }
+
+            .menu-card .btn {
+                width: 100%;
+                margin: 15px;
+            }
+
+        /* Переопределение стандартной подсветки на голубой цвет */
+        .input-field input:focus {
+            border-bottom: 2px solid #2196F3 !important; /* Голубой цвет */
+            box-shadow: 0 1px 0 0 #2196F3 !important; /* Голубой цвет */
+        }
+
+            .input-field input:focus + label {
+                color: #2196F3 !important; /* Голубой цвет */
+            }
+    </style>
     <!-- Materialize JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
@@ -20,19 +67,15 @@
     </script>
 </head>
 <body>
-    <header>
-        <nav class="waves-effect waves-light blue">
-            <div class="nav-wrapper">
-                <ul id="nav" style=" margin-inline:15px ;" class="left hide-on-med-and-down">
-                    <li><a href="#" onclick="Server()">Buss </a></li>
-                    <li><a href="#" onclick="Table()">Table</a></li>
-                    <li><a href="#" onclick="LiftView()">LiftView</a></li>
-                </ul>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
+    <div class="menu-container">
+        <div class="card menu-card">
+            <h4>GPRS-Server</h4>
+                <a class="btn waves-effect waves-light blue" href="#" onclick="Server()">Buss</a>
 
-    </div>
+                <a class="btn waves-effect waves-light blue" href="#" onclick="Table()">Table</a>
+
+                <a class="btn waves-effect waves-light blue" href="#" onclick="LiftView()">LiftView</a>
+        </div>
 </body>
+
 </html>
