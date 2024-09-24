@@ -13,19 +13,19 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
         private string[] defHeaders = new string[] {"Имя", "Значение", "Ед. измер", "Адрес(dec)", "Формат", "Вид", "Размер", "Запись", "Минимум", "Максимум", "Заводские"};
 
-        private List<string> paramNames { get; set; }
+        public List<string> paramNames { get; set; }
 
-        private string[] tableDataValues {  get; set; } 
+        public string[] tableDataValues {  get; set; }
 
-        private List<int> paramAdreses { get; set; }
+        public List<int> paramAdreses { get; set; }
 
-        private List<int> paramSizes { get; set; }
+        public List<int> paramSizes { get; set; }
 
-        private List<string> paramTypes { get; set; }
+        public List<string> paramTypes { get; set; }
 
-        private List<string> paramUnitTypes { get; set; }
+        public List<string> paramUnitTypes { get; set; }
 
-        private List<string> paramFormats { get; set; }
+        public List<string> paramFormats { get; set; }
 
         private Controllers.TcpConnectionController.TcpDeviceTableServer TableServer {  get; set; }
 

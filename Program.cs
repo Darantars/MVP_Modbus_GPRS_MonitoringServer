@@ -235,6 +235,10 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
 
             await TcpDeviceTableServer.AddNewTable(id, 10, addresses.Count, names, addresses, sizes, types, unitTypes, formats);
 
+            foreach (var table in TcpDeviceTableServer.dataTablesList)
+            {
+                Console.WriteLine(table.id);
+            }
             context.Response.StatusCode = StatusCodes.Status200OK;
         }
         catch (Exception ex)
@@ -265,6 +269,28 @@ app.MapGet("/api/Table/GetTableData", async (int modbusID, string tableId) =>
     }
 
     return Results.Json(new string[] { "Не опрашивается" });
+});
+
+app.MapGet("/api/Table/GetSavedTables", async () =>
+{
+    if (TcpDeviceTableServer.dataTablesList != null)
+    {
+        var tables = TcpDeviceTableServer.dataTablesList.Select(table => new
+        {
+            id = table.id,
+            names = table.paramNames.ToArray(),
+            addresses = table.paramAdreses.ToArray(),
+            sizes = table.paramSizes.ToArray(),
+            types = table.paramTypes.ToArray(),
+            unitTypes = table.paramUnitTypes.ToArray(),
+            formats = table.paramFormats.ToArray()
+        }).ToList();
+
+
+        return Results.Json(tables);
+    }
+
+    return Results.Json(new List<object>());
 });
 
 app.MapGet("/api/Table/GetConnectionStatus", async () =>
