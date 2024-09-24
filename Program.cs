@@ -200,8 +200,14 @@ app.MapGet("/api/Table/stop", async () =>
 
 app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
 {
-    var requestBody = await new StreamReader(context.Request.Body).ReadToEndAsync();
-    var data = JsonSerializer.Deserialize<Dictionary<string, object>>(requestBody);
+    using var requestBody = context.Request.Body;
+    var data = await JsonSerializer.DeserializeAsync<Dictionary<string, object>>(requestBody);
+
+    if (data == null)
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        return;
+    }
 
     if (data.TryGetValue("id", out var idObj)
         && data.TryGetValue("names", out var namesObj)
@@ -212,12 +218,12 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
         && data.TryGetValue("formats", out var formatsObj))
     {
         if (idObj == null
-        || namesObj == null
-        || addressesObj == null
-        || sizesObj == null
-        || typesObj == null
-        || untTypesObj == null
-        || formatsObj == null)
+            || namesObj == null
+            || addressesObj == null
+            || sizesObj == null
+            || typesObj == null
+            || untTypesObj == null
+            || formatsObj == null)
         {
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             return;
@@ -232,6 +238,15 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
             var types = JsonSerializer.Deserialize<List<string>>(typesObj.ToString().ToLower());
             var unitTypes = JsonSerializer.Deserialize<List<string>>(untTypesObj.ToString());
             var formats = JsonSerializer.Deserialize<List<string>>(formatsObj.ToString().ToLower());
+
+            if (names.Count != addresses.Count || names.Count != sizes.Count ||
+                names.Count != types.Count || names.Count != unitTypes.Count ||
+                names.Count != formats.Count)
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                await context.Response.WriteAsync("All lists must have the same length.");
+                return;
+            }
 
             await TcpDeviceTableServer.AddNewTable(id, 10, addresses.Count, names, addresses, sizes, types, unitTypes, formats);
 
@@ -253,6 +268,8 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
     }
 });
+
+
 
 
 app.MapGet("/api/Table/GetTableData", async (int modbusID, string tableId) =>
