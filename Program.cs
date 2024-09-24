@@ -248,13 +248,19 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
                 return;
             }
 
-            await TcpDeviceTableServer.AddNewTable(id, 10, addresses.Count, names, addresses, sizes, types, unitTypes, formats);
+            TcpDeviceTableServer.AddNewTable(id, 10, addresses.Count, names, addresses, sizes, types, unitTypes, formats);
 
-            foreach (var table in TcpDeviceTableServer.dataTablesList)
+            // Проверка наличия таблицы по tableid
+            if (TcpDeviceTableServer.dataTablesList.Any(table => table.id == id))
             {
-                Console.WriteLine(table.id);
+                context.Response.StatusCode = StatusCodes.Status200OK;
+                await context.Response.WriteAsync($"Table with id '{id}' successfully added.");
             }
-            context.Response.StatusCode = StatusCodes.Status200OK;
+            else
+            {
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await context.Response.WriteAsync($"Failed to add table with id '{id}'.");
+            }
         }
         catch (Exception ex)
         {
@@ -268,6 +274,7 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
     }
 });
+
 
 
 

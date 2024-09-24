@@ -402,6 +402,7 @@ namespace Read_Write_GPRS_Server.Controllers
             private int lastPort { get; set; }
             public bool readyToGetTableData { get; set; }
 
+            private object tableAdiingLock {  get; set; }
             public string answerFormat { get; set; }
             public string answerMb3 { get; set; }
 
@@ -411,14 +412,20 @@ namespace Read_Write_GPRS_Server.Controllers
                 isRunning = false;
                 dataTablesList = new List<Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable>();
                 readyToGetTableData = true;
+                tableAdiingLock = new CancellationToken();
                 answerMb3 = null;
                 answerFormat = "int16";
             }
 
+
+            
             public async Task AddNewTable(string id, int tableRowSize, int tableColumnSize, List<string> tableNames, List<int> tableAdreses, List<int> tableSizes, List<string> tableTypes, List<string> tableParamUnitTypes, List<string>TableFormats)
             {
-                Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable dataTable = new Plugins.DeviceTable.DataTable(id, tableRowSize, tableColumnSize, tableNames, tableAdreses, tableSizes, tableTypes, tableParamUnitTypes, TableFormats, this);
-                dataTablesList.Add(dataTable);
+                lock (tableAdiingLock) 
+                {
+                    Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable dataTable = new Plugins.DeviceTable.DataTable(id, tableRowSize, tableColumnSize, tableNames, tableAdreses, tableSizes, tableTypes, tableParamUnitTypes, TableFormats, this);
+                    dataTablesList.Add(dataTable);
+                }
             }
 
             public async Task Start(string ipAddress, int port)
