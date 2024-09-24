@@ -76,9 +76,14 @@
     <!-- xlsx Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', async function () {
             var elems = document.querySelectorAll('.collapsible');
             var instances = M.Collapsible.init(elems);
+
+            await UploadSavedTables(); // Загрузка сохраненных таблиц при загрузке страницы
+
+            setInterval(updateData, 100); // Обновление каждые 100 миллисекунд
+            updateData(); // Первоначальное обновление
         });
 
         let tables = [];
@@ -96,8 +101,7 @@
             await fetch('/api/Table/stop');
         }
 
-        async function addTable()
-        {
+        async function addTable() {
             const tableId = document.getElementById('newTableId').value;
             const names = document.getElementById('newTableNames').value;
             const addresses = document.getElementById('addresses').value;
@@ -126,54 +130,52 @@
                 body: JSON.stringify({ id: tableId, names: namesArray, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray })
             });
 
-            if (response.ok)
-            {
+            if (response.ok) {
                 const tableContainer = document.createElement('div');
                 tableContainer.innerHTML =
                     `
-                            <section class="table-section">
-                                <h4 class="table-section-header">${tableId}</h4>
-                                <div class="table-section-body">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Название параметра</th>
-                                                <th>Значение</th>
-                                                <th>Ед.изм</th>
-                                                <th>Адрес</th>
-                                                <th>Формат</th>
-                                                <th>Вид</th>
-                                                <th>Размер</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="${tableId}">
-                                            ${namesArray.map((name, index) => `
-                                                <tr>
-                                                    <td>${name}</td>
-                                                    <td>Не опрашивается</td>
-                                                    <td>${unitTypesArray[index]}</td>
-                                                    <td>${addressesArray[index]}</td>
-                                                    <td>${formatsArray[index]}</td>
-                                                    <td>${typesArray[index]}</td>
-                                                    <td>${sizesArray[index]}</td>
-                                                </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
+                    <section class="table-section">
+                        <h4 class="table-section-header">${tableId}</h4>
+                        <div class="table-section-body">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Название параметра</th>
+                                        <th>Значение</th>
+                                        <th>Ед.изм</th>
+                                        <th>Адрес</th>
+                                        <th>Формат</th>
+                                        <th>Вид</th>
+                                        <th>Размер</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="${tableId}">
+                                    ${namesArray.map((name, index) => `
+                                        <tr>
+                                            <td>${name}</td>
+                                            <td>Не опрашивается</td>
+                                            <td>${unitTypesArray[index]}</td>
+                                            <td>${addressesArray[index]}</td>
+                                            <td>${formatsArray[index]}</td>
+                                            <td>${typesArray[index]}</td>
+                                            <td>${sizesArray[index]}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
 
-                                    <div class="table-section-log-control">
-                                        <span class="log-status">Лог отключен</span>
-                                        <button class="btn waves-effect waves-light blue">Логировать</button>
-                                        <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
-                                    </div>
-                                </div>
-                            </section>
-                        `;
+                            <div class="table-section-log-control">
+                                <span class="log-status">Лог отключен</span>
+                                <button class="btn waves-effect waves-light blue">Логировать</button>
+                                <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
+                            </div>
+                        </div>
+                    </section>
+                `;
                 document.getElementById('tablesContainer').appendChild(tableContainer);
                 tables.push({ id: tableId, names: namesArray, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray });
             }
-            else
-            {
+            else {
                 alert('Ошибка при добавлении таблицы.');
             }
         }
@@ -183,8 +185,7 @@
             const connectionStatus = await response.text();
             document.getElementById(`conectionStatus`).innerHTML = connectionStatus;
 
-            if (updateToken === true)
-            {
+            if (updateToken === true) {
                 updateToken = false;
 
                 // *** Работа с таблицей ***
@@ -321,44 +322,44 @@
                     const tableContainer = document.createElement('div');
                     tableContainer.innerHTML =
                         `
-                                <section class="table-section">
-                                    <h4 class="table-section-header">${tableId}</h4>
-                                    <div class="table-section-body">
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th>Название параметра</th>
-                                                    <th>Значение</th>
-                                                    <th>Ед.изм</th>
-                                                    <th>Адрес</th>
-                                                    <th>Формат</th>
-                                                    <th>Вид</th>
-                                                    <th>Размер</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="${tableId}">
-                                                ${names.map((name, index) => `
-                                                    <tr>
-                                                        <td>${name}</td>
-                                                        <td>Не опрашивается</td>
-                                                        <td>${unitTypes[index]}</td>
-                                                        <td>${addresses[index]}</td>
-                                                        <td>${formats[index]}</td>
-                                                        <td>${types[index]}</td>
-                                                        <td>${sizes[index]}</td>
-                                                    </tr>
-                                                `).join('')}
-                                            </tbody>
-                                        </table>
+                        <section class="table-section">
+                            <h4 class="table-section-header">${tableId}</h4>
+                            <div class="table-section-body">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Название параметра</th>
+                                            <th>Значение</th>
+                                            <th>Ед.изм</th>
+                                            <th>Адрес</th>
+                                            <th>Формат</th>
+                                            <th>Вид</th>
+                                            <th>Размер</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="${tableId}">
+                                        ${names.map((name, index) => `
+                                            <tr>
+                                                <td>${name}</td>
+                                                <td>Не опрашивается</td>
+                                                <td>${unitTypes[index]}</td>
+                                                <td>${addresses[index]}</td>
+                                                <td>${formats[index]}</td>
+                                                <td>${types[index]}</td>
+                                                <td>${sizes[index]}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
 
-                                        <div class="table-section-log-control">
-                                            <span class="log-status">Лог отключен</span>
-                                            <button class="btn waves-effect waves-light blue">Логировать</button>
-                                            <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
-                                        </div>
-                                    </div>
-                                </section>
-                            `;
+                                <div class="table-section-log-control">
+                                    <span class="log-status">Лог отключен</span>
+                                    <button class="btn waves-effect waves-light blue">Логировать</button>
+                                    <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
+                                </div>
+                            </div>
+                        </section>
+                    `;
                     document.getElementById('tablesContainer').appendChild(tableContainer);
                     tables.push({ id: tableId, names: names, addresses: addresses, sizes: sizes, types: types, unitTypes: unitTypes, formats: formats });
                 } else {
@@ -370,8 +371,59 @@
             }
         }
 
-        setInterval(updateData, 100); // Обновление каждые 100 миллисекунд
-        updateData(); // Первоначальное обновление
+        async function UploadSavedTables() {
+            const response = await fetch('/api/Table/GetSavedTables');
+            const tablesData = await response.json();
+
+            tablesData.forEach(tableData => {
+                const { id, names, addresses, sizes, types, unitTypes, formats } = tableData;
+
+                const tableContainer = document.createElement('div');
+                tableContainer.innerHTML =
+                    `
+                <section class="table-section">
+                    <h4 class="table-section-header">${id}</h4>
+                    <div class="table-section-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Название параметра</th>
+                                    <th>Значение</th>
+                                    <th>Ед.изм</th>
+                                    <th>Адрес</th>
+                                    <th>Формат</th>
+                                    <th>Вид</th>
+                                    <th>Размер</th>
+                                </tr>
+                            </thead>
+                            <tbody id="${id}">
+                                ${names.map((name, index) => `
+                                    <tr>
+                                        <td>${name}</td>
+                                        <td>Не опрашивается</td>
+                                        <td>${unitTypes[index]}</td>
+                                        <td>${addresses[index]}</td>
+                                        <td>${formats[index]}</td>
+                                        <td>${types[index]}</td>
+                                        <td>${sizes[index]}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+
+                        <div class="table-section-log-control">
+                            <span class="log-status">Лог отключен</span>
+                            <button class="btn waves-effect waves-light blue">Логировать</button>
+                            <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
+                        </div>
+                    </div>
+                </section>
+            `;
+                document.getElementById('tablesContainer').appendChild(tableContainer);
+                tables.push({ id, names, addresses, sizes, types, unitTypes, formats });
+            });
+        }
+
     </script>
 </head>
 <body>

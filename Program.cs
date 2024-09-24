@@ -200,8 +200,14 @@ app.MapGet("/api/Table/stop", async () =>
 
 app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
 {
-    var requestBody = await new StreamReader(context.Request.Body).ReadToEndAsync();
-    var data = JsonSerializer.Deserialize<Dictionary<string, object>>(requestBody);
+    using var requestBody = context.Request.Body;
+    var data = await JsonSerializer.DeserializeAsync<Dictionary<string, object>>(requestBody);
+
+    if (data == null)
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        return;
+    }
 
     if (data.TryGetValue("id", out var idObj)
         && data.TryGetValue("names", out var namesObj)
@@ -212,12 +218,12 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
         && data.TryGetValue("formats", out var formatsObj))
     {
         if (idObj == null
-        || namesObj == null
-        || addressesObj == null
-        || sizesObj == null
-        || typesObj == null
-        || untTypesObj == null
-        || formatsObj == null)
+            || namesObj == null
+            || addressesObj == null
+            || sizesObj == null
+            || typesObj == null
+            || untTypesObj == null
+            || formatsObj == null)
         {
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             return;
@@ -233,9 +239,28 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
             var unitTypes = JsonSerializer.Deserialize<List<string>>(untTypesObj.ToString());
             var formats = JsonSerializer.Deserialize<List<string>>(formatsObj.ToString().ToLower());
 
-            await TcpDeviceTableServer.AddNewTable(id, 10, addresses.Count, names, addresses, sizes, types, unitTypes, formats);
+            if (names.Count != addresses.Count || names.Count != sizes.Count ||
+                names.Count != types.Count || names.Count != unitTypes.Count ||
+                names.Count != formats.Count)
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                await context.Response.WriteAsync("All lists must have the same length.");
+                return;
+            }
 
-            context.Response.StatusCode = StatusCodes.Status200OK;
+            TcpDeviceTableServer.AddNewTable(id, 10, addresses.Count, names, addresses, sizes, types, unitTypes, formats);
+
+            // Проверка наличия таблицы по tableid
+            if (TcpDeviceTableServer.dataTablesList.Any(table => table.id == id))
+            {
+                context.Response.StatusCode = StatusCodes.Status200OK;
+                await context.Response.WriteAsync($"Table with id '{id}' successfully added.");
+            }
+            else
+            {
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await context.Response.WriteAsync($"Failed to add table with id '{id}'.");
+            }
         }
         catch (Exception ex)
         {
@@ -249,6 +274,9 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
     }
 });
+
+
+
 
 
 app.MapGet("/api/Table/GetTableData", async (int modbusID, string tableId) =>
@@ -265,6 +293,28 @@ app.MapGet("/api/Table/GetTableData", async (int modbusID, string tableId) =>
     }
 
     return Results.Json(new string[] { "Не опрашивается" });
+});
+
+app.MapGet("/api/Table/GetSavedTables", async () =>
+{
+    if (TcpDeviceTableServer.dataTablesList != null)
+    {
+        var tables = TcpDeviceTableServer.dataTablesList.Select(table => new
+        {
+            id = table.id,
+            names = table.paramNames.ToArray(),
+            addresses = table.paramAdreses.ToArray(),
+            sizes = table.paramSizes.ToArray(),
+            types = table.paramTypes.ToArray(),
+            unitTypes = table.paramUnitTypes.ToArray(),
+            formats = table.paramFormats.ToArray()
+        }).ToList();
+
+
+        return Results.Json(tables);
+    }
+
+    return Results.Json(new List<object>());
 });
 
 app.MapGet("/api/Table/GetConnectionStatus", async () =>
