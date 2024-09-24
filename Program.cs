@@ -1,12 +1,7 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Hosting;
+
 using System.Text.Json;
-using System.Threading.Tasks;
-using System;
 using Read_Write_GPRS_Server.Controllers;
-using System.Reflection.Emit;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
@@ -20,15 +15,52 @@ TcpConnectionController.TcpDeviceTableServer TcpDeviceTableServer = new TcpConne
 
 app.MapGet("/", async (HttpContext context) =>
 {
-    var filePath = Path.Combine(context.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath, "html", "index.html");
+    var filePath = Path.Combine(context.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath, "html", "Autorization.html");
     var htmlContent = await System.IO.File.ReadAllTextAsync(filePath);
     context.Response.ContentType = "text/html";
     await context.Response.WriteAsync(htmlContent);
 });
 
+app.MapPost("/api/auth/login", async (HttpContext context) =>
+{
+    try
+    {
+        using var reader = new StreamReader(context.Request.Body);
+        var json = await reader.ReadToEndAsync();
+        var jsonDocument = JsonDocument.Parse(json);
+        var root = jsonDocument.RootElement;
+
+        var username = root.GetProperty("username").GetString();
+        var password = root.GetProperty("password").GetString();
+
+        // Заданные логин и пароль
+        const string validUsername = "MVadmin";
+        const string validPassword = "NotNSO";
+
+        Console.WriteLine(username + ":" + password);
+
+        if (username == validUsername && password == validPassword)
+        {
+            context.Response.StatusCode = StatusCodes.Status200OK;
+            await context.Response.WriteAsync(JsonSerializer.Serialize(new { message = "Login successful" }));
+        }
+        else
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsync(JsonSerializer.Serialize(new { message = "Invalid username or password" }));
+        }
+    }
+    catch (JsonException)
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        await context.Response.WriteAsync(JsonSerializer.Serialize(new { message = "Invalid JSON format" }));
+    }
+});
+
+
 app.MapGet("/Home", async (HttpContext context) =>
 {
-    var filePath = Path.Combine(context.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath, "html", "index.html");
+    var filePath = Path.Combine(context.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath, "html", "Home.html");
     var htmlContent = await System.IO.File.ReadAllTextAsync(filePath);
     context.Response.ContentType = "text/html";
     await context.Response.WriteAsync(htmlContent);
@@ -44,7 +76,7 @@ app.MapGet("/TCP-Server", async (HttpContext context) =>
 });
 
 app.MapGet("/api/TCP/start", async (int connectionPort) =>
-{   
+{
     await tcpServer.Start(ipAddress, connectionPort);
 });
 
@@ -65,7 +97,7 @@ app.MapPost("/api/TCP/send", async (HttpContext context) =>
 
 app.MapGet("/api/TCP/updateConnectionStatus", async (HttpContext context) =>
 {
-        return Results.Content(tcpServer.GetDeviceConnectionStatus(), "text/plain");
+    return Results.Content(tcpServer.GetDeviceConnectionStatus(), "text/plain");
 });
 
 app.MapPost("/api/TCP/sendMb3", async (HttpContext context) =>
@@ -112,7 +144,7 @@ app.MapPost("/api/TCP/sendMb10", async (HttpContext context) =>
 
         var modbusInput = JsonSerializer.Deserialize<TcpConnectionController.ModbusInput>(mbData, options);
 
-        if (int.TryParse(modbusInput.modbusID, out int ID) 
+        if (int.TryParse(modbusInput.modbusID, out int ID)
         && int.TryParse(modbusInput.modbusStartAdress, out int ColumnNum)
         && int.TryParse(modbusInput.modbussQuanity, out int Quanity))
         {
@@ -181,8 +213,8 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
     {
         if (idObj == null
         || namesObj == null
-        || addressesObj == null 
-        || sizesObj == null 
+        || addressesObj == null
+        || sizesObj == null
         || typesObj == null
         || untTypesObj == null
         || formatsObj == null)
@@ -209,7 +241,7 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
         {
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             await context.Response.WriteAsync($"Error deserializing data: {ex.Message}");
-            Console.WriteLine($"Error deserializing data: {ex.Message}"); 
+            Console.WriteLine($"Error deserializing data: {ex.Message}");
         }
     }
     else
@@ -238,7 +270,7 @@ app.MapGet("/api/Table/GetTableData", async (int modbusID, string tableId) =>
 app.MapGet("/api/Table/GetConnectionStatus", async () =>
 {
     string answer = TcpDeviceTableServer.connectionStatus;
-        return Results.Content(answer, "text/plain");
+    return Results.Content(answer, "text/plain");
 });
 
 app.MapGet("/LiftView", async (HttpContext context) =>
