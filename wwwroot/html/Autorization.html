@@ -5,84 +5,16 @@
     <title>Login</title>
     <!-- Materialize CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
-    <style>
-        body{
-            background-color:#808080;
-
-        }
-
-        .login-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .login-card {
-            width: 400px;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .login-card h4 {
-            color:#1485dd;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .login-card .input-field {
-            margin-bottom: 20px;
-        }
-
-        .login-card .btn {
-            width: 100%;
-        }
-
-        /* Переопределение стандартной подсветки на голубой цвет */
-        .input-field input:focus {
-            border-bottom: 2px solid #2196F3 !important; /* Голубой цвет */
-            box-shadow: 0 1px 0 0 #2196F3 !important; /* Голубой цвет */
-        }
-
-        .input-field input:focus + label {
-            color: #2196F3 !important; /* Голубой цвет */
-        }
-
-
-    </style>
     <!-- Materialize JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var elems = document.querySelectorAll('.collapsible');
-            var instances = M.Collapsible.init(elems);
-        });
-        
-        async function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
 
-            if (!username || !password) {
-                alert('Пожалуйста, заполните все поля.');
-                return;
-            }
-
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            });
-
-            if (response.ok) {
-                window.location.href = '/Home';
-            } else {
-                alert('Неверное имя пользователя или пароль.');
-            }
+    <link href="../styles/MainStyles.css" rel="stylesheet">
+    <script src="../scripts/AutorizationScripts.js"></script>
+    <style>
+        body {
+            background-color: #808080;
         }
-    </script>
+    </style>
 </head>
 <body>
     <div class="login-container">

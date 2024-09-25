@@ -1,0 +1,127 @@
+﻿.tables-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+/* Переопределение стандартной подсветки на голубой цвет */
+.input-field input:focus {
+    border-bottom: 2px solid #2196F3 !important; /* Голубой цвет */
+    box-shadow: 0 1px 0 0 #2196F3 !important; /* Голубой цвет */
+}
+
+.input-field input:focus + label {
+    color: #2196F3 !important; /* Голубой цвет */
+}
+
+.table-section {
+    margin: 15px;
+    padding: 20px;
+    border: 1px solid #2196F3;
+    width: fit-content;
+}
+
+.table-section-body {
+    display: flex;
+    flex-direction: row;
+}
+
+.table-section-header {
+    color: #2782C3;
+    font-family: Roboto;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.table-section-body {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: baseline;
+    gap: 25px;
+}
+
+.table-section-table {
+    /* Стили для таблицы */
+}
+
+.table-section-log-control {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.log-status {
+    color: #292929;
+    text-align: center;
+    font-family: Roboto;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.login-container
+{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.login-card {
+    width: 400px;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.login-card h4 {
+    color: #1485dd;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.login-card .input-field {
+    margin-bottom: 20px;
+}
+
+.login-card .btn {
+    width: 100%;
+}
+
+.menu-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.menu-card {
+    width: 400px;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.menu-card h4 {
+    color: #1485dd;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.menu-card .input-field {
+   margin-bottom: 20px;
+}
+
+.menu-card .btn {
+    width: 100%;
+    margin: 15px;
+}
+

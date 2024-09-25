@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
-
+app.UseStaticFiles();
 // ”казываем IP-адрес и порт дл€ прослушивани€
 string ipAddress = "90.188.113.113";
 TcpConnectionController.TcpServer tcpServer = new TcpConnectionController.TcpServer(10000);
