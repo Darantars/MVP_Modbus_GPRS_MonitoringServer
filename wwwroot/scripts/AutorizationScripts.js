@@ -4,10 +4,10 @@
 });
 
 async function login() {
-    const username = document.getElementById('username').value;
+    const email = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
-    if (!username || !password) {
+    if (!email || !password) {
         alert('Пожалуйста, заполните все поля.');
         return;
     }
@@ -17,12 +17,43 @@ async function login() {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ email: email, password: password })
     });
 
     if (response.ok) {
         window.location.href = '/Home';
     } else {
         alert('Неверное имя пользователя или пароль.');
+    }
+}
+
+async function register() {
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
+    const confirmPassword = document.getElementById('register-confirm-password').value;
+
+    if (!email || !password || !confirmPassword) {
+        alert('Пожалуйста, заполните все поля.');
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        alert('Пароли не совпадают.');
+        return;
+    }
+
+    const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: email, password: password })
+    });
+
+    if (response.ok) {
+        window.location.href = '/Home';
+    } else {
+        const data = await response.json();
+        alert('Регистрация не удалась: ' + data.errors.join(', '));
     }
 }

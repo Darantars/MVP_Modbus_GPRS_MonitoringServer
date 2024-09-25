@@ -2,15 +2,40 @@
 using System.Text.Json;
 using Read_Write_GPRS_Server.Controllers;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Read_Write_GPRS_Server.Db;
 
-var builder = WebApplication.CreateBuilder(args);
-var app = builder.Build();
-app.UseStaticFiles();
 // Указываем IP-адрес и порт для прослушивания
 string ipAddress = "90.188.113.113";
 TcpConnectionController.TcpServer tcpServer = new TcpConnectionController.TcpServer(10000);
-
 TcpConnectionController.TcpDeviceTableServer TcpDeviceTableServer = new TcpConnectionController.TcpDeviceTableServer();
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddControllersWithViews();
+
+var app = builder.Build();
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 
 app.MapGet("/", async (HttpContext context) =>
@@ -21,7 +46,7 @@ app.MapGet("/", async (HttpContext context) =>
     await context.Response.WriteAsync(htmlContent);
 });
 
-app.MapPost("/api/auth/login", async (HttpContext context) =>
+app.MapPost("/api/auth/login", async (HttpContext context, SignInManager<IdentityUser> signInManager) =>
 {
     try
     {
@@ -30,16 +55,12 @@ app.MapPost("/api/auth/login", async (HttpContext context) =>
         var jsonDocument = JsonDocument.Parse(json);
         var root = jsonDocument.RootElement;
 
-        var username = root.GetProperty("username").GetString();
+        var email = root.GetProperty("email").GetString();
         var password = root.GetProperty("password").GetString();
 
-        // Заданные логин и пароль
-        const string validUsername = "MVadmin";
-        const string validPassword = "NotNSO";
+        var result = await signInManager.PasswordSignInAsync(email, password, isPersistent: false, lockoutOnFailure: false);
 
-        Console.WriteLine(username + ":" + password);
-
-        if (username == validUsername && password == validPassword)
+        if (result.Succeeded)
         {
             context.Response.StatusCode = StatusCodes.Status200OK;
             await context.Response.WriteAsync(JsonSerializer.Serialize(new { message = "Login successful" }));
@@ -48,6 +69,40 @@ app.MapPost("/api/auth/login", async (HttpContext context) =>
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsync(JsonSerializer.Serialize(new { message = "Invalid username or password" }));
+        }
+    }
+    catch (JsonException)
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        await context.Response.WriteAsync(JsonSerializer.Serialize(new { message = "Invalid JSON format" }));
+    }
+});
+
+app.MapPost("/api/auth/register", async (HttpContext context, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager) =>
+{
+    try
+    {
+        using var reader = new StreamReader(context.Request.Body);
+        var json = await reader.ReadToEndAsync();
+        var jsonDocument = JsonDocument.Parse(json);
+        var root = jsonDocument.RootElement;
+
+        var email = root.GetProperty("email").GetString();
+        var password = root.GetProperty("password").GetString();
+
+        var user = new IdentityUser { UserName = email, Email = email };
+        var result = await userManager.CreateAsync(user, password);
+
+        if (result.Succeeded)
+        {
+            await signInManager.SignInAsync(user, isPersistent: false);
+            context.Response.StatusCode = StatusCodes.Status200OK;
+            await context.Response.WriteAsync(JsonSerializer.Serialize(new { message = "Registration successful" }));
+        }
+        else
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            await context.Response.WriteAsync(JsonSerializer.Serialize(new { message = "Registration failed", errors = result.Errors }));
         }
     }
     catch (JsonException)
