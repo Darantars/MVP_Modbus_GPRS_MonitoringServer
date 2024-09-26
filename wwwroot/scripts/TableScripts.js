@@ -210,9 +210,13 @@ function handleFileUpload(event) {
 
 async function addTableFromData(tableId, names, addresses, sizes, types, unitTypes, formats) {
     try {
-        // Преобразование строк в числа
-        addresses = addresses.map(addr => addr === "" ? 0 : parseInt(addr, 10));
-        sizes = sizes.map(size => size === "" ? 0 : parseInt(size, 10));
+        // Преобразование строк в числа и избавление от null
+        addresses = addresses.map(addr => addr == null || addr == "" || addr == "null" ? 0 : parseInt(addr, 10));
+        sizes = sizes.map(size => size == null || size == "" || size == "null" ? 0 : parseInt(size, 10));
+        types = types.map(type => type == null ? "" : type);
+        unitTypes = unitTypes.map(unit => unit == null ? "" : unit);
+        formats = formats.map(format => format == null ? "" : format);
+        names = names.map(name => name == null ? "" : name);
 
         const jsonData = JSON.stringify({
             id: tableId,
