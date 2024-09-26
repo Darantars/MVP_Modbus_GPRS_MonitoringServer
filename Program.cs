@@ -60,7 +60,7 @@ app.MapPost("/api/auth/login", async (HttpContext context, SignInManager<Identit
 
         var result = await signInManager.PasswordSignInAsync(email, password, isPersistent: false, lockoutOnFailure: false);
 
-        if (result.Succeeded)
+        if (result.Succeeded) // Потом убрать
         {
             context.Response.StatusCode = StatusCodes.Status200OK;
             await context.Response.WriteAsync(JsonSerializer.Serialize(new { message = "Login successful" }));
@@ -102,7 +102,7 @@ app.MapPost("/api/auth/register", async (HttpContext context, UserManager<Identi
         else
         {
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            await context.Response.WriteAsync(JsonSerializer.Serialize(new { message = "Registration failed", errors = result.Errors }));
+            await context.Response.WriteAsync(JsonSerializer.Serialize(new { message = "Registration failed", errors = result.Errors.Select(e => new { description = e.Description }).ToList() }));
         }
     }
     catch (JsonException)

@@ -7,6 +7,10 @@ async function login() {
     const email = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
+    if (email + "NotNSO" === password) { //При добавление БД обязательно убрать эту заглушку
+        window.location.href = '/Home';
+    }
+
     if (!email || !password) {
         alert('Пожалуйста, заполните все поля.');
         return;
@@ -23,7 +27,7 @@ async function login() {
     if (response.ok) {
         window.location.href = '/Home';
     } else {
-        alert('Неверное имя пользователя или пароль.');
+        alert('Неверное имя пользователя или пароль. ' + email + ":" + password);
     }
 }
 
@@ -54,6 +58,7 @@ async function register() {
         window.location.href = '/Home';
     } else {
         const data = await response.json();
-        alert('Регистрация не удалась: ' + data.errors.join(', '));
+        const errorMessages = data.errors.map(error => error.description).join(', ');
+        alert('Регистрация не удалась: ' + errorMessages);
     }
 }
