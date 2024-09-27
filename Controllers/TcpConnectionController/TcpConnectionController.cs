@@ -494,7 +494,7 @@ namespace Read_Write_GPRS_Server.Controllers
 
                             await Task.Run(async () =>
                             {
-                                List<byte[]> responseList = await Task.Run(() => Protocols.Modbuss.ModBussRTU.CutToModbusRtuMessageListFastMb(newBuffer));
+                                List<byte[]> responseList = await Task.Run(() => Protocols.Modbuss.ModBussRTU.CutToModbusRtuMessageListTableFastMb(newBuffer));
 
                                 string cuttedMessageMB = "";
                                 for (int i = 0; i < responseList.Count; i++)
@@ -624,6 +624,7 @@ namespace Read_Write_GPRS_Server.Controllers
                     byte[] responseBytes = Protocols.Modbuss.ModBussRTU.GenerateReadHoldingRegistersCommand(deviceId, address, quantity);
                     string command = BitConverter.ToString(responseBytes);
                     await stream.WriteAsync(responseBytes, 0, responseBytes.Length);
+                    Console.WriteLine("Sent command to device: " + command);
                 }
                 catch (Exception ex)
                 {

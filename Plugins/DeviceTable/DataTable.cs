@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using System.Drawing;
 
+
 namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 {
     public class DataTable
