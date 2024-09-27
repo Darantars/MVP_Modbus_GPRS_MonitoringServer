@@ -357,7 +357,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
 
             switch (mode)
             {
-                case "getTypeAndAdress":
+                case "gettypeandadress":
                     return $"{messageType}: команда {functionCode} для устройства ID {modbusId}";
                 case "int16":
                     return registers;
