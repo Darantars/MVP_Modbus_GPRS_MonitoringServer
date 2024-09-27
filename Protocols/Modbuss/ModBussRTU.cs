@@ -95,6 +95,55 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
             return commands;
         }
 
+        public static List<byte[]> CutToModbusRtuMessageListTableFastMb(byte[] byteData)
+        {
+            List<byte[]> commands = new List<byte[]>();
+            int i = 0;
+
+            Console.WriteLine("Поймано: " + BitConverter.ToString(byteData));
+
+            while (i < byteData.Length - 6)
+            {
+                byte functionCodeRequest = byteData[i + 1];
+
+                if (functionCodeRequest == 3)
+                {
+                  
+                    // Проверка на наличие ответа
+                    if (i + 6 <= byteData.Length)
+                    {
+                        if (Parser.TryParseMb3Response(byteData, ref i, commands))
+                        {
+                            continue;
+                        }
+                    }
+                }
+                else if (functionCodeRequest == 16)
+                {
+                    // Проверка на наличие ответа
+                    if (i + 10 <= byteData.Length)
+                    {
+                        if (Parser.TryParseMb10Request(byteData, ref i, commands))
+                        {
+                            continue;
+                        }
+                    }
+                }
+
+                // Если ничего не подошло, пробуем начать снова со второго байта
+                i++;
+            }
+
+
+            // Вывод в консоль полученного буфера команд в HEX формате
+            foreach (var cmd in commands)
+            {
+                Console.WriteLine(BitConverter.ToString(cmd));
+            }
+
+            return commands;
+        }
+
         public static byte[] GenerateWriteMultipleRegistersCommand(int modbusId, int startAddress, int quantity, int byteCount, byte[] byteData)
         {
             // Проверка входных данных
@@ -247,7 +296,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                                 data = new StringBuilder();
                                 for (int i = 0; i < byteCount / 2; i++)
                                 {
-                                    ushort value = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(buffer, 3 + i * 2));
+                                    short value = (short)((buffer[3 + i * 2] << 8) | buffer[3 + i * 2 + 1]);
                                     data.Append($"{value} ");
                                 }
                                 registers = $"{data.ToString().Trim()}";
@@ -256,62 +305,42 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                                 data = new StringBuilder();
                                 for (int i = 0; i < byteCount / 2; i++)
                                 {
-                                    ushort value = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToUInt16(buffer, 3 + i * 2));
+                                    ushort value = (ushort)((buffer[3 + i * 2] << 8) | buffer[3 + i * 2 + 1]);
                                     data.Append($"{value} ");
                                 }
                                 registers = $"{data.ToString().Trim()}";
                                 break;
-                            case "int32":
-                                data = new StringBuilder();
-                                for (int i = 0; i < byteCount / 4; i++)
-                                {
-                                    byte[] valueBytes = new byte[4];
-                                    Array.Copy(buffer, 3 + i * 4, valueBytes, 0, 4);
-
-                                    // Вывод для отладки
-                                    Console.WriteLine($"Raw bytes for int32 at index {i}: {BitConverter.ToString(valueBytes)}");
 
 
-                                    byte temp = valueBytes[0];
-                                    valueBytes[0] = valueBytes[2];
-                                    valueBytes[2] = temp;
-
-                                    temp = valueBytes[1];
-                                    valueBytes[1] = valueBytes[3];
-                                    valueBytes[3] = temp;
-
-                                    int value = (int)(valueBytes[0] << 24 | valueBytes[1] << 16 | valueBytes[2] << 8 | valueBytes[3]);
-
-                                    // Вывод для отладки
-                                    Console.WriteLine($"Int32 value at index {i}: {value}");
-
-                                    data.Append($"{value} ");
-                                }
-                                registers = $"{data.ToString().Trim()}";
-                                break;
                             case "uint32":
-                                data = new StringBuilder();
                                 for (int i = 0; i < byteCount / 4; i++)
                                 {
-                                    byte[] valueBytes = new byte[4];
-                                    Array.Copy(buffer, 3 + i * 4, valueBytes, 0, 4);
+                                    uint value = (uint)((buffer[3 + i * 4] << 24) | (buffer[3 + i * 4 + 1] << 16) |
+                                                        (buffer[3 + i * 4 + 2] << 8) | buffer[3 + i * 4 + 3]);
+                                    data.Append($"{value} ");
+                                }
+                                registers = $"{data.ToString().Trim()}";
+                                break;
 
-                                    // Вывод для отладки
-                                    Console.WriteLine($"Raw bytes for uint32 at index {i}: {BitConverter.ToString(valueBytes)}");
+                            case "int32":
+                                for (int i = 0; i < byteCount / 4; i++)
+                                {
+                                    int value = (buffer[3 + i * 4] << 24) | (buffer[3 + i * 4 + 1] << 16) |
+                                                (buffer[3 + i * 4 + 2] << 8) | buffer[3 + i * 4 + 3];
+                                    data.Append($"{value} ");
+                                }
+                                registers = $"{data.ToString().Trim()}";
+                                break;
 
-                                    byte temp = valueBytes[0];
-                                    valueBytes[0] = valueBytes[2];
-                                    valueBytes[2] = temp;
-
-                                    temp = valueBytes[1];
-                                    valueBytes[1] = valueBytes[3];
-                                    valueBytes[3] = temp;
-
-                                    uint value = (uint)(valueBytes[0] << 24 | valueBytes[1] << 16 | valueBytes[2] << 8 | valueBytes[3]);
-
-                                    // Вывод для отладки
-                                    Console.WriteLine($"Uint32 value at index {i}: {value}");
-
+                            case "float":
+                                for (int i = 0; i < byteCount / 4; i++)
+                                {
+                                    byte[] floatBytes = new byte[4];
+                                    floatBytes[2] = buffer[3 + i * 4 + 3];
+                                    floatBytes[3] = buffer[3 + i * 4 + 2];
+                                    floatBytes[0] = buffer[3 + i * 4 + 1];
+                                    floatBytes[1] = buffer[3 + i * 4];
+                                    float value = BitConverter.ToSingle(floatBytes, 0);
                                     data.Append($"{value} ");
                                 }
                                 registers = $"{data.ToString().Trim()}";
@@ -357,7 +386,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
 
             switch (mode)
             {
-                case "getTypeAndAdress":
+                case "gettypeandadress":
                     return $"{messageType}: команда {functionCode} для устройства ID {modbusId}";
                 case "int16":
                     return registers;
@@ -366,6 +395,8 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                 case "int32":
                     return registers;
                 case "uint32":
+                    return registers;
+                case "float":
                     return registers;
                 default:
                     return $"Формат {mode} еще не введен";
