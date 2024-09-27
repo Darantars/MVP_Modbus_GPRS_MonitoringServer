@@ -23,7 +23,7 @@ async function StopConnection() {
     await fetch('/api/Table/stop');
 }
 
-async function addTable() {
+async function addTable() {                                           
     const tableId = document.getElementById('newTableId').value;
     const names = document.getElementById('newTableNames').value;
     const addresses = document.getElementById('addresses').value;
@@ -31,6 +31,7 @@ async function addTable() {
     const types = document.getElementById('newTableTypes').value;
     const unitTypes = document.getElementById('newTableUnitTypes').value;
     const formats = document.getElementById('newTableFormats').value;
+    const coiffients = document.getElementById('newTableCoiffients').value;
 
     if (!tableId || !addresses) {
         alert('Пожалуйста, заполните все поля.');
@@ -43,13 +44,14 @@ async function addTable() {
     const typesArray = types.split(',').map(String);
     const unitTypesArray = unitTypes.split(',').map(String);
     const formatsArray = formats.split(',').map(String);
+    const coiffientsArray = coiffients.split(',').map(Number);
 
     const response = await fetch(`/api/Table/AddNewTable`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ id: tableId, names: namesArray, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray })
+        body: JSON.stringify({ id: tableId, names: namesArray, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray, coiffients: coiffientsArray })
     });
 
     if (response.ok) {
@@ -81,6 +83,7 @@ async function addTable() {
                                             <td>${formatsArray[index]}</td>
                                             <td>${typesArray[index]}</td>
                                             <td>${sizesArray[index]}</td>
+                                            <td>${coiffientsArray[index]}</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
@@ -95,7 +98,7 @@ async function addTable() {
                     </section>
                 `;
         document.getElementById('tablesContainer').appendChild(tableContainer);
-        tables.push({ id: tableId, names: namesArray, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray });
+        tables.push({ id: tableId, names: namesArray, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray, coiffients: coiffientsArray });
     }
     else {
         alert('Ошибка при добавлении таблицы.');
@@ -136,7 +139,8 @@ async function updateData() {
 
                         // Добавление столбца с названиями параметров
                         const tdValue = tr.querySelectorAll('td')[1];
-                        tdValue.textContent = row;
+                        const coefficient = table.coiffients[index];
+                        tdValue.textContent = applyCoefficient(row, coefficient);
                     });
                 }
             }
@@ -144,6 +148,14 @@ async function updateData() {
 
         updateToken = true;
     }
+}
+
+
+function applyCoefficient(value, coefficient) {
+    if (coefficient > 0 && typeof value !== 'number') {
+        return value / (10 * coefficient);
+    }
+    return value;
 }
 
 function handleFileUpload(event) {
@@ -178,7 +190,7 @@ function handleFileUpload(event) {
 
             if (tableIdPart !== currentTableId) {
                 if (currentTable) {
-                    addTableFromData(`${fileName}   ${currentGroupName}`, currentTable.names, currentTable.addresses, currentTable.sizes, currentTable.types, currentTable.unitTypes, currentTable.formats);
+                    addTableFromData(`${fileName}   ${currentGroupName}`, currentTable.names, currentTable.addresses, currentTable.sizes, currentTable.types, currentTable.unitTypes, currentTable.formats, currentTable.coiffients);
                 }
                 currentTableId = tableIdPart;
                 currentGroupName = groupName;
@@ -188,7 +200,9 @@ function handleFileUpload(event) {
                     sizes: [],
                     types: [],
                     unitTypes: [],
-                    formats: []
+                    formats: [],
+                    coiffients: []
+
                 };
             }
 
@@ -198,17 +212,18 @@ function handleFileUpload(event) {
             currentTable.formats.push(row[4]);
             currentTable.addresses.push(row[6]);
             currentTable.sizes.push(row[12]);
+            currentTable.coiffients.push(row[11]);
         });
 
         if (currentTable) {
-            addTableFromData(`${fileName}   ${currentGroupName}`, currentTable.names, currentTable.addresses, currentTable.sizes, currentTable.types, currentTable.unitTypes, currentTable.formats);
+            addTableFromData(`${fileName}   ${currentGroupName}`, currentTable.names, currentTable.addresses, currentTable.sizes, currentTable.types, currentTable.unitTypes, currentTable.formats, currentTable.coiffients);
         }
     };
 
     reader.readAsArrayBuffer(file);
 }
 
-async function addTableFromData(tableId, names, addresses, sizes, types, unitTypes, formats) {
+async function addTableFromData(tableId, names, addresses, sizes, types, unitTypes, formats, coiffients) {
     try {
         // Преобразование строк в числа и избавление от null
         addresses = addresses.map(addr => addr == null || addr == "" || addr == "null" ? 0 : parseInt(addr, 10));
@@ -217,6 +232,7 @@ async function addTableFromData(tableId, names, addresses, sizes, types, unitTyp
         unitTypes = unitTypes.map(unit => unit == null ? "" : unit);
         formats = formats.map(format => format == null ? "" : format);
         names = names.map(name => name == null ? "" : name);
+        coiffients = coiffients.map(coif => coif == null || coif == "" || coif == "null" ? 0 : parseInt(coif, 10));
 
         const jsonData = JSON.stringify({
             id: tableId,
@@ -225,7 +241,8 @@ async function addTableFromData(tableId, names, addresses, sizes, types, unitTyp
             sizes: sizes,
             types: types,
             unitTypes: unitTypes,
-            formats: formats
+            formats: formats,
+            coiffients: coiffients
         });
         console.log('JSON данные для отправки:', jsonData);
         const response = await fetch(`/api/Table/AddNewTable`, {
@@ -240,7 +257,8 @@ async function addTableFromData(tableId, names, addresses, sizes, types, unitTyp
                 sizes: sizes,
                 types: types,
                 unitTypes: unitTypes,
-                formats: formats
+                formats: formats,
+                coiffients: coiffients
             })
         });
 
@@ -261,6 +279,7 @@ async function addTableFromData(tableId, names, addresses, sizes, types, unitTyp
                                             <th>Формат</th>
                                             <th>Вид</th>
                                             <th>Размер</th>
+                                            <th>Койфициент</th>
                                         </tr>
                                     </thead>
                                     <tbody id="${tableId}">
@@ -273,6 +292,7 @@ async function addTableFromData(tableId, names, addresses, sizes, types, unitTyp
                                                 <td>${formats[index]}</td>
                                                 <td>${types[index]}</td>
                                                 <td>${sizes[index]}</td>
+                                                <td>${coiffients[index]}</td>
                                             </tr>
                                         `).join('')}
                                     </tbody>
@@ -287,7 +307,7 @@ async function addTableFromData(tableId, names, addresses, sizes, types, unitTyp
                         </section>
                     `;
             document.getElementById('tablesContainer').appendChild(tableContainer);
-            tables.push({ id: tableId, names: names, addresses: addresses, sizes: sizes, types: types, unitTypes: unitTypes, formats: formats });
+            tables.push({ id: tableId, names: names, addresses: addresses, sizes: sizes, types: types, unitTypes: unitTypes, formats: formats, coiffients: coiffients });
         } else {
             alert('Ошибка при добавлении таблицы.');
         }
@@ -297,12 +317,13 @@ async function addTableFromData(tableId, names, addresses, sizes, types, unitTyp
     }
 }
 
+
 async function UploadSavedTables() {
     const response = await fetch('/api/Table/GetSavedTables');
     const tablesData = await response.json();
 
     tablesData.forEach(tableData => {
-        const { id, names, addresses, sizes, types, unitTypes, formats } = tableData;
+        const { id, names, addresses, sizes, types, unitTypes, formats, coiffients} = tableData;
 
         const tableContainer = document.createElement('div');
         tableContainer.innerHTML =
@@ -320,6 +341,7 @@ async function UploadSavedTables() {
                                     <th>Формат</th>
                                     <th>Вид</th>
                                     <th>Размер</th>
+                                    <th>Койфициент</th>
                                 </tr>
                             </thead>
                             <tbody id="${id}">
@@ -332,6 +354,7 @@ async function UploadSavedTables() {
                                         <td>${formats[index]}</td>
                                         <td>${types[index]}</td>
                                         <td>${sizes[index]}</td>
+                                        <td>${coiffients[index]}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -346,6 +369,6 @@ async function UploadSavedTables() {
                 </section>
             `;
         document.getElementById('tablesContainer').appendChild(tableContainer);
-        tables.push({ id, names, addresses, sizes, types, unitTypes, formats });
+        tables.push({ id, names, addresses, sizes, types, unitTypes, formats, coiffients});
     });
 }
