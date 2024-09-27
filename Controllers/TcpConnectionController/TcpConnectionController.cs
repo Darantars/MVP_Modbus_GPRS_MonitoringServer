@@ -419,11 +419,11 @@ namespace Read_Write_GPRS_Server.Controllers
 
 
             
-            public async Task AddNewTable(string id, int tableRowSize, int tableColumnSize, List<string> tableNames, List<int> tableAdreses, List<int> tableSizes, List<string> tableTypes, List<string> tableParamUnitTypes, List<string>TableFormats)
+            public async Task AddNewTable(string id, int tableRowSize, int tableColumnSize, List<string> tableNames, List<int> tableAdreses, List<int> tableSizes, List<string> tableTypes, List<string> tableParamUnitTypes, List<string>TableFormats, List<int> tableCoificent)
             {
                 lock (tableAdiingLock) 
                 {
-                    Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable dataTable = new Plugins.DeviceTable.DataTable(id, tableRowSize, tableColumnSize, tableNames, tableAdreses, tableSizes, tableTypes, tableParamUnitTypes, TableFormats, this);
+                    Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable dataTable = new Plugins.DeviceTable.DataTable(id, tableRowSize, tableColumnSize, tableNames, tableAdreses, tableSizes, tableTypes, tableParamUnitTypes, TableFormats, tableCoificent , this);
                     dataTablesList.Add(dataTable);
                 }
             }

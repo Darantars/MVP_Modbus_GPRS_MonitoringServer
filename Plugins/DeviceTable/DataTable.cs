@@ -20,6 +20,8 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
         public List<int> paramAdreses { get; set; }
 
+        public List<int> paramcoiffients { get; set; }
+
         public List<int> paramSizes { get; set; }
 
         public List<string> paramTypes { get; set; }
@@ -32,7 +34,7 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
         private int badRequestMb3Counter {  get; set; }
 
-        public DataTable(string tableId, int tableRowSize, int tableColumnSize, List<string> tableParamNames, List<int> tableParamAdreses, List<int> tableParamSizes, List<string> tableParamTypes, List<string> tableParamUnitTypes, List<string> tableParamFormats, Controllers.TcpConnectionController.TcpDeviceTableServer tableTableServer) 
+        public DataTable(string tableId, int tableRowSize, int tableColumnSize, List<string> tableParamNames, List<int> tableParamAdreses, List<int> tableParamSizes, List<string> tableParamTypes, List<string> tableParamUnitTypes, List<string> tableParamFormats, List<int> tableParamcoiffients , Controllers.TcpConnectionController.TcpDeviceTableServer tableTableServer) 
         {
             if (tableRowSize < 0 )
             {
@@ -50,6 +52,7 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             paramTypes = tableParamTypes;
             paramUnitTypes = tableParamUnitTypes;
             paramFormats = tableParamFormats;
+            paramcoiffients = tableParamcoiffients;
             tableDataValues = new string[tableColumnSize];
             badRequestMb3Counter = 0;
         }
@@ -80,7 +83,6 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
                 this.TableServer.answerFormat = format;
                 await this.TableServer.SendMB3CommandToDevice(TableServer.device, modbusID, adress, size / 2);
                 return await WaitingResponseMb3Async();
-
             }
             else
             {

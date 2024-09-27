@@ -270,7 +270,8 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
         && data.TryGetValue("sizes", out var sizesObj)
         && data.TryGetValue("types", out var typesObj)
         && data.TryGetValue("unitTypes", out var untTypesObj)
-        && data.TryGetValue("formats", out var formatsObj))
+        && data.TryGetValue("formats", out var formatsObj)
+        && data.TryGetValue("coiffients", out var coificentObj))
     {
         if (idObj == null
             || namesObj == null
@@ -278,7 +279,8 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
             || sizesObj == null
             || typesObj == null
             || untTypesObj == null
-            || formatsObj == null)
+            || formatsObj == null
+            || coificentObj == null)
         {
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             return;
@@ -293,17 +295,17 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
             var types = JsonSerializer.Deserialize<List<string>>(typesObj.ToString().ToLower());
             var unitTypes = JsonSerializer.Deserialize<List<string>>(untTypesObj.ToString());
             var formats = JsonSerializer.Deserialize<List<string>>(formatsObj.ToString().ToLower());
+            var coificent = JsonSerializer.Deserialize<List<int>>(coificentObj.ToString());
 
             if (names.Count != addresses.Count || names.Count != sizes.Count ||
                 names.Count != types.Count || names.Count != unitTypes.Count ||
-                names.Count != formats.Count)
+                names.Count != formats.Count || formats.Count != coificent.Count)
             {
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 await context.Response.WriteAsync("All lists must have the same length.");
                 return;
             }
-
-            TcpDeviceTableServer.AddNewTable(id, 10, addresses.Count, names, addresses, sizes, types, unitTypes, formats);
+            await TcpDeviceTableServer.AddNewTable(id, 10, addresses.Count, names, addresses, sizes, types, unitTypes, formats, coificent);
 
             // Проверка наличия таблицы по tableid
             if (TcpDeviceTableServer.dataTablesList.Any(table => table.id == id))
@@ -362,7 +364,8 @@ app.MapGet("/api/Table/GetSavedTables", async () =>
             sizes = table.paramSizes.ToArray(),
             types = table.paramTypes.ToArray(),
             unitTypes = table.paramUnitTypes.ToArray(),
-            formats = table.paramFormats.ToArray()
+            formats = table.paramFormats.ToArray(),
+            coiffients = table.paramcoiffients.ToArray()
         }).ToList();
 
 
