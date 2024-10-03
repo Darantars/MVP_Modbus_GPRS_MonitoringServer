@@ -1,10 +1,10 @@
-
 using System.Text.Json;
 using Read_Write_GPRS_Server.Controllers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Read_Write_GPRS_Server.Db;
+using Microsoft.AspNetCore.Hosting; // Add this namespace
 
 // Указываем IP-адрес и порт для прослушивания
 string ipAddress = "90.188.113.113";
@@ -21,7 +21,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(); // Эта строка необходима, если используются контроллеры и представления
 
 var app = builder.Build();
 
@@ -33,14 +33,13 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-
 app.UseAuthentication();
 app.UseAuthorization();
 
 
-app.MapGet("/", async (HttpContext context) =>
+app.MapGet("/", async (HttpContext context, IWebHostEnvironment env) =>
 {
-    var filePath = Path.Combine(context.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath, "html", "Autorization.html");
+    var filePath = Path.Combine(env.WebRootPath, "html", "Autorization.html");
     var htmlContent = await System.IO.File.ReadAllTextAsync(filePath);
     context.Response.ContentType = "text/html";
     await context.Response.WriteAsync(htmlContent);
@@ -112,19 +111,17 @@ app.MapPost("/api/auth/register", async (HttpContext context, UserManager<Identi
     }
 });
 
-
-app.MapGet("/Home", async (HttpContext context) =>
+app.MapGet("/Home", async (HttpContext context, IWebHostEnvironment env) =>
 {
-    var filePath = Path.Combine(context.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath, "html", "Home.html");
+    var filePath = Path.Combine(env.WebRootPath, "html", "Home.html");
     var htmlContent = await System.IO.File.ReadAllTextAsync(filePath);
     context.Response.ContentType = "text/html";
     await context.Response.WriteAsync(htmlContent);
 });
 
-
-app.MapGet("/TCP-Server", async (HttpContext context) =>
+app.MapGet("/TCP-Server", async (HttpContext context, IWebHostEnvironment env) =>
 {
-    var filePath = Path.Combine(context.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath, "html", "BusServer.html");
+    var filePath = Path.Combine(env.WebRootPath, "html", "BusServer.html");
     var htmlContent = await System.IO.File.ReadAllTextAsync(filePath);
     context.Response.ContentType = "text/html";
     await context.Response.WriteAsync(htmlContent);
@@ -232,12 +229,9 @@ app.MapGet("/api/TCP/stop", async () =>
     await tcpServer.Stop();
 });
 
-
-
-
-app.MapGet("/Table", async (HttpContext context) =>
+app.MapGet("/Table", async (HttpContext context, IWebHostEnvironment env) =>
 {
-    var filePath = Path.Combine(context.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath, "html", "Table.html");
+    var filePath = Path.Combine(env.WebRootPath, "html", "Table.html");
     var htmlContent = await System.IO.File.ReadAllTextAsync(filePath);
     context.Response.ContentType = "text/html";
     await context.Response.WriteAsync(htmlContent);
@@ -332,10 +326,6 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
     }
 });
 
-
-
-
-
 app.MapGet("/api/Table/GetTableData", async (int modbusID, string tableId) =>
 {
     if (TcpDeviceTableServer.dataTablesList != null)
@@ -368,7 +358,6 @@ app.MapGet("/api/Table/GetSavedTables", async () =>
             coiffients = table.paramcoiffients.ToArray()
         }).ToList();
 
-
         return Results.Json(tables);
     }
 
@@ -381,14 +370,12 @@ app.MapGet("/api/Table/GetConnectionStatus", async () =>
     return Results.Content(answer, "text/plain");
 });
 
-app.MapGet("/LiftView", async (HttpContext context) =>
+app.MapGet("/LiftView", async (HttpContext context, IWebHostEnvironment env) =>
 {
-    var filePath = Path.Combine(context.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath, "html", "LiftView.html");
+    var filePath = Path.Combine(env.WebRootPath, "html", "LiftView.html");
     var htmlContent = await System.IO.File.ReadAllTextAsync(filePath);
     context.Response.ContentType = "text/html";
     await context.Response.WriteAsync(htmlContent);
 });
-
-
 
 app.Run();
