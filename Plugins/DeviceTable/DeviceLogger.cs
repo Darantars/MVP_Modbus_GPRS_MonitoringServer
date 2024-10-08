@@ -66,5 +66,45 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
                 throw new Exception("Ошибка записи в файл лога: " + ex.Message);
             }
         }
+
+        public List<(DateTime, string)> CollectParameterValues(string parameterName)
+        {
+            var values = new List<(DateTime, string)>();
+
+            // Разделяем deviceLog на строки
+            var lines = deviceLog.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+
+            foreach (var line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
+                // Разделяем строку на части
+                var parts = line.Split(new[] { " - " }, StringSplitOptions.None);
+                if (parts.Length != 2)
+                    continue;
+
+                var timePart = parts[0];
+                var valuePart = parts[1];
+
+                // Разделяем valuePart на имя параметра и значение
+                var valueParts = valuePart.Split(new[] { ": " }, StringSplitOptions.None);
+                if (valueParts.Length != 2)
+                    continue;
+
+                var paramName = valueParts[0];
+                var paramValue = valueParts[1];
+
+                if (paramName == parameterName)
+                {
+                    if (DateTime.TryParse(timePart, out DateTime time))
+                    {
+                        values.Add((time, paramValue));
+                    }
+                }
+            }
+
+            return values;
+        }
     }
 }

@@ -402,7 +402,7 @@ namespace Read_Write_GPRS_Server.Controllers
             private int lastPort { get; set; }
             public bool readyToGetTableData { get; set; }
 
-            private object tableAdiingLock {  get; set; }
+            private object tableAdiingLock { get; set; }
             public string answerFormat { get; set; }
             public string answerMb3 { get; set; }
 
@@ -417,13 +417,11 @@ namespace Read_Write_GPRS_Server.Controllers
                 answerFormat = "int16";
             }
 
-
-            
-            public async Task AddNewTable(string id, int tableRowSize, int tableColumnSize, List<string> tableNames, List<int> tableAdreses, List<int> tableSizes, List<string> tableTypes, List<string> tableParamUnitTypes, List<string>TableFormats, List<int> tableCoificent)
+            public async Task AddNewTable(string id, int tableRowSize, int tableColumnSize, List<string> tableNames, List<int> tableAdreses, List<int> tableSizes, List<string> tableTypes, List<string> tableParamUnitTypes, List<string> TableFormats, List<int> tableCoificent)
             {
-                lock (tableAdiingLock) 
+                lock (tableAdiingLock)
                 {
-                    Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable dataTable = new Plugins.DeviceTable.DataTable(id, tableRowSize, tableColumnSize, tableNames, tableAdreses, tableSizes, tableTypes, tableParamUnitTypes, TableFormats, tableCoificent , this);
+                    Read_Write_GPRS_Server.Plugins.DeviceTable.DataTable dataTable = new Plugins.DeviceTable.DataTable(id, tableRowSize, tableColumnSize, tableNames, tableAdreses, tableSizes, tableTypes, tableParamUnitTypes, TableFormats, tableCoificent, this);
                     dataTablesList.Add(dataTable);
                 }
             }
@@ -439,7 +437,7 @@ namespace Read_Write_GPRS_Server.Controllers
                 try
                 {
                     server = new TcpListener(IPAddress.Any, port);
-
+                    _cts = new CancellationTokenSource();
                     // Начинаем прослушивание входящих соединений
                     server.Start();
                     Console.WriteLine($"TCP-сервер связи с устройством запущен на {ipAddress}:{port}");
@@ -538,7 +536,7 @@ namespace Read_Write_GPRS_Server.Controllers
                 int[] heartBeatAtLoop = new int[5];
                 int lostConnectionCounter = 0;
 
-                while (isRunning)
+                while (isRunning && !cancellationToken.IsCancellationRequested)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
                     heartBeatAtLoop[loopCounter - 1] = device.tcp5HeartBeatTimingMessageCounter;
@@ -592,11 +590,9 @@ namespace Read_Write_GPRS_Server.Controllers
 
                     if (lostConnectionCounter >= 5)
                     {
-                        await Stop();
-                        device.tcpConnectionStatus = "В связи с нестабильным соединением осуществляется переподключение";
-                        await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
-                        await Start(lastIpAdress, lastPort);
                         lostConnectionCounter = 0;
+                        device.tcpConnectionStatus = "В связи с нестабильным соединением осуществляется переподключение";
+                        await StopTalkAndReconnect();
                     }
 
                     if (loopCounter == 5)
@@ -689,6 +685,14 @@ namespace Read_Write_GPRS_Server.Controllers
                     connectionStatus = $"Ошибка при остановке сервера: {ex.Message}";
                     Console.WriteLine($"Ошибка при остановке сервера: {ex.Message}");
                 }
+            }
+
+
+            private async Task StopTalkAndReconnect()
+            {
+                await Stop();
+                Task.Delay(10000);
+                Start(lastIpAdress, lastPort);
             }
         }
 
