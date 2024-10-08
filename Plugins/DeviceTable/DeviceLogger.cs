@@ -58,7 +58,6 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             {
                 await File.WriteAllTextAsync(logFilePath, deviceLog, System.Text.Encoding.UTF8);
                 Console.WriteLine($"Log written to file: {logFilePath}");
-                deviceLog = "";
             }
             catch (Exception ex)
             {
