@@ -35,4 +35,8 @@
     <PackageReference Include="Tcp.NET.Server" Version="7.0.26" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="UserData\Logs\" />
+  </ItemGroup>
+
 </Project>
