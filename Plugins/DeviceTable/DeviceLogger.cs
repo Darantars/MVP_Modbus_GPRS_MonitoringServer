@@ -66,9 +66,10 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             }
         }
 
-        public List<(DateTime, string)> CollectParameterValues(string parameterName)
+        public async Task <List<(DateTime date, string value)>> GetParameterValuesLast3Hours(string parameterName)
         {
-            var values = new List<(DateTime, string)>();
+            var values = new List<(DateTime date, string value)>();
+            var cutoffTime = DateTime.Now - TimeSpan.FromHours(3);
 
             // Разделяем deviceLog на строки
             var lines = deviceLog.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
@@ -94,15 +95,15 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
                 var paramName = valueParts[0];
                 var paramValue = valueParts[1];
 
-                if (paramName == parameterName)
+                DateTime.TryParse(timePart, out DateTime time);
+
+                if (paramName.Replace(" ", "").Equals(parameterName.Replace(" ", ""), StringComparison.OrdinalIgnoreCase) && paramValue != "null" && paramValue != "Не получены данные от устройства")
                 {
-                    if (DateTime.TryParse(timePart, out DateTime time))
-                    {
-                        values.Add((time, paramValue));
-                    }
+                    values.Add((date: time, value: paramValue));
                 }
             }
 
+            Console.WriteLine($"Parameter values for {parameterName}: {values.Count} entries"); // Отладочное сообщение
             return values;
         }
     }

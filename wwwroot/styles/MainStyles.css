@@ -22,10 +22,7 @@
     width: fit-content;
 }
 
-.table-section-body {
-    display: flex;
-    flex-direction: row;
-}
+
 
 .table-section-header {
     color: #2782C3;
@@ -40,7 +37,7 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: baseline;
+    align-items: stretch;
     gap: 25px;
 }
 

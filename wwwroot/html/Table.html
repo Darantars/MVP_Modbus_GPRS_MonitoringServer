@@ -9,6 +9,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <!-- xlsx Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <!-- Chart.js Core -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+
 
     <link href="../styles/MainStyles.css" rel="stylesheet">
     <script src="../scripts/TableScripts.js"></script>
@@ -99,6 +102,17 @@
             </li>
         </ul>
     </div>
+    <!-- <div style="width: 500px;"><canvas id="dimensions"></canvas></div><br/> -->
+    <div style="width: 800px;"><canvas id="acquisitions"></canvas></div>
+    <!-- <script type="module" src="dimensions.js"></script> -->
+    <script type="module" href="acquisitions.js"></script>
+
+    <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
+
+
+
+    <div id="tablesContainer" class="tables-container"></div>
+
     <div id="tablesContainer" class="tables-container"></div>
 </body>
 </html>

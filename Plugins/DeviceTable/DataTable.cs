@@ -134,5 +134,10 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             return tableDataValues;
         }
 
+        public async Task<List<(DateTime date, string value)>> GetParameterValuesLast3Hours(string parameterName)
+        {
+            return await logger.GetParameterValuesLast3Hours(parameterName);
+        }
+
     }
 }
