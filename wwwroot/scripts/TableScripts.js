@@ -7,8 +7,7 @@
     setInterval(updateData, 100); // Обновление каждые 100 миллисекунд
     updateData(); // Первоначальное обновление
 
-
-    createChart()
+    createChart();
 });
 
 let tables = [];
@@ -19,14 +18,15 @@ async function Home() {
     StopConnection();
     window.location.href = '/Home';
 }
+
 async function StartConnection() {
     const connectionPort = document.getElementById('connectionPort').value;
     await fetch(`/api/Table/start?connectionPort=${connectionPort}`);
 }
+
 async function StopConnection() {
     await fetch('/api/Table/stop');
 }
-
 
 function createChart() {
     const xValues = [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150];
@@ -44,11 +44,11 @@ function createChart() {
                 data: yValues
             },
             {
-                    fill: false,
-                    lineTension: 0,
-                    backgroundColor: "rgba(10,230,15,11.0)",
-                    borderColor: "rgba(0,0,255,0.1)",
-                    data: yValues.map((value, index) => value + Math.random() * 2 - 1)
+                fill: false,
+                lineTension: 0,
+                backgroundColor: "rgba(10,230,15,11.0)",
+                borderColor: "rgba(0,0,255,0.1)",
+                data: yValues.map((value, index) => value + Math.random() * 2 - 1)
             }]
         },
         options: {
@@ -163,15 +163,15 @@ async function addTable() {
                                     `).join('')}
                                 </tbody>
                             </table>
-
+                            <div>
+                                <canvas id="chart-${tableId}" width="800" height="1200"></canvas>
+                            </div>
                             <div class="table-section-log-control">
                                 <span class="log-status">Лог отключен</span>
                                 <button class="btn waves-effect waves-light blue">Логировать</button>
                                 <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
                             </div>
-                            <div>
-                                <canvas id="chart-${tableId}" width="500" height="500"></canvas>
-                            </div>
+
                         </div>
                     </section>
                 `;
@@ -186,7 +186,6 @@ async function addTable() {
         alert('Ошибка при добавлении таблицы.');
     }
 }
-
 
 async function updateData() {
     const response = await fetch(`/api/Table/GetConnectionStatus`);
@@ -246,7 +245,7 @@ async function updateData() {
                                 if (item && item.date && item.value) {
                                     const date = new Date(item.date); // Преобразуем строку даты в объект Date
                                     const value = parseFloat(item.value); // Получаем значение параметра
-                                    dataset.data.push({ x: date, y: value });
+                                    addData(chart, date, value, name);
                                 }
                             });
 
@@ -263,8 +262,6 @@ async function updateData() {
     }
 }
 
-
-
 function applyCoefficient(value, coefficient) {
     if (coefficient > 0 && typeof value !== 'number') {
         return value / (10 * coefficient);
@@ -273,9 +270,6 @@ function applyCoefficient(value, coefficient) {
 }
 
 function handleFileUpload(event) {
-
-    /*********                               ********* KEIL *********                                *********/
-
     const file = event.target.files[0];
     const fileName = file.name.replace(/\.[^/.]+$/, ""); // Удаляем расширение файла
     const reader = new FileReader();
@@ -316,7 +310,6 @@ function handleFileUpload(event) {
                     unitTypes: [],
                     formats: [],
                     coiffients: []
-
                 };
             }
 
@@ -411,15 +404,15 @@ async function addTableFromData(tableId, names, addresses, sizes, types, unitTyp
                                         `).join('')}
                                     </tbody>
                                 </table>
-
+                                <div>
+                                    <canvas id="chart-${tableId}" width="800" height="1200"></canvas>
+                                </div>
                                 <div class="table-section-log-control">
                                     <span class="log-status">Лог отключен</span>
                                     <button class="btn waves-effect waves-light blue">Логировать</button>
                                     <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
                                 </div>
-                                <div>
-                                    <canvas id="chart-${tableId}" width="500" height="500"></canvas>
-                                </div>
+
                             </div>
                         </section>
                     `;
@@ -438,13 +431,12 @@ async function addTableFromData(tableId, names, addresses, sizes, types, unitTyp
     }
 }
 
-
 async function UploadSavedTables() {
     const response = await fetch('/api/Table/GetSavedTables');
     const tablesData = await response.json();
 
     tablesData.forEach(tableData => {
-        const { id, names, addresses, sizes, types, unitTypes, formats, coiffients} = tableData;
+        const { id, names, addresses, sizes, types, unitTypes, formats, coiffients } = tableData;
 
         const tableContainer = document.createElement('div');
         tableContainer.innerHTML =
@@ -481,13 +473,13 @@ async function UploadSavedTables() {
                             </tbody>
                         </table>
 
+                        <div>
+                            <canvas id="chart-${id}" width="800" height="1200"></canvas>
+                        </div>
                         <div class="table-section-log-control">
                             <span class="log-status">Лог отключен</span>
                             <button class="btn waves-effect waves-light blue">Логировать</button>
                             <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
-                        </div>
-                        <div>
-                            <canvas id="chart-${tableId}" width="500" height="500"></canvas>
                         </div>
                     </div>
                 </section>
@@ -496,7 +488,24 @@ async function UploadSavedTables() {
         tables.push({ id, names, addresses, sizes, types, unitTypes, formats, coiffients });
 
         // Создание графика
-        const chart = createChartForTable(tableId, names);
-        charts.push({ id: tableId, chart: chart });
+        const chart = createChartForTable(id, names);
+        charts.push({ id: id, chart: chart });
     });
+}
+
+function addData(chart, label, newData, parameterName) {
+    chart.data.labels.push(label);
+    const dataset = chart.data.datasets.find(ds => ds.label === parameterName);
+    if (dataset) {
+        dataset.data.push(newData);
+    }
+    chart.update();
+}
+
+function removeData(chart) {
+    chart.data.labels.pop();
+    chart.data.datasets.forEach((dataset) => {
+        dataset.data.pop();
+    });
+    chart.update();
 }
