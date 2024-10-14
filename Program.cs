@@ -364,6 +364,30 @@ app.MapGet("/api/Table/GetSavedTables", async () =>
     return Results.Json(new List<object>());
 });
 
+
+app.MapGet("/api/Table/GetParameterValuesLast3Hours", async (string tableId, string parameterName) =>
+{
+    var table = TcpDeviceTableServer.dataTablesList.FirstOrDefault(t => t.id == tableId);
+    if (table != null)
+    {
+        var values = await table.GetParameterValuesLast3Hours(parameterName);
+        var result = values.Select(v => new
+        {
+            date = v.date,
+            value = v.value
+        }).ToList();
+
+        return Results.Json(result);
+    }
+
+    return Results.Json(new List<object>
+    {
+        new { date = DateTime.Now, value = "1:1" },
+        new { date = DateTime.Now, value = "2:2" },
+        new { date = DateTime.Now, value = "3:3" }
+    });
+});
+
 app.MapGet("/api/Table/GetConnectionStatus", async () =>
 {
     string answer = TcpDeviceTableServer.connectionStatus;
