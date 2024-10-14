@@ -98,92 +98,83 @@ function getRandomColor() {
 }
 
 async function addTable() {
-    const tableId = document.getElementById('newTableId').value;
-    const names = document.getElementById('newTableNames').value;
-    const addresses = document.getElementById('addresses').value;
-    const sizes = document.getElementById('newTableSizes').value;
-    const types = document.getElementById('newTableTypes').value;
-    const unitTypes = document.getElementById('newTableUnitTypes').value;
-    const formats = document.getElementById('newTableFormats').value;
-    const coiffients = document.getElementById('newTableCoiffients').value;
+    // ... (остальной код)
 
-    if (!tableId || !addresses) {
-        alert('Пожалуйста, заполните все поля.');
-        return;
-    }
+    const tableContainer = document.createElement('div');
+    tableContainer.innerHTML =
+        `
+        <section class="table-section" id="${tableId}" >
+            <h4 class="table-section-header">${tableId}</h4>
+            <div class="table-section-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Название параметра</th>
+                            <th>Значение</th>
+                            <th>Ед.изм</th>
+                            <th>Адрес</th>
+                            <th>Формат</th>
+                            <th>Вид</th>
+                            <th>Размер</th>
+                            <th>Койфициент</th>
+                        </tr>
+                    </thead>
+                    <tbody id="${tableId}">
+                        ${namesArray.map((name, index) => `
+                            <tr>
+                                <td>${name}</td>
+                                <td>Не опрашивается</td>
+                                <td>${unitTypesArray[index]}</td>
+                                <td>${addressesArray[index]}</td>
+                                <td>${formatsArray[index]}</td>
+                                <td>${typesArray[index]}</td>
+                                <td>${sizesArray[index]}</td>
+                                <td>${coiffientsArray[index]}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div>
+                    <canvas id="chart-${tableId}" width="800" height="1200"></canvas>
+                </div>
+                <div class="table-section-log-control">
+                    <span class="log-status">Лог отключен</span>
+                    <button class="btn waves-effect waves-light blue">Логировать</button>
+                    <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
+                    <button class="btn waves-effect waves-light red" onclick="deleteTable('${tableId}')">Удалить таблицу</button>
+                </div>
+            </div>
+        </section>
+        `;
+    document.getElementById('tablesContainer').appendChild(tableContainer);
+    tables.push({ id: tableId, names: namesArray, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray, coiffients: coiffientsArray });
 
-    const namesArray = names.split(',').map(String);
-    const addressesArray = addresses.split(',').map(Number);
-    const sizesArray = sizes.split(',').map(Number);
-    const typesArray = types.split(',').map(String);
-    const unitTypesArray = unitTypes.split(',').map(String);
-    const formatsArray = formats.split(',').map(String);
-    const coiffientsArray = coiffients.split(',').map(Number);
+    // Создание графика
+    const chart = createChartForTable(tableId, namesArray);
+    charts.push({ id: tableId, chart: chart });
+}
 
-    const response = await fetch(`/api/Table/AddNewTable`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ id: tableId, names: namesArray, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray, coiffients: coiffientsArray })
+async function deleteTable(tableId) {
+    const response = await fetch(`/api/Table/DeleteTable?tableId=${tableId}`, { 
+        method: 'DELETE'
     });
 
     if (response.ok) {
-        const tableContainer = document.createElement('div');
-        tableContainer.innerHTML =
-            `
-                    <section class="table-section">
-                        <h4 class="table-section-header">${tableId}</h4>
-                        <div class="table-section-body">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Название параметра</th>
-                                        <th>Значение</th>
-                                        <th>Ед.изм</th>
-                                        <th>Адрес</th>
-                                        <th>Формат</th>
-                                        <th>Вид</th>
-                                        <th>Размер</th>
-                                        <th>Койфициент</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="${tableId}">
-                                    ${namesArray.map((name, index) => `
-                                        <tr>
-                                            <td>${name}</td>
-                                            <td>Не опрашивается</td>
-                                            <td>${unitTypesArray[index]}</td>
-                                            <td>${addressesArray[index]}</td>
-                                            <td>${formatsArray[index]}</td>
-                                            <td>${typesArray[index]}</td>
-                                            <td>${sizesArray[index]}</td>
-                                            <td>${coiffientsArray[index]}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                            <div>
-                                <canvas id="chart-${tableId}" width="800" height="1200"></canvas>
-                            </div>
-                            <div class="table-section-log-control">
-                                <span class="log-status">Лог отключен</span>
-                                <button class="btn waves-effect waves-light blue">Логировать</button>
-                                <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
-                            </div>
+        // Удаление таблицы из DOM
+        const tableSection = document.querySelector(`section[id="${tableId}"]`);
+        if (tableSection) {
+            tableSection.remove();
+        }
 
-                        </div>
-                    </section>
-                `;
-        document.getElementById('tablesContainer').appendChild(tableContainer);
-        tables.push({ id: tableId, names: namesArray, addresses: addressesArray, sizes: sizesArray, types: typesArray, unitTypes: unitTypesArray, formats: formatsArray, coiffients: coiffientsArray });
+        // Удаление таблицы из массива tables
+        tables = tables.filter(table => table.id !== tableId);
 
-        // Создание графика
-        const chart = createChartForTable(tableId, namesArray);
-        charts.push({ id: tableId, chart: chart });
-    }
-    else {
-        alert('Ошибка при добавлении таблицы.');
+        // Удаление графика из массива charts
+        charts = charts.filter(chart => chart.id !== tableId);
+
+
+    } else {
+        alert('Ошибка при удалении таблицы.');
     }
 }
 
@@ -373,7 +364,7 @@ async function addTableFromData(tableId, names, addresses, sizes, types, unitTyp
             const tableContainer = document.createElement('div');
             tableContainer.innerHTML =
                 `
-                        <section class="table-section">
+                    <section class="table-section" id="${tableId}" >
                             <h4 class="table-section-header">${tableId}</h4>
                             <div class="table-section-body">
                                 <table>
@@ -411,8 +402,8 @@ async function addTableFromData(tableId, names, addresses, sizes, types, unitTyp
                                     <span class="log-status">Лог отключен</span>
                                     <button class="btn waves-effect waves-light blue">Логировать</button>
                                     <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
+                                    <button class="btn waves-effect waves-light red" onclick="deleteTable('${tableId}')">Удалить таблицу</button>
                                 </div>
-
                             </div>
                         </section>
                     `;
@@ -441,7 +432,7 @@ async function UploadSavedTables() {
         const tableContainer = document.createElement('div');
         tableContainer.innerHTML =
             `
-                <section class="table-section">
+                <section class="table-section" id="${id}" >
                     <h4 class="table-section-header">${id}</h4>
                     <div class="table-section-body">
                         <table>
@@ -480,6 +471,7 @@ async function UploadSavedTables() {
                             <span class="log-status">Лог отключен</span>
                             <button class="btn waves-effect waves-light blue">Логировать</button>
                             <button class="btn waves-effect waves-light blue">Выгрузить лог</button>
+                            <button class="btn waves-effect waves-light red" onclick="deleteTable('${id}')">Удалить таблицу</button>
                         </div>
                     </div>
                 </section>

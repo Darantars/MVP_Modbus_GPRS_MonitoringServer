@@ -326,6 +326,21 @@ app.MapPost("/api/Table/AddNewTable", async (HttpContext context) =>
     }
 });
 
+app.MapDelete("/api/Table/DeleteTable", async (string tableId) =>
+{
+    if (TcpDeviceTableServer.dataTablesList != null)
+    {
+        var table = TcpDeviceTableServer.dataTablesList.FirstOrDefault(t => t.id == tableId);
+        if (table != null)
+        {
+            TcpDeviceTableServer.dataTablesList.Remove(table);
+            return Results.Ok($"Table with id '{tableId}' successfully deleted.");
+        }
+    }
+
+    return Results.NotFound($"Table with id '{tableId}' not found.");
+});
+
 app.MapGet("/api/Table/GetTableData", async (int modbusID, string tableId) =>
 {
     if (TcpDeviceTableServer.dataTablesList != null)
