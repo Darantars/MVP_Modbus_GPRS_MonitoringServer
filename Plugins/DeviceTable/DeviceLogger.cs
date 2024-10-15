@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -32,7 +33,7 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             {
                 await CreateNewLogFileAsync();
             }
-            deviceLog += $"{changeTime.ToString("dd.MM.yyyy HH:mm:ss")} - {parametrName}: {value}\r\n";
+            deviceLog += $"{{\"changeTime\": \"{changeTime.ToString("yyyy-MM-ddTHH:mm:ss")}\", \"parametrName\": \"{parametrName}\", \"value\": \"{value}\"}}\r\n";
             await WriteLogToFileAsync();
         }
 
@@ -66,7 +67,7 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             }
         }
 
-        public async Task <List<(DateTime date, string value)>> GetParameterValuesLast3Hours(string parameterName)
+        public async Task<List<(DateTime date, string value)>> GetParameterValuesLast3Hours(string parameterName)
         {
             var values = new List<(DateTime date, string value)>();
             var cutoffTime = DateTime.Now - TimeSpan.FromHours(3);
@@ -79,32 +80,42 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
 
-                // Разделяем строку на части
-                var parts = line.Split(new[] { " - " }, StringSplitOptions.None);
-                if (parts.Length != 2)
-                    continue;
-
-                var timePart = parts[0];
-                var valuePart = parts[1];
-
-                // Разделяем valuePart на имя параметра и значение
-                var valueParts = valuePart.Split(new[] { ": " }, StringSplitOptions.None);
-                if (valueParts.Length != 2)
-                    continue;
-
-                var paramName = valueParts[0];
-                var paramValue = valueParts[1];
-
-                DateTime.TryParse(timePart, out DateTime time);
-
-                if (paramName.Replace(" ", "").Equals(parameterName.Replace(" ", ""), StringComparison.OrdinalIgnoreCase) && paramValue != "null" && paramValue != "Не получены данные от устройства")
+                try
                 {
-                    values.Add((date: time, value: paramValue));
+                    // Парсим строку как JSON объект
+                    var logEntry = JsonConvert.DeserializeObject<LogEntry>(line);
+
+                    if (logEntry.parametrName.Replace(" ", "").Equals(parameterName.Replace(" ", ""), StringComparison.OrdinalIgnoreCase) 
+                        && logEntry.value != "null" && logEntry.value != "Не получены данные от устройства" 
+                        && IsNumeric(logEntry.value))
+                    {
+                        values.Add((date: logEntry.changeTime, value: logEntry.value));
+                        System.Console.WriteLine(logEntry.value);
+                    }
+                }
+                catch (JsonException)
+                {
+                    // Обработка ошибки парсинга JSON
+                    Console.WriteLine($"Failed to parse log entry: {line}");
                 }
             }
 
             Console.WriteLine($"Parameter values for {parameterName}: {values.Count} entries"); // Отладочное сообщение
             return values;
         }
+
+        private bool IsNumeric(string value)
+        {
+            return double.TryParse(value, out _);
+        }
+
+        // Класс для представления записи лога
+        public class LogEntry
+        {
+            public DateTime changeTime { get; set; }
+            public string parametrName { get; set; }
+            public string value { get; set; }
+        }
+        
     }
 }
