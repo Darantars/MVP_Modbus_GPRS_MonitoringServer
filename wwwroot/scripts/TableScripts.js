@@ -4,7 +4,7 @@
 
     await UploadSavedTables(); // Загрузка сохраненных таблиц при загрузке страницы
 
-    setInterval(updateData, 0); // Обновление каждые 100 миллисекунд
+    setInterval(updateData, 100); // Обновление каждые 100 миллисекунд
     updateData(); // Первоначальное обновление
 });
 
@@ -41,12 +41,15 @@ function createChartForTable(tableId, parameterNames) {
         options: {
             responsive: true,
             scales: {
-            x: {
-                type: 'time',
-                time: {
-                        unit: 'minute'
+                x: [{
+                    type: 'time',
+                    time: {
+                        unit: 'second',
+                        displayFormats: {
+                            second: 'HH:mm:ss'
                         }
                     }
+                }]     
             },
             ticks: {
                 source: 'auto',
@@ -58,7 +61,7 @@ function createChartForTable(tableId, parameterNames) {
                     return value;
                 }
             }
-            }
+        }
     });
 
     return chart;
@@ -74,7 +77,6 @@ function getRandomColor() {
 }
 
 async function addTable() {
-    // ... (остальной код)
 
     const tableContainer = document.createElement('div');
     tableContainer.innerHTML =
@@ -218,21 +220,27 @@ async function updateData() {
 
                             // Сортировка данных по времени
                             data.sort((a, b) => new Date(a.date) - new Date(b.date));
-                            data.forEach(item => {
-                                if (item && item.date && item.value) {
-                                    const date = new Date(item.date); // Преобразуем строку даты в объект Date
-                                    console.log(item.value);
-                                    const value = parseFloat(item.value.replace(",", ".")); // Получаем значение параметра
-                                    console.log(value);
-                                    addData(chart, date, value, name);
-                                }
-                            });
+
+                            // Найти минимальное и максимальное время
+                            const minTime = new Date(data[0].date);
+                            const maxTime = new Date(data[data.length - 1].date);
+
+                            // Добавить данные с временными метками и "пустыми" точками
+                            let currentTime = new Date(minTime);
+                            while (currentTime <= maxTime) {
+                                const item = data.find(d => new Date(d.date).getTime() === currentTime.getTime());
+                                const value = item ? parseFloat(item.value.replace(",", ".")) : null;
+                                addData(chart, currentTime, value, name);
+                                currentTime.setSeconds(currentTime.getSeconds() + 1);
+                            }
 
                             chart.update();
                         } catch (error) {
                             console.error(`Error fetching parameter values for ${name}:`, error);
                         }
                     }
+                
+
                 }
             }
         }
