@@ -2,10 +2,14 @@
     var elems = document.querySelectorAll('.collapsible');
     var instances = M.Collapsible.init(elems);
 
-    await UploadSavedTables(); // Загрузка сохраненных таблиц при загрузке страницы
+    await UploadSavedTables();
 
-    setInterval(updateTableData, 0); // Обновление каждые 100 миллисекунд
-    updateTableData(); // Первоначальное обновление
+    setInterval(updateTableData, 0);
+    setInterval(updateChartData, 1000);
+
+    // Первоначальное обновление
+    updateTableData();
+    updateChartData();
 });
 
 let tables = [];
@@ -223,40 +227,43 @@ async function updateTableData() {
 
 async function updateChartData() {
     // *** Работа с графиками ***
-    const chartEntry = charts.find(c => c.id === tableId);
-    if (chartEntry) {
-        const chart = chartEntry.chart;
-        await freshChartData(chart);    // TODO: очень неоптимально, переделать
-        for (const name of table.names) {
-            console.log(`Fetching parameter values for ${name}...`); // Отладочное сообщение
-            try {
-                const parameterValuesResponse = await fetch(`/api/Table/GetParameterValuesLast3Hours?tableId=${tableId}&parameterName=${name}`);
-                const data = await parameterValuesResponse.json();
-                let dataset = chart.data.datasets.find(ds => ds.label === name);
-                if (!dataset) {
-                    console.warn(`Dataset not found for parameter ${name}`);
-                    continue;
+    for (const table of tables) {
+        const tableId = table.id;
+        const chartEntry = charts.find(c => c.id === tableId);
+        if (chartEntry) {
+            const chart = chartEntry.chart;
+            await freshChartData(chart);    // TODO: очень неоптимально, переделать
+            for (const name of table.names) {
+                console.log(`Fetching parameter values for ${name}...`); // Отладочное сообщение
+                try {
+                    const parameterValuesResponse = await fetch(`/api/Table/GetParameterValuesLast3Hours?tableId=${tableId}&parameterName=${name}`);
+                    const data = await parameterValuesResponse.json();
+                    let dataset = chart.data.datasets.find(ds => ds.label === name);
+                    if (!dataset) {
+                        console.warn(`Dataset not found for parameter ${name}`);
+                        continue;
+                    }
+
+                    // Сортировка данных по времени
+                    data.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                    // Найти минимальное и максимальное время
+                    const minTime = new Date(data[0].date);
+                    const maxTime = new Date(data[data.length - 1].date);
+
+                    // Добавить данные с временными метками и "пустыми" точками
+                    let currentTime = new Date(minTime);
+                    while (currentTime <= maxTime) {
+                        const item = data.find(d => new Date(d.date).getTime() === currentTime.getTime());
+                        const value = item ? parseFloat(item.value.replace(",", ".")) : null;
+                        addData(chart, currentTime, value, name);
+                        currentTime.setSeconds(currentTime.getSeconds() + 1);
+                    }
+
+                    chart.update();
+                } catch (error) {
+                    console.error(`Error fetching parameter values for ${name}:`, error);
                 }
-
-                // Сортировка данных по времени
-                data.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-                // Найти минимальное и максимальное время
-                const minTime = new Date(data[0].date);
-                const maxTime = new Date(data[data.length - 1].date);
-
-                // Добавить данные с временными метками и "пустыми" точками
-                let currentTime = new Date(minTime);
-                while (currentTime <= maxTime) {
-                    const item = data.find(d => new Date(d.date).getTime() === currentTime.getTime());
-                    const value = item ? parseFloat(item.value.replace(",", ".")) : null;
-                    addData(chart, currentTime, value, name);
-                    currentTime.setSeconds(currentTime.getSeconds() + 1);
-                }
-
-                chart.update();
-            } catch (error) {
-                console.error(`Error fetching parameter values for ${name}:`, error);
             }
         }
     }

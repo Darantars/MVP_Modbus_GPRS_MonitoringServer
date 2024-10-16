@@ -90,7 +90,6 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
                         && IsNumeric(logEntry.value))
                     {
                         values.Add((date: logEntry.changeTime, value: logEntry.value));
-                        System.Console.WriteLine(logEntry.value);
                     }
                 }
                 catch (JsonException)
@@ -100,7 +99,6 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
                 }
             }
 
-            Console.WriteLine($"Parameter values for {parameterName}: {values.Count} entries"); // Отладочное сообщение
             return values;
         }
 
