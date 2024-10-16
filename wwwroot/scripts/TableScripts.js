@@ -171,7 +171,6 @@ async function updateData() {
                 const tableId = table.id;
                 const tableDataResponse = await fetch(`/api/Table/GetTableData?modbusID=${modbusID}&tableId=${tableId}`);
                 const tableData = await tableDataResponse.json();
-
                 const tableBody = document.getElementById(tableId);
 
                 if (tableBody) {
