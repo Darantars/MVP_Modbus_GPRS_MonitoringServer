@@ -4,8 +4,8 @@
 
     await UploadSavedTables(); // Загрузка сохраненных таблиц при загрузке страницы
 
-    setInterval(updateData, 100); // Обновление каждые 100 миллисекунд
-    updateData(); // Первоначальное обновление
+    setInterval(updateTableData, 0); // Обновление каждые 100 миллисекунд
+    updateTableData(); // Первоначальное обновление
 });
 
 let tables = [];
@@ -155,8 +155,7 @@ async function deleteTable(tableId) {
         alert('Ошибка при удалении таблицы.');
     }
 }
-
-async function updateData() {
+async function updateTableData() {
     const response = await fetch(`/api/Table/GetConnectionStatus`);
     const connectionStatus = await response.text();
     document.getElementById(`conectionStatus`).innerHTML = connectionStatus;
@@ -166,80 +165,52 @@ async function updateData() {
 
         // *** Работа с таблицей ***
         const modbusID = document.getElementById('modbusID').value;
-        if (modbusID !== "") {
+        if (modbusID != "") {
             for (const table of tables) {
                 const tableId = table.id;
                 const tableDataResponse = await fetch(`/api/Table/GetTableData?modbusID=${modbusID}&tableId=${tableId}`);
                 const tableData = await tableDataResponse.json();
+
                 const tableBody = document.getElementById(tableId);
 
-                if (tableBody) {
-                    if (tableData.includes("Не опрашивается")) {
-                        // Заполнение таблицы строками с "Не опрашивается"
-                        table.names.forEach((name, index) => {
-                            const tr = tableBody.querySelectorAll('tr')[index];
-                            if (tr) {
-                                const tdValue = tr.querySelectorAll('td')[1];
-                                if (tdValue) {
-                                    tdValue.textContent = "Не опрашивается";
-                                }
-                            }
-                        });
-                    } else {
-                        // Заполнение таблицы реальными данными
-                        tableData.forEach((row, index) => {
-                            const tr = tableBody.querySelectorAll('tr')[index];
-                            if (tr) {
-                                const tdValue = tr.querySelectorAll('td')[1];
-                                if (tdValue) {
-                                    const coefficient = table.coiffients[index];
-                                    tdValue.textContent = applyCoefficient(row, coefficient);
-                                }
-                            }
-                        });
+                if (tableData.includes("Не опрашивается")) {
+
+
+                    if (!tableBody) {
+                        console.error(`Table with id ${tableId} not found`);
+                        continue;
                     }
+
+                    const tr = tableBody.querySelectorAll('tr')[index];
+                    if (!tr) {
+                        console.error(`Row at index ${index} not found in table with id ${tableId}`);
+                        continue;
+                    }
+
+                    const tdValue = tr.querySelectorAll('td')[1];
+                    if (!tdValue) {
+                        console.error(`Cell at index 1 not found in row ${index} of table with id ${tableId}`);
+                        continue;
+                    }
+
+
+                    // Заполнение таблицы строками с "Не опрашивается"
+                    table.names.forEach((name, index) => {
+                        const tr = tableBody.querySelectorAll('tr')[index];
+
+                        // Добавление столбца с названиями параметров
+                        const tdValue = tr.querySelectorAll('td')[1];
+                        tdValue.textContent = "Не опрашивается";
+                    });
                 } else {
-                    console.error(`Table body with id ${tableId} not found.`);
-                }
+                    // Заполнение таблицы реальными данными
+                    tableData.forEach((row, index) => {
+                        const tr = tableBody.querySelectorAll('tr')[index + 1];
+                        const tdValue = tr.querySelectorAll('td')[1];
+                        const coefficient = table.coiffients[index];
+                        tdValue.textContent = applyCoefficient(row, coefficient);
 
-                const chartEntry = charts.find(c => c.id === tableId);
-                if (chartEntry) {
-                    const chart = chartEntry.chart;
-                    await freshChartData(chart);    // TODO: очень неоптимально, переделать
-                    for (const name of table.names) {
-                        console.log(`Fetching parameter values for ${name}...`); // Отладочное сообщение
-                        try {
-                            const parameterValuesResponse = await fetch(`/api/Table/GetParameterValuesLast3Hours?tableId=${tableId}&parameterName=${name}`);
-                            const data = await parameterValuesResponse.json();
-                            let dataset = chart.data.datasets.find(ds => ds.label === name);
-                            if (!dataset) {
-                                console.warn(`Dataset not found for parameter ${name}`);
-                                continue;
-                            }
-
-                            // Сортировка данных по времени
-                            data.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-                            // Найти минимальное и максимальное время
-                            const minTime = new Date(data[0].date);
-                            const maxTime = new Date(data[data.length - 1].date);
-
-                            // Добавить данные с временными метками и "пустыми" точками
-                            let currentTime = new Date(minTime);
-                            while (currentTime <= maxTime) {
-                                const item = data.find(d => new Date(d.date).getTime() === currentTime.getTime());
-                                const value = item ? parseFloat(item.value.replace(",", ".")) : null;
-                                addData(chart, currentTime, value, name);
-                                currentTime.setSeconds(currentTime.getSeconds() + 1);
-                            }
-
-                            chart.update();
-                        } catch (error) {
-                            console.error(`Error fetching parameter values for ${name}:`, error);
-                        }
-                    }
-                
-
+                    });
                 }
             }
         }
@@ -247,6 +218,51 @@ async function updateData() {
         updateToken = true;
     }
 }
+
+
+
+async function updateChartData() {
+    // *** Работа с графиками ***
+    const chartEntry = charts.find(c => c.id === tableId);
+    if (chartEntry) {
+        const chart = chartEntry.chart;
+        await freshChartData(chart);    // TODO: очень неоптимально, переделать
+        for (const name of table.names) {
+            console.log(`Fetching parameter values for ${name}...`); // Отладочное сообщение
+            try {
+                const parameterValuesResponse = await fetch(`/api/Table/GetParameterValuesLast3Hours?tableId=${tableId}&parameterName=${name}`);
+                const data = await parameterValuesResponse.json();
+                let dataset = chart.data.datasets.find(ds => ds.label === name);
+                if (!dataset) {
+                    console.warn(`Dataset not found for parameter ${name}`);
+                    continue;
+                }
+
+                // Сортировка данных по времени
+                data.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                // Найти минимальное и максимальное время
+                const minTime = new Date(data[0].date);
+                const maxTime = new Date(data[data.length - 1].date);
+
+                // Добавить данные с временными метками и "пустыми" точками
+                let currentTime = new Date(minTime);
+                while (currentTime <= maxTime) {
+                    const item = data.find(d => new Date(d.date).getTime() === currentTime.getTime());
+                    const value = item ? parseFloat(item.value.replace(",", ".")) : null;
+                    addData(chart, currentTime, value, name);
+                    currentTime.setSeconds(currentTime.getSeconds() + 1);
+                }
+
+                chart.update();
+            } catch (error) {
+                console.error(`Error fetching parameter values for ${name}:`, error);
+            }
+        }
+    }
+}
+
+
 
 function parseCustomDate(dateString) {
     const [day, month, year, hours, minutes, seconds] = dateString.match(/\d+/g);
@@ -283,8 +299,8 @@ function removeData(chart) {
 }
 
 function applyCoefficient(value, coefficient) {
-    if (coefficient > 0 && typeof value !== 'number') {
-        return value / (10 * coefficient);
+    if (coefficient > 0 && typeof parseFloat(value) == 'number') {
+        return parseFloat(value.replace(',', '.')).toFixed(6) / (10 ** coefficient);
     }
     return value;
 }
