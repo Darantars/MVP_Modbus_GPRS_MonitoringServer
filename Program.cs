@@ -388,20 +388,25 @@ app.MapGet("/api/Table/GetParameterValuesLast3Hours", async (string tableId, str
         var values = await table.GetParameterValuesLast3Hours(parameterName);
         var result = values.Select(v => new
         {
-            date = v.date,
+            date = v.date.ToString("yyyy-MM-ddTHH:mm:ss"), // Формат даты для JSON
             value = v.value
         }).ToList();
 
         return Results.Json(result);
     }
 
+    // Логирование для отладки
+    Console.WriteLine($"Table with id {tableId} not found.");
+
+    // Возвращаем заглушку, если таблица не найдена
     return Results.Json(new List<object>
     {
-        new { date = DateTime.Now, value = "1:1" },
-        new { date = DateTime.Now, value = "2:2" },
-        new { date = DateTime.Now, value = "3:3" }
+        new { date = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss"), value = "1:1" },
+        new { date = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss"), value = "2:2" },
+        new { date = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss"), value = "3:3" }
     });
 });
+
 
 app.MapGet("/api/Table/GetConnectionStatus", async () =>
 {
