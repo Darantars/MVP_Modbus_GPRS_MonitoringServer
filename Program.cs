@@ -364,13 +364,13 @@ app.MapGet("/api/Table/GetSavedTables", async () =>
         var tables = TcpDeviceTableServer.dataTablesList.Select(table => new
         {
             id = table.id,
-            names = table.paramNames.ToArray(),
-            addresses = table.paramAdreses.ToArray(),
-            sizes = table.paramSizes.ToArray(),
-            types = table.paramTypes.ToArray(),
-            unitTypes = table.paramUnitTypes.ToArray(),
-            formats = table.paramFormats.ToArray(),
-            coiffients = table.paramcoiffients.ToArray()
+            names = table.Parametrs.Select(param => param.name).ToArray(),
+            addresses = table.Parametrs.Select(param => param.adress).ToArray(),
+            sizes = table.Parametrs.Select(param => param.size).ToArray(),
+            types = table.Parametrs.Select(param => param.type).ToArray(),
+            unitTypes = table.Parametrs.Select(param => param.unitType).ToArray(),
+            formats = table.Parametrs.Select(param => param.format).ToArray(),
+            coiffients = table.Parametrs.Select(param => param.coiffient).ToArray()
         }).ToList();
 
         return Results.Json(tables);

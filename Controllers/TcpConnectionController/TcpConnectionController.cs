@@ -417,7 +417,7 @@ namespace Read_Write_GPRS_Server.Controllers
                 tableAdiingLock = new CancellationToken();
                 answerMb3 = null;
                 answerFormat = "int16";
-                readingMode = "buffer";
+                readingMode = "default";
             }
 
             public async Task AddNewTable(string id, int tableRowSize, int tableColumnSize, List<string> tableNames, List<int> tableAdreses, List<int> tableSizes, List<string> tableTypes, List<string> tableParamUnitTypes, List<string> TableFormats, List<int> tableCoificent)

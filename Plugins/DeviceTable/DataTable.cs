@@ -14,21 +14,7 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
         private string[] defHeaders = new string[] { "Имя", "Значение", "Ед. измер", "Адрес(dec)", "Формат", "Вид", "Размер", "Запись", "Минимум", "Максимум", "Заводские" };
 
-        public List<string> paramNames { get; set; }
-
-        public string[] tableDataValues { get; set; }
-
-        public List<int> paramAdreses { get; set; }
-
-        public List<int> paramcoiffients { get; set; }
-
-        public List<int> paramSizes { get; set; }
-
-        public List<string> paramTypes { get; set; }
-
-        public List<string> paramUnitTypes { get; set; }
-
-        public List<string> paramFormats { get; set; }
+        public List<Parametr> Parametrs { get; set; }
 
         private Controllers.TcpConnectionController.TcpDeviceTableServer TableServer { get; set; }
 
@@ -47,14 +33,21 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             rowSize = tableRowSize;
             columnSize = tableColumnSize;
             headers = new string[tableRowSize];
-            paramNames = tableParamNames;
-            paramAdreses = tableParamAdreses;
-            paramSizes = tableParamSizes;
-            paramTypes = tableParamTypes;
-            paramUnitTypes = tableParamUnitTypes;
-            paramFormats = tableParamFormats;
-            paramcoiffients = tableParamcoiffients;
-            tableDataValues = new string[tableColumnSize];
+            Parametrs = new List<Parametr>();
+            for (int i = 0; i < tableColumnSize; i++)
+            {
+                Parametrs.Add(new Parametr(
+                tableParamNames[i],
+                "Не определено",
+                tableParamAdreses[i],
+                tableParamSizes[i],
+                tableParamTypes[i],
+                tableParamUnitTypes[i],
+                tableParamFormats[i],
+                tableParamcoiffients[i]
+                ));
+            }
+
             badRequestMb3Counter = 0;
             logger = new DeviceLogger(tableId);
         }
@@ -68,15 +61,15 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
                 {
                     for (int i = 0; i < columnSize; i++)
                     {
-                        tableDataValues[i] = await GetValueByAdressMb(modbusID, this.paramAdreses[i], this.paramSizes[i], this.paramFormats[i]);
-                        await logger.LogParamChangeAsync(DateTime.Now, paramNames[i], tableDataValues[i]);
+                        Parametrs[i].value = await GetValueByAdressMb(modbusID, this.Parametrs[i].adress, this.Parametrs[i].size, this.Parametrs[i].format);
+                        await logger.LogParamChangeAsync(DateTime.Now, Parametrs[i].name, Parametrs[i].value);
                     }
                 }
                 else if (mode == "buffer")
                 {
                     try
                     {
-                        List<int> sortedAdresess = paramAdreses.OrderBy(a => a).ToList();
+                        List<int> sortedAdresess = (Parametrs.Select(param => param.adress).ToList()).OrderBy(a => a).ToList();
                         if (sortedAdresess[sortedAdresess.Count - 1] - sortedAdresess[2] < 50)
                         {
                             int maxAdress = sortedAdresess[sortedAdresess.Count - 1];
@@ -182,7 +175,7 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
         public string[] GetTableDataValues()
         {
-            return tableDataValues;
+            return Parametrs.Select(param => param.value).ToArray();
         }
 
         public async Task<List<(DateTime date, string value)>> GetParameterValuesLast3Hours(string parameterName)
