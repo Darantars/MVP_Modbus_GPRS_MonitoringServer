@@ -90,6 +90,28 @@
     width: 100%;
 }
 
+.nav-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.nav-wrapper .switch {
+    margin-left: 20px;
+}
+
+.nav-wrapper .switch label {
+    display: flex;
+    align-items: center;
+}
+
+.nav-wrapper .switch label span {
+    margin-left: 10px;
+}
+
+.nav-wrapper .brand-logo {
+    margin-right: 20px;
+}
+
 .menu-container {
     display: flex;
     justify-content: center;
