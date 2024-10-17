@@ -348,7 +348,7 @@ app.MapGet("/api/Table/GetTableData", async (int modbusID, string tableId) =>
         var table = TcpDeviceTableServer.dataTablesList.FirstOrDefault(t => t.id == tableId);
         if (table != null)
         {
-            await table.GetTableDataAsync("default", modbusID);
+            await table.GetTableDataAsync(TcpDeviceTableServer.readingMode, modbusID);
             var tableDataValues = table.GetTableDataValues();
             return Results.Json(tableDataValues);
         }

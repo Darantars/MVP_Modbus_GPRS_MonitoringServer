@@ -403,8 +403,6 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
             }
         }
 
-
-
         private class Parser()
         {
             public static bool TryParseMb3TwoRequestsAndResponses(byte[] byteData, ref int i, List<byte[]> commands)

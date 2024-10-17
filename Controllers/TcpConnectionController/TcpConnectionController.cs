@@ -406,6 +406,8 @@ namespace Read_Write_GPRS_Server.Controllers
             public string answerFormat { get; set; }
             public string answerMb3 { get; set; }
 
+            public string readingMode { get; set; }
+
             public TcpDeviceTableServer()
             {
                 connectionStatus = "Disconnected";
@@ -415,6 +417,7 @@ namespace Read_Write_GPRS_Server.Controllers
                 tableAdiingLock = new CancellationToken();
                 answerMb3 = null;
                 answerFormat = "int16";
+                readingMode = "buffer";
             }
 
             public async Task AddNewTable(string id, int tableRowSize, int tableColumnSize, List<string> tableNames, List<int> tableAdreses, List<int> tableSizes, List<string> tableTypes, List<string> tableParamUnitTypes, List<string> TableFormats, List<int> tableCoificent)
@@ -500,7 +503,14 @@ namespace Read_Write_GPRS_Server.Controllers
                                     cuttedMessageMB = cuttedMessageMB + "<br>" + BitConverter.ToString(responseList[i]);
                                     if (responseList[i][1] == 3)
                                     {
-                                        answerMb3 = Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], answerFormat); //Сменить для перехода на несколько таблиц
+                                        if(readingMode == "default")
+                                        {
+                                            answerMb3 = Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], answerFormat);
+                                        }
+                                        else if(readingMode == "buffer") //О госпади, какая срань...
+                                        {
+                                            answerMb3 = Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], "float"); //Buffer: Нужно наисать код учитывающий не только float
+                                        }
                                     }
                                 }
                             });
