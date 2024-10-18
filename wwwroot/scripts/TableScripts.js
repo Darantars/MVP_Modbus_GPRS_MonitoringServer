@@ -5,20 +5,29 @@
     await UploadSavedTables();
 
     setInterval(updateTableData, 0);
-    setInterval(updateChartData, 1000);
+   /* setInterval(updateChartData, 1000);                  ВКЛЮЧИ*/
 
     // Первоначальное обновление
     updateTableData();
     updateChartData();
 
     // Инициализация переключателя
+    const readMode = document.getElementById('readMode');
+    readMode.addEventListener('change', async function () {
+    if (this.checked) {
+        await SwitchToBufferReadMode();
+    } else {
+        await SwitchToSingleReadMode();
+    }
+    });
+
     const connectionSwitch = document.getElementById('connectionSwitch');
     connectionSwitch.addEventListener('change', async function () {
-    if (this.checked) {
-        await StartConnection();
-    } else {
-        await StopConnection();
-    }
+        if (this.checked) {
+            await StartConnection();
+        } else {
+            await StopConnection();
+        }
     });
 });
 
@@ -38,6 +47,14 @@ async function StartConnection() {
 
 async function StopConnection() {
     await fetch('/api/Table/stop');
+}
+
+async function SwitchToSingleReadMode() {
+    await fetch('/api/Table/SwitchToSingleReadMode');
+}
+
+async function SwitchToBufferReadMode() {
+    await fetch('/api/Table/SwitchToBufferReadMode');
 }
 
 function createChartForTable(tableId, parameterNames) {

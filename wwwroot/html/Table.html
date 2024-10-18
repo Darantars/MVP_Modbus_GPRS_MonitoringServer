@@ -24,10 +24,16 @@
             <div class="nav-wrapper">
                 <ul id="nav" style="margin-inline:15px;" class="left hide-on-med-and-down">
                     <li><a href="#" onclick="Home()">Home</a></li>
-                    <li><a href="#" onclick="StartConnection()">Start</a></li>
-                    <li><a href="#" onclick="StopConnection()">Stop</a></li>
-                    <li><a href="#" style="font-weight: 600; padding-left: 20px; padding-right: 20px;" >Device-Table</a></li>
-                    <li><a id="conectionStatus"></a></li>
+                    <li><a href="#" style="font-weight: 600; padding-left: 20px; padding-right: 20px;">Device-Table</a></li>
+                    <li>
+                        <div class="switch">
+                            <label class="switch">
+                                <input type="checkbox" id="connectionSwitch">
+                                <span class="lever white waves-light"  style="margin-bottom:5px"></span>
+                                <span id="conectionStatus" style="color: white; font-size:large"></span>
+                            </label>
+                        </div>
+                    </li>
                 </ul>
             </div>
         </nav>
@@ -53,10 +59,11 @@
                             <label class="switch">
                                 <input type="checkbox" id="readMode">
                                 <span class="lever"></span>
-                                <span>buffer read</span>
+                                <span style="color: black">buffer read</span>
                             </label>
                         </div>
                     </div>
+
                 </li>
             </ul>
         </div>

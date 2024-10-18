@@ -1,4 +1,14 @@
-﻿﻿.tables-container {
+﻿body{
+    background-color: snow;
+}
+
+header {
+    position: -webkit-sticky;
+    position: sticky !important;
+    top: 0 !important;
+}
+
+﻿.tables-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -22,11 +32,7 @@
     width: fit-content;
 }
 
-header  {
-    position: -webkit-sticky;
-    position: sticky !important;
-    top: 0 !important;
-}
+
 
 .table-section-header {
     color: #2782C3;
