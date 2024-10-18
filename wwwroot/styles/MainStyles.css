@@ -1,4 +1,4 @@
-﻿.tables-container {
+﻿﻿.tables-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -22,7 +22,11 @@
     width: fit-content;
 }
 
-
+header  {
+    position: -webkit-sticky;
+    position: sticky !important;
+    top: 0 !important;
+}
 
 .table-section-header {
     color: #2782C3;
@@ -61,8 +65,7 @@
     line-height: normal;
 }
 
-.login-container
-{
+.login-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -90,28 +93,6 @@
     width: 100%;
 }
 
-.nav-wrapper {
-    display: flex;
-    align-items: center;
-}
-
-.nav-wrapper .switch {
-    margin-left: 20px;
-}
-
-.nav-wrapper .switch label {
-    display: flex;
-    align-items: center;
-}
-
-.nav-wrapper .switch label span {
-    margin-left: 10px;
-}
-
-.nav-wrapper .brand-logo {
-    margin-right: 20px;
-}
-
 .menu-container {
     display: flex;
     justify-content: center;
@@ -136,11 +117,10 @@
 }
 
 .menu-card .input-field {
-   margin-bottom: 20px;
+    margin-bottom: 20px;
 }
 
 .menu-card .btn {
     width: 100%;
     margin: 15px;
 }
-
