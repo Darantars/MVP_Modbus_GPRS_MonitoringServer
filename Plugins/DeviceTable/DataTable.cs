@@ -97,51 +97,26 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
             List<int> adresses = new List<int>();
             Dictionary<int, string> rawValues = new Dictionary<int, string>();
-            int lastParamSize = 0;
-            var sortedList = sortedMappedParametrs.ToList();
 
             while (sortedMappedParametrs.Count > 0)
             {
-                
-                Parametr param = sortedList[0].Value;
-                adresses.Add(param.adress);
-                int startParamSize = param.size;
+                int startQueryAdress = sortedMappedParametrs.First().Key;
+                int endQueryAdress = startQueryAdress;
+                int lastParamSize = 0;
 
-                sortedMappedParametrs.Remove(param.adress);
-                sortedList = sortedMappedParametrs.ToList();  //неоптимально
-
-                int startQueryAdress = adresses.Last();
-                int endQueryAdress = adresses.Last();
-
-                if (adresses.Last() + 198 >= sortedMappedParametrs.Last().Key + sortedMappedParametrs.Last().Value.adress)
+                foreach (var param in sortedMappedParametrs)
                 {
-                    endQueryAdress = sortedMappedParametrs.Last().Key;
-                }
-                else
-                {
-                    for (int i = 0; i < sortedMappedParametrs.Count; i++)
+                    if (param.Key + param.Value.size - startQueryAdress <= 198)
                     {
-                        if (adresses.Last() + 198 >= sortedList[sortedList.Count() - 1 - i].Key + sortedList[sortedList.Count() - 1 - i].Value.size - startQueryAdress)
-                        {
-                            endQueryAdress = sortedList[sortedList.Count() - 1 - i].Key;
-                            lastParamSize = sortedList[sortedList.Count() - 1 - i].Value.size;
-                            for (int j = 0; j < sortedList.Count() - i; j++)
-                            {
-                                adresses.Add(sortedList[j].Key);
-                            }
-                            for (int j = 0; j < sortedList.Count() - i; j++)
-                            {
-                                if (adresses.Count - 1 - j >= 0)
-                                {
-                                    sortedMappedParametrs.Remove(adresses[adresses.Count - 1 - j]);
-                                }
-                            }
-                            sortedList = sortedMappedParametrs.ToList();  //неоптимально
-                            break;
-                        }
+                        endQueryAdress = param.Key + param.Value.size - 1;
+                        lastParamSize = param.Value.size;
+                    }
+                    else
+                    {
+                        break;
                     }
                 }
-                
+
                 string response = await GetValueByBufferAdressesMb(modbusID, startQueryAdress, endQueryAdress - startQueryAdress + lastParamSize / 2);
                 if (response != "Не получены данные от устройства")
                 {
@@ -149,13 +124,16 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
                     for (int i = 0; i < ansValues.Length; i++)
                     {
-                        if (adresses.Contains(i + startQueryAdress))
+                        int currentAdress = startQueryAdress + i;
+                        if (sortedMappedParametrs.ContainsKey(currentAdress))
                         {
-                            rawValues.Add(i + startQueryAdress, ansValues[i]);
+                            rawValues.Add(currentAdress, ansValues[i]);
+                            sortedMappedParametrs.Remove(currentAdress);
                         }
                     }
                 }
             }
+
             foreach (var item in rawValues)
             {
                 mappedParametrs[item.Key].value = item.Value;
