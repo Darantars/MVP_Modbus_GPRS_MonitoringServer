@@ -407,6 +407,15 @@ app.MapGet("/api/Table/GetParameterValuesLast3Hours", async (string tableId, str
     });
 });
 
+app.MapGet("/api/Table/SwitchToBufferReadMode", async () =>
+{
+    TcpDeviceTableServer.readingMode = "buffer";
+});
+
+app.MapGet("/api/Table/SwitchToSingleReadMode", async () =>
+{
+    TcpDeviceTableServer.readingMode = "default";
+});
 
 app.MapGet("/api/Table/GetConnectionStatus", async () =>
 {

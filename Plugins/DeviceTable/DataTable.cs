@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Reflection.Metadata;
 
 
 namespace Read_Write_GPRS_Server.Plugins.DeviceTable
@@ -67,56 +69,99 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
                 }
                 else if (mode == "buffer")
                 {
-                    try
+                    Dictionary<int, Parametr> mappedParametrs = await GetTableDataByBuffer(modbusID);
+                    foreach (var item in mappedParametrs)
                     {
-                        List<int> sortedAdresess = (Parametrs.Select(param => param.adress).ToList()).OrderBy(a => a).ToList();
-                        if (sortedAdresess[sortedAdresess.Count - 1] - sortedAdresess[2] < 50)
-                        {
-                            int maxAdress = sortedAdresess[sortedAdresess.Count - 1];
-                            int minAdress = sortedAdresess[2];
-                            int quanity = (maxAdress - minAdress) / 2;
-                            // Здесь нужен метод запроса плюс дешифровки и return
-                            string[] values = (await GetValueByBufferAdressesMb(modbusID, minAdress, quanity)).Split(' ');
-                            foreach (string value in values)
-                            {
-                                System.Console.WriteLine(value);
-                            }
-                        }
-
-                        for (int i = 0; i < columnSize; i++)
-                        {
-                            while(sortedAdresess[i] == 0 && sortedAdresess[i + 1] == 0)
-                            {
-                                i++;
-                                i++;
-                            }
-                            int startAdresses = sortedAdresess[i];
-
-                            while (sortedAdresess[i + 1] - sortedAdresess[0] <= 2 && i < columnSize)
-                            {
-                                i++;
-                            }
-                            int maxAdress = sortedAdresess[i];
-                            int quanity = (maxAdress - startAdresses) / 2;
-
-                            string[] values = (await GetValueByBufferAdressesMb(modbusID, startAdresses, quanity)).Split(' ');
-                            // Здесь нужен метод дешифровки и return
-                            foreach (string value in values)
-                            {
-                                System.Console.WriteLine(value);
-                            }
-
-                        }
+                        this.Parametrs.Where(parametr => parametr.adress == item.Key).Last().value = item.Value.value;
+                        //еще нужен логгер
                     }
-                    catch
-                    {
 
-                    }
-                   
                 }
                 TableServer.readyToGetTableData = true;
             }
 
+        }
+
+        private async Task<Dictionary<int, Parametr>> GetTableDataByBuffer(int modbusID)
+        {
+            Dictionary<int, Parametr> mappedParametrs = new Dictionary<int, Parametr>();
+
+            foreach (Parametr param in this.Parametrs)
+            {
+                if (param.size != 0)
+                {
+                    mappedParametrs.Add(param.adress, param);
+                }
+            }
+            SortedDictionary<int, Parametr> sortedMappedParametrs = new SortedDictionary<int, Parametr>(mappedParametrs);
+
+            List<int> adresses = new List<int>();
+            Dictionary<int, string> rawValues = new Dictionary<int, string>();
+            int lastParamSize = 0;
+            var sortedList = sortedMappedParametrs.ToList();
+
+            while (sortedMappedParametrs.Count > 0)
+            {
+                
+                Parametr param = sortedList[0].Value;
+                adresses.Add(param.adress);
+                int startParamSize = param.size;
+
+                sortedMappedParametrs.Remove(param.adress);
+                sortedList = sortedMappedParametrs.ToList();  //неоптимально
+
+                int startQueryAdress = adresses.Last();
+                int endQueryAdress = adresses.Last();
+
+                if (adresses.Last() + 198 >= sortedMappedParametrs.Last().Key + sortedMappedParametrs.Last().Value.adress)
+                {
+                    endQueryAdress = sortedMappedParametrs.Last().Key;
+                }
+                else
+                {
+                    for (int i = 0; i < sortedMappedParametrs.Count; i++)
+                    {
+                        if (adresses.Last() + 198 >= sortedList[sortedList.Count() - 1 - i].Key + sortedList[sortedList.Count() - 1 - i].Value.size - startQueryAdress)
+                        {
+                            endQueryAdress = sortedList[sortedList.Count() - 1 - i].Key;
+                            lastParamSize = sortedList[sortedList.Count() - 1 - i].Value.size;
+                            for (int j = 0; j < sortedList.Count() - i; j++)
+                            {
+                                adresses.Add(sortedList[j].Key);
+                            }
+                            for (int j = 0; j < sortedList.Count() - i; j++)
+                            {
+                                if (adresses.Count - 1 - j >= 0)
+                                {
+                                    sortedMappedParametrs.Remove(adresses[adresses.Count - 1 - j]);
+                                }
+                            }
+                            sortedList = sortedMappedParametrs.ToList();  //неоптимально
+                            break;
+                        }
+                    }
+                }
+                
+                string response = await GetValueByBufferAdressesMb(modbusID, startQueryAdress, endQueryAdress - startQueryAdress + lastParamSize / 2);
+                if (response != "Не получены данные от устройства")
+                {
+                    string[] ansValues = response.Split(' ');
+
+                    for (int i = 0; i < ansValues.Length; i++)
+                    {
+                        if (adresses.Contains(i + startQueryAdress))
+                        {
+                            rawValues.Add(i + startQueryAdress, ansValues[i]);
+                        }
+                    }
+                }
+            }
+            foreach (var item in rawValues)
+            {
+                mappedParametrs[item.Key].value = item.Value;
+            }
+
+            return mappedParametrs;
         }
 
         private async Task<string> GetValueByAdressMb(int modbusID, int adress, int size, string format)
@@ -143,14 +188,15 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             TimeSpan timeout = TimeSpan.FromSeconds(10);
 
             // Запускаем цикл while в фоновом потоке
-            string response = await Task.Run(() =>
+            string response = await Task.Run(async () =>
             {
                 while (DateTime.Now - startTime < timeout)
                 {
                     // Проверяем буфер сообщений на наличие ответа
-                    string currentResponse = CheckResponseBuffer();
+                    string currentResponse = await CheckResponseBuffer();
                     if (!string.IsNullOrEmpty(currentResponse))
                     {
+                        Console.WriteLine("TableMove^ " + currentResponse);
                         TableServer.answerMb3 = null;
                         badRequestMb3Counter = 0; // Обнуляем счетчик неудачных запросов
                         return currentResponse;
@@ -165,7 +211,7 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             return response;
         }
 
-        private string CheckResponseBuffer()
+        private async Task<string> CheckResponseBuffer()
         {
             if (TableServer.answerMb3 != null)
                 return TableServer.answerMb3;
