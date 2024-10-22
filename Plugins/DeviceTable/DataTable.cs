@@ -106,9 +106,9 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
                 foreach (var param in sortedMappedParametrs)
                 {
-                    if (param.Key + param.Value.size - startQueryAdress <= 198)
+                    if (param.Key + param.Value.size - startQueryAdress <= 246)
                     {
-                        endQueryAdress = param.Key + param.Value.size - 1;
+                        endQueryAdress = param.Key + param.Value.size;
                         lastParamSize = param.Value.size;
                     }
                     else
@@ -117,7 +117,7 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
                     }
                 }
 
-                string response = await GetValueByBufferAdressesMb(modbusID, startQueryAdress, endQueryAdress - startQueryAdress + lastParamSize / 2);
+                string response = await GetValueByBufferAdressesMb(modbusID, startQueryAdress, endQueryAdress - startQueryAdress + lastParamSize);
                 if (response != "Не получены данные от устройства")
                 {
                     string[] ansValues = response.Split(' ');
