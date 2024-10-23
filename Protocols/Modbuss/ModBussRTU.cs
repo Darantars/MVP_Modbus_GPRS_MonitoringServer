@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
@@ -247,6 +248,99 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
             return command;
         }
 
+        public async Task<string> DecodeModbusPayload(byte[] payload, string format) 
+        {
+
+            int byteCount = payload.Length; 
+            string registers = "";
+            StringBuilder data = new StringBuilder();
+            // Извлечение данных регистров для функции 3
+            switch (format)
+            {
+                case "int16":
+                    data = new StringBuilder();
+                    for (int i = 0; i < byteCount / 2; i++)
+                    {
+                        short value = (short)((payload[i * 2] << 8) | payload[i * 2 + 1]);
+                        data.Append($"{value} ");
+                    }
+                    registers = $"{data.ToString().Trim()}";
+                    break;
+                case "uint16":
+                    data = new StringBuilder();
+                    for (int i = 0; i < byteCount / 2; i++)
+                    {
+                        ushort value = (ushort)((payload[i * 2] << 8) | payload[i * 2 + 1]);
+                        data.Append($"{value} ");
+                    }
+                    registers = $"{data.ToString().Trim()}";
+                    break;
+
+
+                case "uint32":
+                    for (int i = 0; i < byteCount / 4; i++)
+                    {
+                        uint value = (uint)((payload[i * 4] << 24) | (payload[i * 4 + 1] << 16) |
+                                            (payload[i * 4 + 2] << 8) | payload[i * 4 + 3]);
+                        data.Append($"{value} ");
+                    }
+                    registers = $"{data.ToString().Trim()}";
+                    break;
+
+                case "int32":
+                    for (int i = 0; i < byteCount / 4; i++)
+                    {
+                        int value = (payload[i * 4] << 24) | (payload[i * 4 + 1] << 16) |
+                                    (payload[i * 4 + 2] << 8) | payload[i * 4 + 3];
+                        data.Append($"{value} ");
+                    }
+                    registers = $"{data.ToString().Trim()}";
+                    break;
+
+                case "float":
+                    for (int i = 0; i < byteCount / 4; i++)
+                    {
+                        byte[] floatBytes = new byte[4];
+                        floatBytes[2] = payload[i * 4 + 3];
+                        floatBytes[3] = payload[i * 4 + 2];
+                        floatBytes[0] = payload[i * 4 + 1];
+                        floatBytes[1] = payload[i * 4];
+                        float value = BitConverter.ToSingle(floatBytes, 0);
+                        data.Append($"{value} ");
+                    }
+                    registers = $"{data.ToString().Trim()}";
+                    break;
+
+                case "buffer":
+                    data = new StringBuilder();
+                    for (int i = 0; i < byteCount; i++)
+                    {
+                        data.Append($"{payload[i]:X2} ");
+                    }
+                    registers = $"{data.ToString().Trim()}";
+                    break;
+            }
+
+            switch (format)
+            {
+                case "int16":
+                    return registers;
+                case "uint16":
+                    return registers;
+                case "int32":
+                    return registers;
+                case "uint32":
+                    return registers;
+                case "float":
+                    return registers;
+                case "buffer":
+                    return registers;
+                default:
+                    return $"Формат {format} еще не введен";
+            }
+        }
+
+
         public static string DecodeModbusMessage(byte[] buffer, string mode)
         {
             if (buffer.Length < 2)
@@ -294,7 +388,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                         {
                             case "int16":
                                 data = new StringBuilder();
-                                for (int i = 0; i < byteCount / 2; i++)
+                                for (int i = 0; i < byteCount / 2; i++) 
                                 {
                                     short value = (short)((buffer[3 + i * 2] << 8) | buffer[3 + i * 2 + 1]);
                                     data.Append($"{value} ");
@@ -342,6 +436,15 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                                     floatBytes[1] = buffer[3 + i * 4];
                                     float value = BitConverter.ToSingle(floatBytes, 0);
                                     data.Append($"{value} ");
+                                }
+                                registers = $"{data.ToString().Trim()}";
+                                break;
+
+                            case "buffer":
+                                data = new StringBuilder();
+                                for (int i = 0; i < byteCount; i++)
+                                {
+                                    data.Append($"{buffer[3 + i]:X2} ");
                                 }
                                 registers = $"{data.ToString().Trim()}";
                                 break;
@@ -398,12 +501,12 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                     return registers;
                 case "float":
                     return registers;
+                case "buffer":
+                    return registers;
                 default:
                     return $"Формат {mode} еще не введен";
             }
         }
-
-
 
         private class Parser()
         {

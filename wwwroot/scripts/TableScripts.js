@@ -5,11 +5,30 @@
     await UploadSavedTables();
 
     setInterval(updateTableData, 0);
-    setInterval(updateChartData, 1000);
+    //setInterval(updateChartData, 5000);     
 
     // Первоначальное обновление
     updateTableData();
     updateChartData();
+
+    // Инициализация переключателя
+    const readMode = document.getElementById('readMode');
+    readMode.addEventListener('change', async function () {
+    if (this.checked) {
+        await SwitchToBufferReadMode();
+    } else {
+        await SwitchToSingleReadMode();
+    }
+    });
+
+    const connectionSwitch = document.getElementById('connectionSwitch');
+    connectionSwitch.addEventListener('change', async function () {
+        if (this.checked) {
+            await StartConnection();
+        } else {
+            await StopConnection();
+        }
+    });
 });
 
 let tables = [];
@@ -28,6 +47,14 @@ async function StartConnection() {
 
 async function StopConnection() {
     await fetch('/api/Table/stop');
+}
+
+async function SwitchToSingleReadMode() {
+    await fetch('/api/Table/SwitchToSingleReadMode');
+}
+
+async function SwitchToBufferReadMode() {
+    await fetch('/api/Table/SwitchToBufferReadMode');
 }
 
 function createChartForTable(tableId, parameterNames) {
@@ -53,7 +80,7 @@ function createChartForTable(tableId, parameterNames) {
                             second: 'HH:mm:ss'
                         }
                     }
-                }]     
+                }]
             },
             ticks: {
                 source: 'auto',
@@ -81,7 +108,6 @@ function getRandomColor() {
 }
 
 async function addTable() {
-
     const tableContainer = document.createElement('div');
     tableContainer.innerHTML =
         `
@@ -137,7 +163,7 @@ async function addTable() {
 }
 
 async function deleteTable(tableId) {
-    const response = await fetch(`/api/Table/DeleteTable?tableId=${tableId}`, { 
+    const response = await fetch(`/api/Table/DeleteTable?tableId=${tableId}`, {
         method: 'DELETE'
     });
 
@@ -154,11 +180,11 @@ async function deleteTable(tableId) {
         // Удаление графика из массива charts
         charts = charts.filter(chart => chart.id !== tableId);
 
-
     } else {
         alert('Ошибка при удалении таблицы.');
     }
 }
+
 async function updateTableData() {
     const response = await fetch(`/api/Table/GetConnectionStatus`);
     const connectionStatus = await response.text();
@@ -179,7 +205,6 @@ async function updateTableData() {
 
                 if (tableData.includes("Не опрашивается")) {
 
-
                     if (!tableBody) {
                         console.error(`Table with id ${tableId} not found`);
                         continue;
@@ -196,7 +221,6 @@ async function updateTableData() {
                         console.error(`Cell at index 1 not found in row ${index} of table with id ${tableId}`);
                         continue;
                     }
-
 
                     // Заполнение таблицы строками с "Не опрашивается"
                     table.names.forEach((name, index) => {
@@ -222,8 +246,6 @@ async function updateTableData() {
         updateToken = true;
     }
 }
-
-
 
 async function updateChartData() {
     // *** Работа с графиками ***
@@ -268,8 +290,6 @@ async function updateChartData() {
         }
     }
 }
-
-
 
 function parseCustomDate(dateString) {
     const [day, month, year, hours, minutes, seconds] = dateString.match(/\d+/g);
@@ -447,6 +467,7 @@ async function addTableFromData(tableId, names, addresses, sizes, types, unitTyp
                                         `).join('')}
                                     </tbody>
                                 </table>
+
                                 <div>
                                     <canvas id="chart-${tableId}" width="800" height="1200"></canvas>
                                 </div>

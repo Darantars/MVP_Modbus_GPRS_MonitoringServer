@@ -348,7 +348,7 @@ app.MapGet("/api/Table/GetTableData", async (int modbusID, string tableId) =>
         var table = TcpDeviceTableServer.dataTablesList.FirstOrDefault(t => t.id == tableId);
         if (table != null)
         {
-            await table.GetTableDataAsync("default", modbusID);
+            await table.GetTableDataAsync(TcpDeviceTableServer.readingMode, modbusID);
             var tableDataValues = table.GetTableDataValues();
             return Results.Json(tableDataValues);
         }
@@ -364,13 +364,13 @@ app.MapGet("/api/Table/GetSavedTables", async () =>
         var tables = TcpDeviceTableServer.dataTablesList.Select(table => new
         {
             id = table.id,
-            names = table.paramNames.ToArray(),
-            addresses = table.paramAdreses.ToArray(),
-            sizes = table.paramSizes.ToArray(),
-            types = table.paramTypes.ToArray(),
-            unitTypes = table.paramUnitTypes.ToArray(),
-            formats = table.paramFormats.ToArray(),
-            coiffients = table.paramcoiffients.ToArray()
+            names = table.Parametrs.Select(param => param.name).ToArray(),
+            addresses = table.Parametrs.Select(param => param.adress).ToArray(),
+            sizes = table.Parametrs.Select(param => param.size).ToArray(),
+            types = table.Parametrs.Select(param => param.type).ToArray(),
+            unitTypes = table.Parametrs.Select(param => param.unitType).ToArray(),
+            formats = table.Parametrs.Select(param => param.format).ToArray(),
+            coiffients = table.Parametrs.Select(param => param.coiffient).ToArray()
         }).ToList();
 
         return Results.Json(tables);
@@ -407,6 +407,15 @@ app.MapGet("/api/Table/GetParameterValuesLast3Hours", async (string tableId, str
     });
 });
 
+app.MapGet("/api/Table/SwitchToBufferReadMode", async () =>
+{
+    TcpDeviceTableServer.readingMode = "buffer";
+});
+
+app.MapGet("/api/Table/SwitchToSingleReadMode", async () =>
+{
+    TcpDeviceTableServer.readingMode = "default";
+});
 
 app.MapGet("/api/Table/GetConnectionStatus", async () =>
 {
