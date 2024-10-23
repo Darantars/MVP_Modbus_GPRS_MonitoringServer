@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Read_Write_GPRS_Server.Protocols.Modbuss;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Reflection.Metadata;
@@ -143,21 +144,36 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             // Обновление значений параметров
             foreach (var item in rawValues)
             {
+                ModBussRTU modBussRTU = new ModBussRTU();
+                string value = await modBussRTU.DecodeModbusPayload(ConvertHexStringToByteArray(item.Value.Split(' ')), mappedParametrs[item.Key].format);
 
-                ////////////////////////////
-                
-                //Перед добавлением здесь нужно добавить дешифровку
-
-                /////////////////////////////
-
-
-                mappedParametrs[item.Key].value = item.Value;
+                mappedParametrs[item.Key].value = value;
             }
 
             return mappedParametrs;
         }
 
 
+        private byte[] ConvertHexStringToByteArray(string[] hexStrings)
+        {
+            List<byte> byteList = new List<byte>();
+            foreach (var hexString in hexStrings)
+            {
+                byteList.AddRange(StringToByteArray(hexString));
+            }
+            return byteList.ToArray();
+        }
+
+        private byte[] StringToByteArray(string hex)
+        {
+            int numberChars = hex.Length;
+            byte[] bytes = new byte[numberChars / 2];
+            for (int i = 0; i < numberChars; i += 2)
+            {
+                bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
+            }
+            return bytes;
+        }
 
         private async Task<string> GetValueByAdressMb(int modbusID, int adress, int size, string format)
         {
