@@ -121,12 +121,19 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
                     // Обработка ответа
                     for (int i = 0; i < ansValues.Length; i++)
                     {
-                        int currentAdress = startQueryAdress + i * 2;
+                        int currentAdress = startQueryAdress + i;  
                         if (mappedParametrs.ContainsKey(currentAdress))
                         {
-                            rawValues.Add(currentAdress, ansValues[i]);
+                            string value = "";
+                            for (int j = 0; j < mappedParametrs[currentAdress].size; j++)
+                            {
+                                value += ansValues[(currentAdress - startQueryAdress) * 2 + j];
+                            }
+                            
+                            rawValues.Add(currentAdress, value);
                         }
                     }
+
 
                     // Удаление обработанных параметров
                     sortedParametrs.RemoveAll(p => p.adress >= startQueryAdress && p.adress < endQueryAdress);
@@ -136,6 +143,14 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
             // Обновление значений параметров
             foreach (var item in rawValues)
             {
+
+                ////////////////////////////
+                
+                //Перед добавлением здесь нужно добавить дешифровку
+
+                /////////////////////////////
+
+
                 mappedParametrs[item.Key].value = item.Value;
             }
 
