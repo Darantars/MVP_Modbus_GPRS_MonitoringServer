@@ -1,3 +1,13 @@
+﻿body{
+    background-color: snow;
+}
+
+header {
+    position: -webkit-sticky;
+    position: sticky !important;
+    top: 0 !important;
+}
+
 ﻿.tables-container {
     display: flex;
     flex-direction: column;
@@ -61,8 +71,7 @@
     line-height: normal;
 }
 
-.login-container
-{
+.login-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -114,11 +123,10 @@
 }
 
 .menu-card .input-field {
-   margin-bottom: 20px;
+    margin-bottom: 20px;
 }
 
 .menu-card .btn {
     width: 100%;
     margin: 15px;
 }
-
