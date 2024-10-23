@@ -5,7 +5,7 @@
     await UploadSavedTables();
 
     setInterval(updateTableData, 0);
-    setInterval(updateChartData, 1000);     
+    //setInterval(updateChartData, 5000);     
 
     // Первоначальное обновление
     updateTableData();

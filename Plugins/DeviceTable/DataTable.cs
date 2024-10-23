@@ -84,32 +84,28 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
         private async Task<Dictionary<int, Parametr>> GetTableDataByBuffer(int modbusID)
         {
-            Dictionary<int, Parametr> mappedParametrs = new Dictionary<int, Parametr>();
+            // Сортировка параметров по адресам
+            var sortedParametrs = this.Parametrs
+                .Where(p => p.size != 0)
+                .OrderBy(p => p.adress)
+                .ToList();
 
-            foreach (Parametr param in this.Parametrs)
-            {
-                if (param.size != 0)
-                {
-                    mappedParametrs.Add(param.adress, param);
-                }
-            }
-            SortedDictionary<int, Parametr> sortedMappedParametrs = new SortedDictionary<int, Parametr>(mappedParametrs);
-
-            List<int> adresses = new List<int>();
+            Dictionary<int, Parametr> mappedParametrs = sortedParametrs.ToDictionary(p => p.adress, p => p);
             Dictionary<int, string> rawValues = new Dictionary<int, string>();
 
-            while (sortedMappedParametrs.Count > 0)
+            while (sortedParametrs.Count > 0)
             {
-                int startQueryAdress = sortedMappedParametrs.First().Key;
+                int startQueryAdress = sortedParametrs.First().adress;
                 int endQueryAdress = startQueryAdress;
-                int lastParamSize = 0;
+                int querySize = 0;
 
-                foreach (var param in sortedMappedParametrs)
+                // Определение диапазона адресов для запроса
+                foreach (var param in sortedParametrs)
                 {
-                    if (param.Key + param.Value.size - startQueryAdress <= 246)
+                    if (param.adress + param.size/2 - startQueryAdress <= 248)
                     {
-                        endQueryAdress = param.Key + param.Value.size;
-                        lastParamSize = param.Value.size;
+                        endQueryAdress = param.adress + param.size/2;
+                        querySize = endQueryAdress - startQueryAdress;
                     }
                     else
                     {
@@ -117,23 +113,27 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
                     }
                 }
 
-                string response = await GetValueByBufferAdressesMb(modbusID, startQueryAdress, endQueryAdress - startQueryAdress + lastParamSize);
+                string response = await GetValueByBufferAdressesMb(modbusID, startQueryAdress, querySize);
                 if (response != "Не получены данные от устройства")
                 {
                     string[] ansValues = response.Split(' ');
 
+                    // Обработка ответа
                     for (int i = 0; i < ansValues.Length; i++)
                     {
-                        int currentAdress = startQueryAdress + i;
-                        if (sortedMappedParametrs.ContainsKey(currentAdress))
+                        int currentAdress = startQueryAdress + i * 2;
+                        if (mappedParametrs.ContainsKey(currentAdress))
                         {
                             rawValues.Add(currentAdress, ansValues[i]);
-                            sortedMappedParametrs.Remove(currentAdress);
                         }
                     }
+
+                    // Удаление обработанных параметров
+                    sortedParametrs.RemoveAll(p => p.adress >= startQueryAdress && p.adress < endQueryAdress);
                 }
             }
 
+            // Обновление значений параметров
             foreach (var item in rawValues)
             {
                 mappedParametrs[item.Key].value = item.Value;
@@ -141,6 +141,8 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
             return mappedParametrs;
         }
+
+
 
         private async Task<string> GetValueByAdressMb(int modbusID, int adress, int size, string format)
         {
@@ -155,8 +157,8 @@ namespace Read_Write_GPRS_Server.Plugins.DeviceTable
 
         private async Task<string> GetValueByBufferAdressesMb(int modbusID, int adress, int size)
         {
-            await this.TableServer.SendMB3CommandToDevice(TableServer.device, modbusID, adress, size / 2);  //Нужно добавить режим answera в TcpConnection
-            Console.WriteLine($"Отправлена команда 3: {modbusID} {adress} {size / 2}");
+            await this.TableServer.SendMB3CommandToDevice(TableServer.device, modbusID, adress, size);  //Нужно добавить режим answera в TcpConnection
+            Console.WriteLine($"Отправлена команда 3: {modbusID} {adress} {size}");
             return await WaitingResponseMb3Async(); //Нужно добавить режим answera в TcpConnection
         }
 

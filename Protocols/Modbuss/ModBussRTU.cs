@@ -294,7 +294,7 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                         {
                             case "int16":
                                 data = new StringBuilder();
-                                for (int i = 0; i < byteCount / 2; i++)
+                                for (int i = 0; i < byteCount / 2; i++) 
                                 {
                                     short value = (short)((buffer[3 + i * 2] << 8) | buffer[3 + i * 2 + 1]);
                                     data.Append($"{value} ");
@@ -342,6 +342,15 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                                     floatBytes[1] = buffer[3 + i * 4];
                                     float value = BitConverter.ToSingle(floatBytes, 0);
                                     data.Append($"{value} ");
+                                }
+                                registers = $"{data.ToString().Trim()}";
+                                break;
+
+                            case "buffer":
+                                data = new StringBuilder();
+                                for (int i = 0; i < byteCount; i++)
+                                {
+                                    data.Append($"{buffer[3 + i]:X2} ");
                                 }
                                 registers = $"{data.ToString().Trim()}";
                                 break;
@@ -397,6 +406,8 @@ namespace Read_Write_GPRS_Server.Protocols.Modbuss
                 case "uint32":
                     return registers;
                 case "float":
+                    return registers;
+                case "buffer":
                     return registers;
                 default:
                     return $"Формат {mode} еще не введен";

@@ -509,7 +509,7 @@ namespace Read_Write_GPRS_Server.Controllers
                                         }
                                         else if(readingMode == "buffer") //О госпади, какая срань...
                                         {
-                                            answerMb3 = Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], "float"); //Buffer: Нужно наисать код учитывающий не только float или вариант Raw buffer
+                                            answerMb3 = Protocols.Modbuss.ModBussRTU.DecodeModbusMessage(responseList[i], "float"); 
                                             Console.WriteLine(answerMb3);
                                         }
                                     }
