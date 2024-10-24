@@ -1,0 +1,40 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Login</title>
+    <!-- Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <!-- Materialize JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    <link href="../styles/MainStyles.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #808080;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="card register-card">
+            <h4>Register</h4>
+            <div class="input-field">
+                <input id="register-email" type="email" class="validate">
+                <label for="register-email">Email</label>
+            </div>
+            <div class="input-field">
+                <input id="register-password" type="password" class="validate">
+                <label for="register-password">Password</label>
+            </div>
+            <div class="input-field">
+                <input id="register-confirm-password" type="password" class="validate">
+                <label for="register-confirm-password">Confirm Password</label>
+            </div>
+            <button class="btn waves-effect waves-light blue" onclick="register()">Register</button>
+            <button class="btn waves-effect waves-light grey" onclick="goToAutorization()">Back to auth</button>
+        </div>
+    </div>
+    <script src="../scripts/RegistrationScript.js"></script>
+</body>
+</html>
