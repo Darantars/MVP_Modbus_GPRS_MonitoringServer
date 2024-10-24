@@ -9,7 +9,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
     <link href="../styles/MainStyles.css" rel="stylesheet">
-    <script src="../scripts/AutorizationScripts.js"></script>
     <style>
         body {
             background-color: #808080;
@@ -17,21 +16,6 @@
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="card login-card">
-            <h4>GPRS-Server</h4>
-            <div class="input-field">
-                <input id="username" type="email" class="validate">
-                <label for="username">Email</label>
-            </div>
-            <div class="input-field">
-                <input id="password" type="password" class="validate">
-                <label for="password">Password</label>
-            </div>
-            <button class="btn waves-effect waves-light blue" onclick="login()">Login</button>
-        </div>
-    </div>
-
     <div class="register-container">
         <div class="card register-card">
             <h4>Register</h4>
@@ -48,7 +32,9 @@
                 <label for="register-confirm-password">Confirm Password</label>
             </div>
             <button class="btn waves-effect waves-light blue" onclick="register()">Register</button>
+            <button class="btn waves-effect waves-light grey" onclick="goToAutorization()">Back to auth</button>
         </div>
     </div>
+    <script src="../scripts/RegistrationScript.js"></script>
 </body>
 </html>

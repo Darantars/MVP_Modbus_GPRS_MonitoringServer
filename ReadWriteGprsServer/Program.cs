@@ -111,6 +111,24 @@ app.MapPost("/api/auth/register", async (HttpContext context, UserManager<Identi
     }
 });
 
+app.MapGet("/Registration", async (HttpContext context, IWebHostEnvironment env) =>
+{
+    var filePath = Path.Combine(env.WebRootPath, "html", "Registration.html");
+    var htmlContent = await System.IO.File.ReadAllTextAsync(filePath);
+    context.Response.ContentType = "text/html";
+    await context.Response.WriteAsync(htmlContent);
+});
+
+app.MapGet("/Autorization", async (HttpContext context, IWebHostEnvironment env) =>
+{
+    var filePath = Path.Combine(env.WebRootPath, "html", "Autorization.html");
+    var htmlContent = await System.IO.File.ReadAllTextAsync(filePath);
+    context.Response.ContentType = "text/html";
+    await context.Response.WriteAsync(htmlContent);
+});
+
+
+
 app.MapGet("/Home", async (HttpContext context, IWebHostEnvironment env) =>
 {
     var filePath = Path.Combine(env.WebRootPath, "html", "Home.html");

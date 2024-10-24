@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34511.84
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Read_Write_GPRS_Server", "Read_Write_GPRS_Server.csproj", "{DF621814-437D-4814-87D8-6AC7A6B15867}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Read_Write_GPRS_Server", "ReadWriteGprsServer\Read_Write_GPRS_Server.csproj", "{DF621814-437D-4814-87D8-6AC7A6B15867}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
