@@ -4,11 +4,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Read_Write_GPRS_Server.Db;
-using Microsoft.AspNetCore.Hosting; // Add this namespace
 
 // ”казываем IP-адрес и порт дл€ прослушивани€
 string ipAddress = "90.188.113.113";
-TcpConnectionController.TcpServer tcpServer = new TcpConnectionController.TcpServer(10000);
+TcpConnectionController.TcpServer tcpServer = new TcpConnectionController.TcpServer(1000);
 TcpConnectionController.TcpDeviceTableServer TcpDeviceTableServer = new TcpConnectionController.TcpDeviceTableServer();
 
 var builder = WebApplication.CreateBuilder(args);
