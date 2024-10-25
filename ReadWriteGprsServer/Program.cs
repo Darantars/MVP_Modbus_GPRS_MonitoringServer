@@ -20,7 +20,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddControllersWithViews(); // Ёта строка необходима, если используютс€ контроллеры и представлени€
+builder.Services.AddControllersWithViews(); 
 
 var app = builder.Build();
 
@@ -405,14 +405,13 @@ app.MapGet("/api/Table/GetParameterValuesLast3Hours", async (string tableId, str
         var values = await table.GetParameterValuesLast3Hours(parameterName);
         var result = values.Select(v => new
         {
-            date = v.date.ToString("yyyy-MM-ddTHH:mm:ss"), // ‘ормат даты дл€ JSON
+            date = v.date.ToString("yyyy-MM-ddTHH:mm:ss"), 
             value = v.value
         }).ToList();
 
         return Results.Json(result);
     }
 
-    // Ћогирование дл€ отладки
     Console.WriteLine($"Table with id {tableId} not found.");
 
     // ¬озвращаем заглушку, если таблица не найдена
