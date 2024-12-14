@@ -1,4 +1,4 @@
-# GPRS_web_demo
+# MoGServer
 
 
 
